@@ -6,7 +6,7 @@ import type { Locale } from '~/i18n/locales'
 import type { ViewerState } from '~/server/session'
 import { AccountMenu } from '~/ui/account/account-menu'
 import { LanguageSwitcher } from '~/ui/i18n/language-switcher'
-import { ThemeToggle } from '~/ui/theme/theme'
+import { ThemeMenu } from '~/ui/theme/theme'
 import type { Destination } from './destinations'
 
 /**
@@ -160,7 +160,7 @@ export function Shell({
 
         <div className="border-t border-rule p-3">
           <div className="mb-2 flex items-center gap-3">
-            <ThemeToggle />
+            <ThemeMenu />
             <LanguageSwitcher current={locale} />
           </div>
           <AccountMenu viewer={viewer} locale={locale} />
@@ -175,7 +175,7 @@ export function Shell({
               {t('brand.name')}
             </Link>
             <div className="ms-auto flex items-center gap-3">
-              <ThemeToggle />
+              <ThemeMenu />
               <LanguageSwitcher current={locale} />
               <AccountMenu viewer={viewer} locale={locale} />
             </div>

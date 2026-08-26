@@ -25,9 +25,30 @@ import { join } from 'node:path'
 
 const ASSETS = join(process.cwd(), 'dist', 'client', 'assets')
 
-/** Kilo-octets gzip. Relevés le 24/08/2026, marge d'environ 15 %. */
+/**
+ * Kilo-octets gzip. Relevés le 24/08/2026, marge d'environ 15 %.
+ *
+ * `entry` est passé de 150 à 185 ko le 26/08/2026, avec l'adoption de shadcn/ui.
+ *
+ * **Ce n'est pas une dérive, c'est une décision, et il faut savoir laquelle.** Le
+ * chrome public — thème et langue — vit dans la couche `$lang`, donc dans le morceau
+ * que TOUT LE MONDE télécharge. En passant ces deux menus sur Radix, on y a fait
+ * entrer `@radix-ui/react-dropdown-menu` et sa famille (portail, popper, piège de
+ * focus, navigation au clavier) : environ 30 ko gzip, mesurés — 143,1 ko avant,
+ * 176,5 ko après.
+ *
+ * Ce qu'on achète en échange : un menu qui se pilote entièrement au clavier, qui
+ * annonce correctement son état aux lecteurs d'écran, qui gère l'échappement et le
+ * retour de focus — trois choses que la version maison faisait à moitié.
+ *
+ * Deux points à surveiller, et c'est pour cela que le seuil n'est PAS mis à 200 :
+ *  - les vagues 2 et 3 doivent RETIRER `src/ui/overlay/menu.tsx` et les primitives
+ *    qu'elles remplacent. Tant qu'elles cohabitent, on paie les deux ;
+ *  - si ce chiffre remonte encore, c'est que Radix gagne des écrans qu'il ne devrait
+ *    pas : les menus rares se chargent paresseusement, pas depuis la couche de langue.
+ */
 const BUDGETS = {
-  entry: 150,
+  entry: 185,
   css: 30,
   /** Au-delà, un morceau doit figurer dans `HEAVY_BY_DESIGN`. */
   chunk: 120,

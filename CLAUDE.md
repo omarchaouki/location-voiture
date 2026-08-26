@@ -1,4 +1,4 @@
-# Registre — SaaS de gestion pour loueurs de voitures (Maroc)
+# Flotta — SaaS de gestion pour loueurs de voitures (Maroc)
 
 Réponds-moi en **français**. Code, noms de fichiers et commentaires en **anglais**… sauf les
 commentaires explicatifs, qui sont en français comme le reste du projet.

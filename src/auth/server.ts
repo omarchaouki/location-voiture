@@ -83,7 +83,7 @@ export interface AuthOptions {
 
 export function createAuth(db: Db, options: AuthOptions = {}) {
   return betterAuth({
-    appName: 'Registre',
+    appName: 'Flotta',
     baseURL: process.env['APP_URL'] ?? 'http://localhost:5173',
     secret: process.env['AUTH_SECRET'] ?? 'dev-only-secret-change-me',
 
@@ -198,7 +198,7 @@ export function createAuth(db: Db, options: AuthOptions = {}) {
             locale,
             subject: `Invitation — ${data.organization.name}`,
             body: [
-              `Vous êtes invité à rejoindre ${data.organization.name} sur Registre.`,
+              `Vous êtes invité à rejoindre ${data.organization.name} sur Flotta.`,
               `Rôle : ${data.role}`,
               '',
               `Lien (valable 7 jours, à usage unique) :`,

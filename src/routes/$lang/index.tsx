@@ -1,5 +1,6 @@
-import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { ArrowRight } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { FLEET_SIZES } from '~/core/schemas/lead'
@@ -16,29 +17,33 @@ import {
   InvoiceIcon,
   type IconProps,
 } from '~/ui/icons'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
-import { Card, CardBody } from '~/ui/primitives/card'
-import { DataTable } from '~/ui/primitives/table'
 import { CityCombobox } from '~/ui/forms/city-combobox'
 import { choiceField, textField } from '~/ui/forms/form-data'
+import { Alert } from '~/ui/shadcn/alert'
+import { Badge } from '~/ui/shadcn/badge'
+import { Button } from '~/ui/shadcn/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/ui/shadcn/card'
+import { Field, Input, Select, Textarea } from '~/ui/shadcn/field'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '~/ui/shadcn/table'
 
 /**
  * SITE VITRINE.
- *
- * La page disait « Socle en place » depuis la Phase 1 — un provisoire assumé, mais un
- * provisoire quand même : c'est la seule page que verra un loueur qui découvre le
- * produit, et elle lui parlait de jetons de design.
  *
  * Trois principes tenus ici, et le troisième est le seul qui compte vraiment :
  *
  *  1. **Les tarifs sont LUS EN BASE**, jamais écrits dans la page. Un prix codé dans
  *     le JSX finit toujours par contredire celui de la facture.
  *  2. **Rien n'est promis qui n'existe pas.** Chaque promesse de cette page
- *     correspond à un écran livré. Une vitrine qui vend la Phase 14 se paie au
- *     premier rendez-vous.
+ *     correspond à un écran livré.
  *  3. **Le formulaire demande deux champs obligatoires**, un nom et un numéro. Chaque
  *     champ obligatoire de plus coûte des prospects, et un premier contact n'a pas
  *     besoin de connaître la taille de la flotte.
+ *
+ * **Refonte shadcn/ui du 26/08/2026.** Ce qui a changé tient en une phrase : les
+ * sections ne sont plus séparées par des filets nus, elles sont posées sur des
+ * surfaces qui se lisent d'un coup d'œil. Ce qui n'a PAS changé : l'échelle
+ * typographique, les jetons de couleur, les propriétés logiques, et le fait que
+ * chaque icône de métier reste dessinée à la main.
  */
 export const Route = createFileRoute('/$lang/')({
   loader: async () => ({ plans: await listPublicPlans() }),
@@ -64,38 +69,40 @@ function HomePage() {
 /**
  * L'accroche.
  *
- * Volontairement SOBRE. La version précédente empilait une pastille colorée, un
- * titre de 40 px et deux boutons côte à côte : c'est la disposition qu'on obtient
- * par défaut, et c'est précisément ce qui fait « page générée ». Ici, une ligne de
- * contexte en petit, un titre de 28 px, une phrase, et UNE action principale — la
- * connexion est un lien, pas un second bouton qui se dispute l'attention
- * (`primary-action`).
+ * Volontairement SOBRE. Une ligne de contexte en petit, un titre, une phrase, et UNE
+ * action principale — la connexion vit dans l'en-tête, pas ici, et n'a donc pas à se
+ * disputer l'attention avec la demande de démonstration (`primary-action`).
  */
 function Hero({ locale }: { locale: Locale }) {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-12 sm:py-14">
-      <div className="max-w-2xl">
-        <p className="text-xs font-medium text-stamp">{t('site.badge')}</p>
-        <h1 className="mt-3 text-2xl font-semibold">{t('site.heroTitle')}</h1>
-        <p className="mt-3 text-md text-muted">{t('site.heroBody')}</p>
+    <section className="border-b border-rule py-14 sm:py-20">
+      <div className="max-w-3xl">
+        <Badge variant="secondary">{t('site.badge')}</Badge>
 
-        <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
+          {t('site.heroTitle')}
+        </h1>
+        <p className="mt-4 max-w-2xl text-md text-muted">{t('site.heroBody')}</p>
+
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
-          <a href="#demo" className={buttonClasses('primary')} style={BUTTON_STYLE}>
-            <span>{t('site.requestDemo')}</span>
-          </a>
-          <Link
-            to="/$lang/connexion"
-            params={{ lang: locale }}
-            className="text-sm text-muted underline underline-offset-4 hover:text-ink"
-          >
-            {t('auth.signIn')}
-          </Link>
+          <Button asChild size="lg">
+            <a href="#demo">
+              <span>{t('site.requestDemo')}</span>
+              {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
+              <ArrowRight className="icon-directional" aria-hidden="true" />
+            </a>
+          </Button>
+          <Button asChild variant="ghost" size="lg">
+            <Link to="/$lang/connexion" params={{ lang: locale }}>
+              {t('auth.signIn')}
+            </Link>
+          </Button>
         </div>
 
-        <p className="mt-4 text-xs text-muted">{t('site.heroNote')}</p>
+        <p className="mt-5 text-xs text-muted">{t('site.heroNote')}</p>
       </div>
     </section>
   )
@@ -116,32 +123,36 @@ const CAPABILITIES: ReadonlyArray<{
 /**
  * Ce que le produit fait — six affirmations, six écrans livrés.
  *
- * Une liste à deux colonnes séparée par des filets, PAS une grille de six cartes
- * identiques. La grille de cartes à icône est la mise en page la plus reconnaissable
- * des pages produites à la chaîne, et elle donne le même poids à six choses qui n'en
- * ont pas le même. Des filets suffisent à séparer.
+ * Les icônes viennent du jeu MAISON et non de lucide, et c'est un choix, pas un
+ * oubli : ce sont des objets de métier — une échéance, un contrat signé, un boîtier
+ * GPS, un PV, une facture, une agence. Aucune bibliothèque générique ne les dessine
+ * juste, et ce sont eux qui font que la page ne ressemble pas à un gabarit.
  */
 function Capabilities() {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-12 sm:py-14">
-      <h2 className="text-lg font-semibold">{t('site.capabilitiesTitle')}</h2>
+    <section className="border-b border-rule py-14 sm:py-16">
+      <h2 className="text-lg font-semibold tracking-tight">{t('site.capabilitiesTitle')}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.capabilitiesBody')}</p>
 
-      <div className="mt-8 grid gap-x-10 sm:grid-cols-2">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CAPABILITIES.map((capability) => (
-          <div key={capability.key} className="border-t border-rule py-5">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <span className="text-stamp">
-                <capability.icon size={18} />
+          <Card key={capability.key} className="gap-3">
+            <CardHeader>
+              <span className="flex size-9 items-center justify-center rounded-md bg-stamp-wash text-stamp">
+                <capability.icon size={19} />
               </span>
-              {t(`site.capability.${capability.key}.title`)}
-            </h3>
-            <p className="mt-1.5 text-sm text-muted">
-              {t(`site.capability.${capability.key}.body`)}
-            </p>
-          </div>
+              <CardTitle className="mt-3 text-md">
+                {t(`site.capability.${capability.key}.title`)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-sm">
+                {t(`site.capability.${capability.key}.body`)}
+              </CardDescription>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </section>
@@ -155,17 +166,21 @@ function Capabilities() {
  * qu'un loueur marocain reconnaît immédiatement. Ce ne sont pas des arguments de
  * vente inventés : chacun correspond à une décision écrite dans `docs/DECISIONS.md`
  * et à un test qui échoue si on la casse.
+ *
+ * Pas de cartes ici, à dessein : quatre affirmations argumentées se lisent en
+ * colonnes de texte. Les enfermer dans des cartes leur donnerait le même poids visuel
+ * que les six capacités ci-dessus, qui elles se survolent.
  */
 function MadeForMorocco() {
   const { t } = useTranslation()
   const points = ['plates', 'arabic', 'time', 'money'] as const
 
   return (
-    <section className="border-b border-rule py-12 sm:py-14">
-      <h2 className="text-lg font-semibold">{t('site.localTitle')}</h2>
+    <section className="border-b border-rule py-14 sm:py-16">
+      <h2 className="text-lg font-semibold tracking-tight">{t('site.localTitle')}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.localBody')}</p>
 
-      <ul className="mt-8 grid gap-x-10 sm:grid-cols-2">
+      <ul className="mt-8 grid gap-x-12 gap-y-2 sm:grid-cols-2">
         {points.map((point) => (
           <li key={point} className="border-t border-rule py-5">
             <h3 className="text-sm font-semibold">{t(`site.local.${point}.title`)}</h3>
@@ -180,70 +195,60 @@ function MadeForMorocco() {
 /**
  * Les offres, lues en base.
  *
- * Un TABLEAU de comparaison, pas quatre cartes. Quatre cartes de prix côte à côte
+ * Un TABLEAU de comparaison, pas quatre cartes de prix. Quatre cartes côte à côte
  * obligent à faire l'aller-retour des yeux pour comparer une limite d'une offre à
- * l'autre ; une ligne par limite permet de lire « voitures » en travers. Sous 768 px,
- * le tableau redevient une fiche par offre — la même primitive que dans la console.
+ * l'autre ; une ligne par offre et une colonne par limite permettent de lire
+ * « voitures » en travers. Le tableau défile dans sa boîte sous 768 px — jamais la
+ * page.
  */
 function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Locale }) {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-12 sm:py-14">
-      <h2 className="text-lg font-semibold">{t('site.pricingTitle')}</h2>
+    <section className="border-b border-rule py-14 sm:py-16">
+      <h2 className="text-lg font-semibold tracking-tight">{t('site.pricingTitle')}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.pricingBody')}</p>
 
-      <div className="mt-6">
-        <Card as="div">
-          <DataTable
-            caption={t('site.pricingTitle')}
-            rows={plans}
-            rowKey={(plan) => plan.code}
-            columns={[
-              {
-                key: 'plan',
-                header: t('billing.plan'),
-                cell: (plan) => (
-                  <>
-                    <span className="font-medium">{t(plan.nameKey)}</span>
-                    {plan.trialDays > 0 ? (
-                      <span className="block text-xs text-muted">
-                        {t('site.trialDays', { days: plan.trialDays })}
-                      </span>
-                    ) : null}
-                  </>
-                ),
-              },
-              {
-                key: 'price',
-                header: t('billing.perMonth'),
-                numeric: true,
-                cell: (plan) =>
-                  formatMoney(plan.monthlyCents, locale, plan.currency, { withDecimals: false }),
-              },
-              {
-                key: 'vehicles',
-                header: t('site.limitVehicles'),
-                numeric: true,
-                cell: (plan) => <Limit value={plan.maxVehicles} locale={locale} />,
-              },
-              {
-                key: 'users',
-                header: t('site.limitUsers'),
-                numeric: true,
-                cell: (plan) => <Limit value={plan.maxUsers} locale={locale} />,
-              },
-              {
-                key: 'branches',
-                header: t('site.limitBranches'),
-                numeric: true,
-                secondary: true,
-                cell: (plan) => <Limit value={plan.maxBranches} locale={locale} />,
-              },
-            ]}
-          />
-        </Card>
-      </div>
+      <Card className="mt-8 py-0">
+        <Table>
+          <TableCaption className="sr-only">{t('site.pricingTitle')}</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('billing.plan')}</TableHead>
+              <TableHead className="text-end">{t('billing.perMonth')}</TableHead>
+              <TableHead className="text-end">{t('site.limitVehicles')}</TableHead>
+              <TableHead className="text-end">{t('site.limitUsers')}</TableHead>
+              <TableHead className="text-end">{t('site.limitBranches')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {plans.map((plan) => (
+              <TableRow key={plan.code}>
+                <TableCell>
+                  <span className="font-medium">{t(plan.nameKey)}</span>
+                  {plan.trialDays > 0 ? (
+                    <span className="block text-xs text-muted">
+                      {t('site.trialDays', { days: plan.trialDays })}
+                    </span>
+                  ) : null}
+                </TableCell>
+                <TableCell className="numeric text-end font-medium">
+                  {formatMoney(plan.monthlyCents, locale, plan.currency, { withDecimals: false })}
+                </TableCell>
+                <TableCell className="numeric text-end">
+                  <Limit value={plan.maxVehicles} locale={locale} />
+                </TableCell>
+                <TableCell className="numeric text-end">
+                  <Limit value={plan.maxUsers} locale={locale} />
+                </TableCell>
+                <TableCell className="numeric text-end text-muted">
+                  <Limit value={plan.maxBranches} locale={locale} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
 
       <p className="mt-3 text-xs text-muted">{t('site.pricingNote')}</p>
     </section>
@@ -259,7 +264,7 @@ function Limit({ value, locale }: { value: number | null; locale: Locale }) {
 /**
  * Le formulaire.
  *
- * Deux champs obligatoires. Le leurre `website` est masqué aux humains et aux
+ * Deux champs obligatoires. Le leurre `website` est masqué aux humains ET aux
  * lecteurs d'écran (`aria-hidden` + `tabIndex={-1}`) : un robot le remplit, un
  * utilisateur ne le rencontre jamais. C'est la protection anti-robot la moins chère,
  * et la seule qui n'impose rien — un CAPTCHA ferait fuir exactement le public visé.
@@ -300,59 +305,52 @@ function DemoForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section id="demo" className="py-12 sm:py-16">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_26rem]">
-        <div>
-          <h2 className="font-display text-xl font-semibold tracking-tight">
-            {t('site.demoTitle')}
-          </h2>
-          <p className="mt-2 max-w-xl text-sm text-muted">{t('site.demoBody')}</p>
-          <p className="mt-4 max-w-xl text-sm text-muted">{t('site.demoPrivacy')}</p>
+    <section id="demo" className="py-14 sm:py-20">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_28rem]">
+        <div className="lg:self-center">
+          <h2 className="text-xl font-semibold tracking-tight">{t('site.demoTitle')}</h2>
+          <p className="mt-3 max-w-xl text-sm text-muted">{t('site.demoBody')}</p>
+          <p className="mt-4 max-w-xl text-xs text-muted">{t('site.demoPrivacy')}</p>
         </div>
 
-        <Card as="div" className="self-start">
-          <CardBody>
+        <Card>
+          <CardContent>
             <form method="post" onSubmit={(event) => void submit(event)} className="grid gap-4">
-              <LeadField name="name" label={t('site.fieldName')} required autoComplete="name" />
-              <LeadField
-                name="phone"
+              <Field label={t('site.fieldName')} htmlFor="lead-name">
+                <Input id="lead-name" name="name" required autoComplete="name" />
+              </Field>
+
+              <Field
                 label={t('site.fieldPhone')}
-                type="tel"
-                required
-                autoComplete="tel"
+                htmlFor="lead-phone"
                 hint={t('site.fieldPhoneHint')}
-              />
-              <LeadField
-                name="company"
-                label={t('site.fieldCompany')}
-                autoComplete="organization"
-              />
+              >
+                <Input id="lead-phone" name="phone" type="tel" required autoComplete="tel" />
+              </Field>
+
+              <Field label={t('site.fieldCompany')} htmlFor="lead-company">
+                <Input id="lead-company" name="company" autoComplete="organization" />
+              </Field>
+
               <CityCombobox name="city" label={t('site.fieldCity')} />
-              <label className="block">
-                <span className="text-xs text-muted">{t('site.fieldFleetSize')}</span>
-                <select
-                  name="fleetSize"
-                  defaultValue="1-5"
-                  className={INPUT_CLASS}
-                  style={BUTTON_STYLE}
-                >
+
+              <Field label={t('site.fieldFleetSize')} htmlFor="lead-fleet">
+                <Select id="lead-fleet" name="fleetSize" defaultValue="1-5">
                   {FLEET_SIZES.map((size) => (
                     <option key={size} value={size}>
                       {size}
                     </option>
                   ))}
-                </select>
-              </label>
-              <LeadField
-                name="email"
-                label={t('site.fieldEmail')}
-                type="email"
-                autoComplete="email"
-              />
-              <label className="block">
-                <span className="text-xs text-muted">{t('site.fieldMessage')}</span>
-                <textarea name="message" rows={3} className={INPUT_CLASS} />
-              </label>
+                </Select>
+              </Field>
+
+              <Field label={t('site.fieldEmail')} htmlFor="lead-email">
+                <Input id="lead-email" name="email" type="email" autoComplete="email" />
+              </Field>
+
+              <Field label={t('site.fieldMessage')} htmlFor="lead-message">
+                <Textarea id="lead-message" name="message" rows={3} />
+              </Field>
 
               {/* Leurre. Invisible aux humains ET aux lecteurs d'écran. */}
               <div aria-hidden="true" className="hidden">
@@ -362,64 +360,25 @@ function DemoForm({ locale }: { locale: Locale }) {
                 </label>
               </div>
 
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full"
-                disabled={state === 'sending'}
-              >
+              <Button type="submit" className="w-full" disabled={state === 'sending'}>
                 {state === 'sending' ? t('auth.working') : t('site.send')}
               </Button>
 
+              {/* `status` et non `alert` : une confirmation s'annonce sans interrompre. */}
               {state === 'done' ? (
-                <p role="status" className="text-sm text-calm">
+                <Alert role="status" variant="success">
                   {t('site.sent')}
-                </p>
+                </Alert>
               ) : null}
               {state === 'error' ? (
-                <p role="alert" className="text-sm text-danger">
+                <Alert role="alert" variant="destructive">
                   {t('site.sendFailed')}
-                </p>
+                </Alert>
               ) : null}
             </form>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     </section>
-  )
-}
-
-/** Même géométrie que les champs partagés (`src/ui/forms/fields.tsx`). */
-const INPUT_CLASS =
-  'mt-1 block w-full rounded-sm border border-rule-strong bg-surface px-3 py-2 text-base transition-colors focus:border-stamp'
-
-function LeadField({
-  name,
-  label,
-  type = 'text',
-  required,
-  autoComplete,
-  hint,
-}: {
-  name: string
-  label: string
-  type?: string
-  required?: boolean
-  autoComplete?: string
-  hint?: string
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs text-muted">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        autoComplete={autoComplete}
-        className={INPUT_CLASS}
-        style={BUTTON_STYLE}
-      />
-      {hint ? <span className="mt-1 block text-2xs text-muted">{hint}</span> : null}
-    </label>
   )
 }

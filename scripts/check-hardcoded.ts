@@ -66,8 +66,23 @@ const TEXT_ATTRIBUTE = /\b(?:title|placeholder|aria-label|alt|aria-description)\
 
 const CONSOLE_LOG = /\bconsole\.log\s*\(/g
 
-/** Bibliothèques d'icônes : le jeu est maison. */
-const ICON_LIBRARY = /from\s+['"](?:lucide-react|@heroicons\/react|react-icons)/g
+/**
+ * Bibliothèques d'icônes — UNE seule, et elle est nommée.
+ *
+ * Le jeu était entièrement maison jusqu'à la refonte shadcn/ui du 26/08/2026.
+ * `lucide-react` est désormais le jeu d'INTERFACE du produit : chevrons, croix,
+ * coches, flèches, soleil et lune. Les primitives Radix l'embarquent déjà, et
+ * redessiner à la main ce qu'un composant vendu fournit revient à le forker.
+ *
+ * Ce que la règle protège encore, c'est le NOMBRE : deux jeux d'icônes tiers dans un
+ * même produit, ce sont deux graisses de trait et deux rayons d'angle dans la même
+ * barre d'outils. Heroicons et react-icons restent donc refusés.
+ *
+ * Et le jeu MAISON ne disparaît pas (`src/ui/icons/`, docs/DESIGN.md §6) : voiture,
+ * clé, bidon d'huile, plaque, cachet. Aucune bibliothèque générique ne dessine juste
+ * les objets d'un loueur marocain, et ce sont eux qui portent la direction.
+ */
+const ICON_LIBRARY = /from\s+['"](?:@heroicons\/react|react-icons)/g
 
 /**
  * Accès direct à une table CLOISONNÉE hors des repositories.
@@ -154,7 +169,7 @@ for (const absolute of SCAN_DIRS.flatMap((dir) => walk(join(ROOT, dir)))) {
   const header = source.slice(0, 600)
 
   report(file, source, CONSOLE_LOG, 'console', 'console.log oublié')
-  report(file, source, ICON_LIBRARY, 'icons', "bibliothèque d'icônes tierce")
+  report(file, source, ICON_LIBRARY, 'icons', "second jeu d'icônes tiers (lucide suffit)")
 
   // Les repositories SONT l'endroit prévu pour ces accès ; le schéma les déclare.
   if (!file.startsWith('src/db/')) {

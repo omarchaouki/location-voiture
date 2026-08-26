@@ -182,7 +182,7 @@
     "usageTitle": "Consommation"
   },
   "brand": {
-    "name": "Registre",
+    "name": "Flotta",
     "tagline": "La gestion de flotte de location, échéance par échéance"
   },
   "contract": {
@@ -479,7 +479,7 @@
         "title": "Hébergement"
       },
       "liability": {
-        "body": "Registre est un outil de gestion : il rappelle des échéances, il ne se substitue pas aux obligations légales de l'agence en matière d'assurance, de visite technique, de vignette ou d'autorisation de transport. La vérification des documents reste à la charge de l'exploitant.",
+        "body": "Flotta est un outil de gestion : il rappelle des échéances, il ne se substitue pas aux obligations légales de l'agence en matière d'assurance, de visite technique, de vignette ou d'autorisation de transport. La vérification des documents reste à la charge de l'exploitant.",
         "title": "Responsabilité"
       },
       "property": {
@@ -606,7 +606,7 @@
   "site": {
     "badge": "Pour les loueurs marocains",
     "capabilitiesBody": "Six écrans, tous livrés. Rien sur cette page ne décrit une fonctionnalité à venir.",
-    "capabilitiesTitle": "Ce que Registre fait",
+    "capabilitiesTitle": "Ce que Flotta fait",
     "capability": {
       "branches": {
         "body": "Agences, utilisateurs et rôles. Chaque société ne voit que ses données — c'est vérifié par un test, pas par une promesse.",
@@ -621,7 +621,7 @@
         "title": "Échéances"
       },
       "fines": {
-        "body": "Un PV arrive avec une date et une plaque. Registre retrouve le contrat en cours à cette date, donc le conducteur.",
+        "body": "Un PV arrive avec une date et une plaque. Flotta retrouve le contrat en cours à cette date, donc le conducteur.",
         "title": "Amendes"
       },
       "gps": {
@@ -633,10 +633,10 @@
         "title": "Facturation"
       }
     },
-    "copyright": "© {{year}} Registre",
+    "copyright": "© {{year}} Flotta",
     "demoBody": "Laissez un nom et un numéro : nous rappelons, nous regardons votre flotte ensemble, et nous ouvrons votre espace si cela vous convient.",
     "demoPrivacy": "Ces informations servent uniquement à vous rappeler. Elles ne sont ni revendues, ni transmises à un tiers.",
-    "demoTitle": "Voir Registre sur vos données",
+    "demoTitle": "Voir Flotta sur vos données",
     "fieldCity": "Ville",
     "fieldCompany": "Société",
     "fieldEmail": "Adresse électronique (facultatif)",
@@ -645,7 +645,7 @@
     "fieldName": "Votre nom",
     "fieldPhone": "Téléphone",
     "fieldPhoneHint": "Format marocain : 06 12 34 56 78 ou +212 6 12 34 56 78.",
-    "heroBody": "Assurance, visite technique, vignette, autorisation, contrats, cautions, amendes, boîtiers GPS. Registre surveille les échéances et vous prévient avant qu'elles ne coûtent.",
+    "heroBody": "Assurance, visite technique, vignette, autorisation, contrats, cautions, amendes, boîtiers GPS. Flotta surveille les échéances et vous prévient avant qu'elles ne coûtent.",
     "heroNote": "L'accès se fait sur invitation : nous ouvrons votre espace après un premier appel.",
     "heroTitle": "Le registre de votre agence, tenu à jour tout seul.",
     "limitBranches": "Agences",

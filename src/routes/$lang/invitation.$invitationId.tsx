@@ -1,13 +1,15 @@
-import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { acceptInvitation, readInvitation } from '~/server/invitations'
-import { EmptyState } from '~/ui/feedback/states'
 import { textField } from '~/ui/forms/form-data'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Alert } from '~/ui/shadcn/alert'
+import { Badge } from '~/ui/shadcn/badge'
+import { Button } from '~/ui/shadcn/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/ui/shadcn/card'
+import { Field, Input, Label } from '~/ui/shadcn/field'
 
 /**
  * Acceptation d'une invitation.
@@ -35,41 +37,37 @@ function InvitationPage() {
 
   if (invitation.state === 'unusable') {
     return (
-      <div className="mx-auto max-w-md">
-        <EmptyState
-          title={t('auth.invitationInvalid')}
-          action={
-            <Link
-              to="/$lang/connexion"
-              params={{ lang: locale }}
-              className={buttonClasses('secondary')}
-              style={BUTTON_STYLE}
-            >
-              <span>{t('auth.signIn')}</span>
+      <Shell>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">{t('auth.invitationInvalid')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/$lang/connexion" params={{ lang: locale }}>
+              {t('auth.signIn')}
             </Link>
-          }
-        />
-      </div>
+          </Button>
+        </CardContent>
+      </Shell>
     )
   }
 
   // Compte déjà existant : on ne recrée rien, on renvoie vers la connexion.
   if (invitation.accountExists) {
     return (
-      <div className="mx-auto max-w-md">
-        <h1 className="font-display text-2xl">{t('auth.invitationTitle')}</h1>
-        <p className="mt-3 text-sm text-muted">{invitation.organizationName}</p>
-        <div className="mt-8">
-          <Link
-            to="/$lang/connexion"
-            params={{ lang: locale }}
-            className={buttonClasses('primary')}
-            style={BUTTON_STYLE}
-          >
-            <span>{t('auth.alreadyAccount')}</span>
-          </Link>
-        </div>
-      </div>
+      <Shell>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">{t('auth.invitationTitle')}</CardTitle>
+          <CardDescription className="text-sm">{invitation.organizationName}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild className="w-full">
+            <Link to="/$lang/connexion" params={{ lang: locale }}>
+              {t('auth.alreadyAccount')}
+            </Link>
+          </Button>
+        </CardContent>
+      </Shell>
     )
   }
 
@@ -96,60 +94,67 @@ function InvitationPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="font-display text-2xl">{t('auth.invitationTitle')}</h1>
-      <p className="mt-2 flex flex-wrap items-center gap-3">
-        <span className="font-display text-md">{invitation.organizationName}</span>
-        <Stamp>{invitation.role}</Stamp>
-      </p>
-      <p className="mt-3 text-sm text-muted">{t('auth.invitationIntro')}</p>
+    <Shell>
+      <CardHeader>
+        <CardTitle className="text-lg tracking-tight">{t('auth.invitationTitle')}</CardTitle>
+        <CardDescription className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-medium text-ink">{invitation.organizationName}</span>
+          <Badge variant="secondary">{t(`role.${invitation.role}`)}</Badge>
+        </CardDescription>
+        <CardDescription className="mt-2 text-sm">{t('auth.invitationIntro')}</CardDescription>
+      </CardHeader>
 
-      <form method="post" className="mt-8 border-t border-rule pt-6" onSubmit={(event) => void submit(event)}>
-        <p className="text-xs text-muted">{t('auth.email')}</p>
-        {/* L'adresse vient de l'invitation et ne se modifie pas : on ne choisit pas
-            pour qui on crée le compte. */}
-        <p className="numeric mt-1 border border-rule bg-surface-sunken px-3 py-2 text-sm">
-          {invitation.email}
-        </p>
+      <CardContent>
+        <form method="post" className="grid gap-5" onSubmit={(event) => void submit(event)}>
+          <div className="grid gap-1.5">
+            <Label>{t('auth.email')}</Label>
+            {/* L'adresse vient de l'invitation et ne se modifie pas : on ne choisit
+                pas pour qui on crée le compte. Un champ désactivé serait trompeur —
+                il donnerait l'apparence d'un contrôle qui n'en est pas un. */}
+            <p className="numeric rounded-sm border border-rule bg-surface-sunken px-3 py-2 text-sm">
+              {invitation.email}
+            </p>
+          </div>
 
-        <label className="mt-5 block">
-          <span className="text-xs text-muted">{t('auth.yourName')}</span>
-          <input
-            name="name"
-            required
-            minLength={2}
-            autoComplete="name"
-            className="mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
+          <Field label={t('auth.yourName')} htmlFor="invite-name">
+            <Input id="invite-name" name="name" required minLength={2} autoComplete="name" />
+          </Field>
 
-        <label className="mt-5 block">
-          <span className="text-xs text-muted">{t('auth.choosePassword')}</span>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={10}
-            autoComplete="new-password"
-            className="mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-          <span className="mt-1 block text-2xs text-muted">{t('auth.passwordHint')}</span>
-        </label>
+          <Field
+            label={t('auth.choosePassword')}
+            htmlFor="invite-password"
+            hint={t('auth.passwordHint')}
+          >
+            <Input
+              id="invite-password"
+              name="password"
+              type="password"
+              required
+              minLength={10}
+              autoComplete="new-password"
+            />
+          </Field>
 
-        {failed ? (
-          <p role="alert" className="mt-5 border-s-2 border-danger ps-3 text-sm text-danger">
-            {t('auth.invitationInvalid')}
-          </p>
-        ) : null}
+          {failed ? (
+            <Alert role="alert" variant="destructive">
+              {t('auth.invitationInvalid')}
+            </Alert>
+          ) : null}
 
-        <div className="mt-7">
-          <Button type="submit" variant="primary" disabled={busy}>
+          <Button type="submit" disabled={busy} className="w-full">
             {busy ? t('auth.working') : t('auth.activate')}
           </Button>
-        </div>
-      </form>
+        </form>
+      </CardContent>
+    </Shell>
+  )
+}
+
+/** Même géométrie que la page de connexion : les deux portes se ressemblent. */
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col justify-center py-6 sm:min-h-[70vh]">
+      <Card>{children}</Card>
     </div>
   )
 }

@@ -1,17 +1,20 @@
-import { useState } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { authClient } from '~/auth/client'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { fetchViewer } from '~/server/session'
-import { Button } from '~/ui/primitives/button'
+import { Alert } from '~/ui/shadcn/alert'
+import { Button } from '~/ui/shadcn/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/ui/shadcn/card'
+import { Field, Input } from '~/ui/shadcn/field'
 
 /**
  * Connexion.
  *
- * Il n'y a pas de page « créer un compte » : l'accès se fait sur invitation
- * (cahier des charges §1). Le refus est aussi appliqué côté serveur, sur l'endpoint
+ * Il n'y a pas de page « créer un compte » : l'accès se fait sur invitation (cahier
+ * des charges §1). Le refus est aussi appliqué côté serveur, sur l'endpoint
  * d'inscription — l'absence de page ne protège rien à elle seule.
  */
 export const Route = createFileRoute('/$lang/connexion')({
@@ -26,10 +29,6 @@ export const Route = createFileRoute('/$lang/connexion')({
   },
   component: SignInPage,
 })
-
-/** Même géométrie que les champs partagés (`src/ui/forms/fields.tsx`). */
-const INPUT_CLASS =
-  'mt-1 block w-full rounded-sm border border-rule-strong bg-surface px-3 py-2 text-base transition-colors focus:border-stamp'
 
 function SignInPage() {
   const { t } = useTranslation()
@@ -71,68 +70,62 @@ function SignInPage() {
       pas de colonne latérale, aucune sortie. Chaque élément supplémentaire y est une
       occasion de ne pas se connecter.
     */
-    <div className="mx-auto flex max-w-md flex-col justify-center py-6 sm:min-h-[70vh]">
-      <h1 className="font-display text-xl font-semibold tracking-tight">
-        {t('auth.signInTitle')}
-      </h1>
-      <p className="mt-2 text-sm text-muted">{t('auth.signInIntro')}</p>
+    <div className="mx-auto flex w-full max-w-md flex-col justify-center py-6 sm:min-h-[70vh]">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">{t('auth.signInTitle')}</CardTitle>
+          <CardDescription className="text-sm">{t('auth.signInIntro')}</CardDescription>
+        </CardHeader>
 
-      {/*
-        `method="post"` alors que la soumission est interceptée par React.
+        <CardContent>
+          {/*
+            `method="post"` alors que la soumission est interceptée par React.
 
-        Ce n'est pas redondant : c'est le comportement du jour où le JavaScript ne
-        s'exécute pas. Sans lui, le navigateur soumet en GET et place l'adresse ET LE
-        MOT DE PASSE dans l'URL — donc dans l'historique, dans les journaux du serveur
-        et dans l'en-tête `Referer`. Arrivé le 25/08/2026 : une erreur d'import avait
-        empêché l'hydratation, et le formulaire est reparti en GET.
+            Ce n'est pas redondant : c'est le comportement du jour où le JavaScript ne
+            s'exécute pas. Sans lui, le navigateur soumet en GET et place l'adresse ET
+            LE MOT DE PASSE dans l'URL — donc dans l'historique, dans les journaux du
+            serveur et dans l'en-tête `Referer`. Arrivé le 25/08/2026 : une erreur
+            d'import avait empêché l'hydratation, et le formulaire est reparti en GET.
 
-        En POST, la même panne produit une requête sans effet au lieu d'une fuite.
-      */}
-      <form
-        method="post"
-        className="mt-6 rounded-md border border-rule bg-surface p-5 shadow-card"
-        onSubmit={(event) => void submit(event)}
-      >
-        <label className="block">
-          <span className="text-xs text-muted">{t('auth.email')}</span>
-          <input
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={INPUT_CLASS}
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
+            En POST, la même panne produit une requête sans effet au lieu d'une fuite.
+          */}
+          <form method="post" className="grid gap-5" onSubmit={(event) => void submit(event)}>
+            <Field label={t('auth.email')} htmlFor="signin-email">
+              <Input
+                id="signin-email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </Field>
 
-        <label className="mt-5 block">
-          <span className="text-xs text-muted">{t('auth.password')}</span>
-          <input
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={INPUT_CLASS}
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
+            <Field label={t('auth.password')} htmlFor="signin-password">
+              <Input
+                id="signin-password"
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </Field>
 
-        {failed ? (
-          <p role="alert" className="mt-5 border-s-2 border-danger ps-3 text-sm text-danger">
-            {t('auth.signInFailed')}
-          </p>
-        ) : null}
+            {failed ? (
+              <Alert role="alert" variant="destructive">
+                {t('auth.signInFailed')}
+              </Alert>
+            ) : null}
 
-        <div className="mt-6">
-          <Button type="submit" variant="primary" disabled={busy} className="w-full">
-            {busy ? t('auth.working') : t('auth.signIn')}
-          </Button>
-        </div>
-      </form>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? t('auth.working') : t('auth.signIn')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

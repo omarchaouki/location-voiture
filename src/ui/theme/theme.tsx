@@ -1,9 +1,19 @@
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { useCallback, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '~/ui/shadcn/button'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '~/ui/shadcn/dropdown-menu'
+
 export type ThemeChoice = 'light' | 'dark' | 'system'
 
-const STORAGE_KEY = 'registre.theme'
+const STORAGE_KEY = 'flotta.theme'
 
 /**
  * Script posé dans `<head>`, avant tout rendu.
@@ -77,32 +87,55 @@ export function useTheme(): {
 
 const ORDER: ReadonlyArray<ThemeChoice> = ['system', 'light', 'dark']
 
-export function ThemeToggle() {
+const ICONS: Record<ThemeChoice, typeof Monitor> = {
+  system: Monitor,
+  light: Sun,
+  dark: Moon,
+}
+
+/**
+ * SÉLECTEUR DE THÈME.
+ *
+ * C'était une rangée de trois segments — SYSTÈME / CLAIR / SOMBRE — écrits en toutes
+ * lettres. Cela tenait 150 px dans une barre qui porte déjà la marque, la langue et
+ * le compte, et sur téléphone les trois libellés poussaient le reste hors de l'écran.
+ *
+ * Un menu résout les deux : un seul déclencheur de 44 px quelle que soit la largeur,
+ * et le choix courant lisible à l'icône sans ouvrir. C'est le même raisonnement que
+ * pour la langue, et la même conclusion.
+ *
+ * Le déclencheur garde un `aria-label` : une icône seule ne se lit pas
+ * (`aria-labels`), et la coche dans le panneau dit lequel est actif sans dépendre de
+ * la couleur (`color-not-only`).
+ */
+export function ThemeMenu() {
   const { t } = useTranslation()
   const { choice, setChoice } = useTheme()
+  const Current = ICONS[choice]
 
   return (
-    <fieldset className="flex items-center gap-0 border border-rule" aria-label={t('theme.label')}>
-      {ORDER.map((option) => (
-        <label
-          key={option}
-          // Cible tactile de 44 px : le réglage se fait au pouce, pas à la souris.
-          style={{ minHeight: 'var(--tap-target)' }}
-          className={`flex cursor-pointer items-center px-3 text-2xs tracking-wide uppercase ${
-            choice === option ? 'bg-stamp text-stamp-contrast' : 'text-muted hover:text-ink'
-          }`}
-        >
-          <input
-            type="radio"
-            name="theme"
-            value={option}
-            checked={choice === option}
-            onChange={() => setChoice(option)}
-            className="sr-only"
-          />
-          {t(`theme.${option}`)}
-        </label>
-      ))}
-    </fieldset>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={t('theme.label')}>
+          <Current className="size-[18px] text-muted" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{t('theme.label')}</DropdownMenuLabel>
+        {ORDER.map((option) => {
+          const Icon = ICONS[option]
+          return (
+            <DropdownMenuCheckboxItem
+              key={option}
+              checked={choice === option}
+              onCheckedChange={() => setChoice(option)}
+            >
+              <Icon className="size-4 text-muted" aria-hidden="true" />
+              <span>{t(`theme.${option}`)}</span>
+            </DropdownMenuCheckboxItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

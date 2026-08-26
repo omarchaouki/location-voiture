@@ -1,4 +1,14 @@
 @import 'tailwindcss';
+/*
+ * `animate-in`, `fade-in-0`, `zoom-in-95` — les utilitaires d'animation attendus par
+ * les primitives Radix de `src/ui/shadcn/`. Ils ne servent QUE là : le reste du
+ * produit n'anime que ses squelettes.
+ *
+ * Attention, ils ne connaissent que des directions PHYSIQUES. Toute animation qui
+ * glisse latéralement (tiroir, panneau) doit être décrite à la main plus bas, avec sa
+ * variante `[dir='rtl']` — sinon elle entre à contresens en arabe.
+ */
+@import 'tw-animate-css';
 @import './fonts.css';
 @import './tokens.css';
 

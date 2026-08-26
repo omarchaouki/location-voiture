@@ -182,7 +182,7 @@
     "usageTitle": "Usage"
   },
   "brand": {
-    "name": "Registre",
+    "name": "Flotta",
     "tagline": "Rental fleet management, one deadline at a time"
   },
   "contract": {
@@ -479,7 +479,7 @@
         "title": "Hosting"
       },
       "liability": {
-        "body": "Registre is a management tool: it reminds you of deadlines, it does not replace the agency’s legal obligations regarding insurance, roadworthiness, road tax or transport permits. Checking the documents remains the operator’s responsibility.",
+        "body": "Flotta is a management tool: it reminds you of deadlines, it does not replace the agency’s legal obligations regarding insurance, roadworthiness, road tax or transport permits. Checking the documents remains the operator’s responsibility.",
         "title": "Liability"
       },
       "property": {
@@ -606,7 +606,7 @@
   "site": {
     "badge": "For Moroccan rental agencies",
     "capabilitiesBody": "Six screens, all shipped. Nothing on this page describes a future feature.",
-    "capabilitiesTitle": "What Registre does",
+    "capabilitiesTitle": "What Flotta does",
     "capability": {
       "branches": {
         "body": "Branches, users and roles. Each company sees only its own data — verified by a test, not by a promise.",
@@ -621,7 +621,7 @@
         "title": "Deadlines"
       },
       "fines": {
-        "body": "A ticket arrives with a date and a plate. Registre finds the contract running on that date, and therefore the driver.",
+        "body": "A ticket arrives with a date and a plate. Flotta finds the contract running on that date, and therefore the driver.",
         "title": "Fines"
       },
       "gps": {
@@ -633,10 +633,10 @@
         "title": "Invoicing"
       }
     },
-    "copyright": "© {{year}} Registre",
+    "copyright": "© {{year}} Flotta",
     "demoBody": "Leave a name and a number: we call back, we look at your fleet together, and we open your workspace if it suits you.",
     "demoPrivacy": "This information is used only to call you back. It is never sold or passed to a third party.",
-    "demoTitle": "See Registre on your own data",
+    "demoTitle": "See Flotta on your own data",
     "fieldCity": "City",
     "fieldCompany": "Company",
     "fieldEmail": "Email (optional)",
@@ -645,7 +645,7 @@
     "fieldName": "Your name",
     "fieldPhone": "Phone",
     "fieldPhoneHint": "Moroccan format: 06 12 34 56 78 or +212 6 12 34 56 78.",
-    "heroBody": "Insurance, roadworthiness, road tax, permits, contracts, deposits, fines, GPS trackers. Registre watches every deadline and warns you before it costs you.",
+    "heroBody": "Insurance, roadworthiness, road tax, permits, contracts, deposits, fines, GPS trackers. Flotta watches every deadline and warns you before it costs you.",
     "heroNote": "Access is by invitation: we open your workspace after a first call.",
     "heroTitle": "Your agency ledger, kept up to date on its own.",
     "limitBranches": "Branches",

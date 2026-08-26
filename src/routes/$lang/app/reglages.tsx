@@ -8,7 +8,7 @@ import { choiceField, textField } from '~/ui/forms/form-data'
 import { LanguageSwitcher } from '~/ui/i18n/language-switcher'
 import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
 import { Stamp } from '~/ui/primitives/stamp'
-import { ThemeToggle } from '~/ui/theme/theme'
+import { ThemeMenu } from '~/ui/theme/theme'
 import { SettingsSkeleton } from '~/ui/skeletons'
 
 /**
@@ -173,7 +173,7 @@ function SettingsPage() {
       </h2>
       <p className="mt-3 text-xs text-muted">{t('settings.preferencesHint')}</p>
       <div className="mt-4 flex flex-wrap items-center gap-6">
-        <ThemeToggle />
+        <ThemeMenu />
         <LanguageSwitcher current={locale} />
       </div>
     </div>

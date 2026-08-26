@@ -64,14 +64,20 @@ export default tseslint.config(
 
       'no-console': ['error', { allow: ['warn', 'error'] }],
 
-      // Le jeu d'icônes est maison. Une icône manquante se dessine, elle ne s'installe pas.
+      /*
+       * UN seul jeu d'icônes tiers, et c'est `lucide-react` (refonte shadcn/ui du
+       * 26/08/2026). Deux jeux dans un même produit, ce sont deux graisses de trait
+       * et deux rayons d'angle dans la même barre d'outils.
+       *
+       * Le jeu MAISON reste la référence pour les objets du métier — voiture, clé,
+       * bidon d'huile, plaque, cachet : voir `src/ui/icons/` et docs/DESIGN.md §6.
+       */
       'no-restricted-imports': [
         'error',
         {
           paths: [
-            { name: 'lucide-react', message: "Jeu d'icônes maison : voir src/ui/icons/." },
-            { name: '@heroicons/react', message: "Jeu d'icônes maison : voir src/ui/icons/." },
-            { name: 'react-icons', message: "Jeu d'icônes maison : voir src/ui/icons/." },
+            { name: '@heroicons/react', message: 'Un seul jeu tiers : lucide-react.' },
+            { name: 'react-icons', message: 'Un seul jeu tiers : lucide-react.' },
           ],
         },
       ],
