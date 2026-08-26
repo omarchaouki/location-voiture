@@ -34,7 +34,7 @@ export function DropdownMenuContent({
         className={cn(
           'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[11rem]',
           'origin-(--radix-dropdown-menu-content-transform-origin) overflow-y-auto overflow-x-hidden',
-          'rounded-md border border-rule bg-surface p-1 text-ink',
+          'rounded-lg border border-rule bg-surface p-1 text-ink',
           'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           className,

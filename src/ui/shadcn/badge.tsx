@@ -12,7 +12,7 @@ import { cn } from './utils'
  * mois apprend à ne plus voir le rouge (docs/DESIGN.md §2).
  */
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-sm border px-2 py-0.5 text-2xs font-medium [&>svg]:size-3',
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-2xs font-medium [&>svg]:size-3',
   {
     variants: {
       variant: {

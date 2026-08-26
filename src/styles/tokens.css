@@ -48,17 +48,30 @@
   --danger-wash: oklch(0.955 0.03 26);
 
   /* --- Élévation ------------------------------------------------------
-   * DEUX jetons, et deux seulement. `--elevation-card` est le liseré porté des
-   * cartes : il ne remplace pas le filet, il l'accompagne. `--overlay-shadow` reste
-   * réservée à la couche flottante. Aucune ombre écrite à la main n'est permise
-   * ailleurs — `pnpm check:hardcoded` le vérifie.
+   * TROIS jetons, et trois seulement. Aucune ombre écrite à la main n'est permise
+   * ailleurs — `pnpm check:hardcoded` le vérifie, et n'accepte que les classes qui
+   * résolvent vers l'un de ces trois.
+   *
+   *  - `--elevation-control` : boutons, champs, sélecteurs. Ajoutée le 26/08/2026
+   *    avec l'adoption du dessin shadcn. C'est UN pixel de portée, pas un relief :
+   *    elle décolle le contrôle du papier juste assez pour qu'on le lise comme
+   *    cliquable, ce que le filet seul ne faisait pas.
+   *  - `--elevation-card` : le liseré porté des cartes. Il ne remplace pas le filet,
+   *    il l'accompagne.
+   *  - `--overlay-shadow` : réservée à la couche flottante (menu, dialogue, tiroir),
+   *    la seule famille de surfaces autorisée à vraiment décoller.
+   *
+   * La règle qui n'a PAS changé : l'ombre est un jeton, jamais une valeur écrite dans
+   * un composant. C'est ainsi qu'une interface dérive — une ombre à la fois.
    */
   --elevation-card: 0 1px 0 oklch(0 0 0 / 0.04), 0 1px 3px oklch(0 0 0 / 0.06);
+  --elevation-control: 0 1px 2px oklch(0 0 0 / 0.05);
   --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.08), 0 12px 32px oklch(0 0 0 / 0.14);
   --overlay-backdrop: oklch(0.29 0 0 / 0.36);
 
   /* --- Focus ---------------------------------------------------------- */
   --focus-ring: oklch(0.49 0.115 163);
+  --focus-ring-soft: oklch(0.49 0.115 163 / 0.45);
   --focus-ring-offset: var(--paper);
 }
 
@@ -86,10 +99,12 @@
     --danger-wash: oklch(0.285 0.06 26);
 
     --elevation-card: 0 1px 0 oklch(0 0 0 / 0.3), 0 1px 3px oklch(0 0 0 / 0.4);
+    --elevation-control: 0 1px 2px oklch(0 0 0 / 0.35);
     --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.5), 0 12px 32px oklch(0 0 0 / 0.55);
     --overlay-backdrop: oklch(0.09 0 0 / 0.64);
 
     --focus-ring: oklch(0.76 0.145 163);
+    --focus-ring-soft: oklch(0.76 0.145 163 / 0.45);
     --focus-ring-offset: var(--paper);
   }
 }
@@ -117,9 +132,11 @@
   --danger-wash: oklch(0.285 0.06 26);
 
   --elevation-card: 0 1px 0 oklch(0 0 0 / 0.3), 0 1px 3px oklch(0 0 0 / 0.4);
+  --elevation-control: 0 1px 2px oklch(0 0 0 / 0.35);
   --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.5), 0 12px 32px oklch(0 0 0 / 0.55);
   --overlay-backdrop: oklch(0.09 0 0 / 0.64);
 
   --focus-ring: oklch(0.76 0.145 163);
+  --focus-ring-soft: oklch(0.76 0.145 163 / 0.45);
   --focus-ring-offset: var(--paper);
 }

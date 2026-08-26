@@ -16,7 +16,7 @@ import { cn } from './utils'
  *     une couleur de rôle. Pas d'icône obligatoire, mais la variante donne toujours
  *     un mot ET une couleur — jamais la couleur seule (`color-not-only`).
  */
-const alertVariants = cva('rounded-sm border-s-2 px-3 py-2 text-sm', {
+const alertVariants = cva('rounded-md border-s-2 px-3 py-2 text-sm', {
   variants: {
     variant: {
       default: 'border-rule-strong bg-surface-sunken text-ink',

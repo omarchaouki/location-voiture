@@ -19,7 +19,7 @@ import { cn } from './utils'
  *     (`color-not-only`).
  */
 const CONTROL = [
-  'block w-full min-w-0 rounded-sm border border-rule-strong bg-surface px-3 py-2',
+  'block w-full min-w-0 rounded-md border border-rule-strong bg-surface px-3 py-2 shadow-control',
   'text-base text-ink transition-colors',
   'placeholder:text-muted focus:border-stamp',
   'disabled:cursor-not-allowed disabled:opacity-45',

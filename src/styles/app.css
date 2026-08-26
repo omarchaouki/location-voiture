@@ -37,7 +37,15 @@
   --color-danger: var(--danger);
   --color-danger-wash: var(--danger-wash);
 
-  /* Seule elevation autorisee sur du contenu : le lisere porte des cartes. */
+  /*
+   * Les deux élévations de CONTENU, exposées à Tailwind sous des noms de rôle.
+   *
+   * `shadow-control` sur un bouton ou un champ, `shadow-card` sur une carte, et rien
+   * d'autre : `pnpm check:hardcoded` refuse toute autre classe d'ombre. Nommer le
+   * RÔLE plutôt que l'intensité est ce qui empêche `shadow-lg` d'apparaître un jour
+   * « juste sur ce bloc-là ».
+   */
+  --shadow-control: var(--elevation-control);
   --shadow-card: var(--elevation-card);
 
   /*
@@ -90,14 +98,21 @@
   --spacing: 0.25rem;
 
   /*
-   * Rayons, calés sur ceux d'une console d'administration : 6 px pour un bouton,
-   * 8 px pour un champ, 12 px pour une carte. Au-delà, une carte de données se met à
-   * ressembler à une bulle de discussion.
+   * RAYONS — l'échelle de shadcn, dérivée d'une seule base (26/08/2026).
+   *
+   * Avant : trois valeurs indépendantes (6, 8, 12 px). Elles étaient défendables une
+   * par une, mais rien ne les reliait : changer d'avis sur l'arrondi du produit
+   * demandait de rouvrir les trois et d'espérer qu'elles restent cohérentes.
+   *
+   * Maintenant tout descend de `--radius-base`. Régler l'arrondi du produit entier,
+   * c'est changer UNE ligne — et les quatre marches gardent leur écart.
    */
+  --radius-base: 0.625rem; /* 10px */
   --radius-none: 0;
-  --radius-sm: 6px; /* boutons, cachets */
-  --radius-md: 8px; /* champs, entrées de menu */
-  --radius-lg: 12px; /* cartes */
+  --radius-sm: calc(var(--radius-base) - 4px); /* 6px — cachets, badges */
+  --radius-md: calc(var(--radius-base) - 2px); /* 8px — boutons, champs, entrées */
+  --radius-lg: var(--radius-base); /* 10px — panneaux flottants */
+  --radius-xl: calc(var(--radius-base) + 4px); /* 14px — cartes */
 
   /* Hauteurs de ligne de registre — la géométrie que les squelettes doivent reproduire. */
   --row-height-dense: 2.5rem; /* 40px, tableau de l'application */
@@ -203,9 +218,23 @@
     unicode-bidi: isolate;
   }
 
+  /*
+   * L'ANNEAU DE FOCUS, dessin shadcn (26/08/2026).
+   *
+   * C'était un trait plein de 2 px à 2 px d'écart. Lisible, mais dur : sur un champ
+   * arrondi il dessinait un second contour qui semblait appartenir à un autre élément.
+   *
+   * Trois pixels à mi-opacité, collés au bord, se lisent comme un HALO autour du
+   * contrôle — c'est ce que fait shadcn avec `ring-[3px] ring-ring/50`, et c'est plus
+   * doux sans être moins visible : `--focus-ring-soft` reste la teinte de l'accent,
+   * seule son opacité baisse.
+   *
+   * Ce qui ne change pas : le focus ne se supprime JAMAIS. Si cette règle disparaît,
+   * c'est une régression.
+   */
   :focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: 3px solid var(--focus-ring-soft);
+    outline-offset: 1px;
   }
 
   /* Le focus ne se supprime jamais. Si cette règle disparaît, c'est une régression. */

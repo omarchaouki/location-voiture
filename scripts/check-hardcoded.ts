@@ -43,14 +43,25 @@ const PHYSICAL_CSS_PROP = /\b(?:margin|padding|border)-(?:left|right)\s*:/g
 
 /** L'ombre est réservée aux couches flottantes (menu, dialogue, infobulle). */
 /*
- * Ombres. `shadow-card` est la SEULE exception de contenu : elle resout vers le jeton
- * `--elevation-card`, un lisere porte d'un pixel, defini une fois dans tokens.css.
- * Tout le reste (`shadow-lg`, `shadow-[0_4px...]`, `box-shadow:` ecrit a la main) reste
- * interdit hors de la couche flottante : c'est ainsi qu'une interface derive, une ombre
- * a la fois, vers un empilement de cartes sans hierarchie.
+ * Ombres. DEUX exceptions de contenu, et deux seulement : `shadow-card` et
+ * `shadow-control`. Toutes deux resolvent vers un jeton de tokens.css
+ * (`--elevation-card`, `--elevation-control`), donc vers une valeur decidee une fois
+ * pour le produit entier.
+ *
+ * `shadow-control` est arrivee le 26/08/2026 avec l'adoption du dessin shadcn : un
+ * pixel de portee sous les boutons et les champs, qui les fait lire comme cliquables
+ * la ou le filet seul ne suffisait pas.
+ *
+ * Tout le reste — les elevations graduees de Tailwind, les valeurs arbitraires, un
+ * `box-shadow:` ecrit a la main — reste interdit hors de la couche flottante. C'est
+ * ainsi qu'une interface derive : une ombre a la fois, vers un empilement sans
+ * hierarchie.
+ *
+ * Les deux feuilles de style sont exemptees parce que c'est LA qu'on definit les
+ * jetons et qu'on les expose a Tailwind.
  */
-const SHADOW = /\bshadow-(?!none\b|card\b)[a-z0-9[\]()/-]+|box-shadow\s*:/g
-const SHADOW_ALLOWED = ['src/styles/tokens.css', 'src/ui/overlay/']
+const SHADOW = /\bshadow-(?!none\b|card\b|control\b)[a-z0-9[\]()/-]+|box-shadow\s*:/g
+const SHADOW_ALLOWED = ['src/styles/tokens.css', 'src/styles/app.css', 'src/ui/overlay/']
 
 /** Chaîne visible codée en dur dans un composant. */
 /**
