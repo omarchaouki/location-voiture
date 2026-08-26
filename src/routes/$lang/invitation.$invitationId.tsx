@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { acceptInvitation, readInvitation } from '~/server/invitations'
 import { textField } from '~/ui/forms/form-data'
+import { useHydrated } from '~/ui/forms/use-hydrated'
 import { Alert } from '~/ui/shadcn/alert'
 import { Badge } from '~/ui/shadcn/badge'
 import { Button } from '~/ui/shadcn/button'
@@ -34,6 +35,7 @@ function InvitationPage() {
 
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const hydrated = useHydrated()
 
   if (invitation.state === 'unusable') {
     return (
@@ -141,7 +143,10 @@ function InvitationPage() {
             </Alert>
           ) : null}
 
-          <Button type="submit" disabled={busy} className="w-full">
+          {/* Le bouton attend l'hydratation : sinon valider vite envoie un POST
+              natif, la page se recharge et le compte n'est jamais créé.
+              Voir src/ui/forms/use-hydrated.ts. */}
+          <Button type="submit" disabled={!hydrated || busy} className="w-full">
             {busy ? t('auth.working') : t('auth.activate')}
           </Button>
         </form>

@@ -19,6 +19,7 @@ import {
 } from '~/ui/icons'
 import { CityCombobox } from '~/ui/forms/city-combobox'
 import { choiceField, textField } from '~/ui/forms/form-data'
+import { useHydrated } from '~/ui/forms/use-hydrated'
 import { Alert } from '~/ui/shadcn/alert'
 import { Badge } from '~/ui/shadcn/badge'
 import { Button } from '~/ui/shadcn/button'
@@ -276,6 +277,7 @@ function Limit({ value, locale }: { value: number | null; locale: Locale }) {
 function DemoForm({ locale }: { locale: Locale }) {
   const { t } = useTranslation()
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const hydrated = useHydrated()
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -360,7 +362,10 @@ function DemoForm({ locale }: { locale: Locale }) {
                 </label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={state === 'sending'}>
+              {/* Le bouton attend l'hydratation : avant elle, valider enverrait un
+                  POST natif qui recharge la page sans rien enregistrer.
+                  Voir src/ui/forms/use-hydrated.ts. */}
+              <Button type="submit" className="w-full" disabled={!hydrated || state === 'sending'}>
                 {state === 'sending' ? t('auth.working') : t('site.send')}
               </Button>
 

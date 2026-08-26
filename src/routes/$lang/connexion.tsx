@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -5,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { authClient } from '~/auth/client'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { fetchViewer } from '~/server/session'
+import { useHydrated } from '~/ui/forms/use-hydrated'
 import { Alert } from '~/ui/shadcn/alert'
 import { Button } from '~/ui/shadcn/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/ui/shadcn/card'
@@ -35,33 +37,36 @@ function SignInPage() {
   const { lang } = Route.useParams()
   const locale = isLocale(lang) ? lang : DEFAULT_LOCALE
   const navigate = useNavigate()
+  const hydrated = useHydrated()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [failed, setFailed] = useState(false)
-  const [busy, setBusy] = useState(false)
 
-  async function submit(event: React.FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    setFailed(false)
+  /**
+   * La connexion est une MUTATION, pas un `useState` de plus.
+   *
+   * Le gain n'est pas théorique : `TopProgress` compte les mutations en vol
+   * (`useIsMutating`), donc la barre du haut s'allume pendant l'appel. Avant, l'écran
+   * ne bougeait pas d'un pixel entre le clic et la redirection, et le seul indice que
+   * quelque chose se passait était le libellé du bouton.
+   */
+  const signIn = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const result = await authClient.signIn.email(credentials)
+      // Better Auth ne LÈVE pas sur un refus : il rend `{ error }`. Sans ce test, la
+      // mutation « réussit » et on redirige vers un espace où l'on n'entrera pas.
+      if (result.error) throw new Error('signin_refused')
 
-    const result = await authClient.signIn.email({ email, password })
-
-    if (result.error) {
-      // Message unique : on ne dit jamais si c'est l'adresse ou le mot de passe qui
-      // est faux, cela révélerait quels comptes existent.
-      setFailed(true)
-      setBusy(false)
-      return
-    }
-
-    const viewer = await fetchViewer()
-    await navigate({
-      to: viewer?.isPlatformOwner ? '/$lang/admin' : '/$lang/app',
-      params: { lang: locale },
-    })
-  }
+      const viewer = await fetchViewer()
+      return { isPlatformOwner: viewer?.isPlatformOwner === true }
+    },
+    onSuccess: async ({ isPlatformOwner }) => {
+      await navigate({
+        to: isPlatformOwner ? '/$lang/admin' : '/$lang/app',
+        params: { lang: locale },
+      })
+    },
+  })
 
   return (
     /*
@@ -84,12 +89,21 @@ function SignInPage() {
             Ce n'est pas redondant : c'est le comportement du jour où le JavaScript ne
             s'exécute pas. Sans lui, le navigateur soumet en GET et place l'adresse ET
             LE MOT DE PASSE dans l'URL — donc dans l'historique, dans les journaux du
-            serveur et dans l'en-tête `Referer`. Arrivé le 25/08/2026 : une erreur
-            d'import avait empêché l'hydratation, et le formulaire est reparti en GET.
+            serveur et dans l'en-tête `Referer`.
 
-            En POST, la même panne produit une requête sans effet au lieu d'une fuite.
+            Mais la ceinture avait un angle mort, corrigé le 26/08/2026 : entre
+            l'affichage du HTML et la fin de l'hydratation, valider envoyait un POST
+            NATIF. La page se rechargeait et personne ne se connectait. Le bouton
+            attend donc `useHydrated()` — voir src/ui/forms/use-hydrated.ts.
           */}
-          <form method="post" className="grid gap-5" onSubmit={(event) => void submit(event)}>
+          <form
+            method="post"
+            className="grid gap-5"
+            onSubmit={(event) => {
+              event.preventDefault()
+              signIn.mutate({ email, password })
+            }}
+          >
             <Field label={t('auth.email')} htmlFor="signin-email">
               <Input
                 id="signin-email"
@@ -114,14 +128,20 @@ function SignInPage() {
               />
             </Field>
 
-            {failed ? (
+            {signIn.isError ? (
+              /* Message unique : on ne dit jamais si c'est l'adresse ou le mot de
+                 passe qui est faux, cela révélerait quels comptes existent. */
               <Alert role="alert" variant="destructive">
                 {t('auth.signInFailed')}
               </Alert>
             ) : null}
 
-            <Button type="submit" disabled={busy} className="w-full">
-              {busy ? t('auth.working') : t('auth.signIn')}
+            <Button
+              type="submit"
+              disabled={!hydrated || signIn.isPending || signIn.isSuccess}
+              className="w-full"
+            >
+              {signIn.isPending || signIn.isSuccess ? t('auth.working') : t('auth.signIn')}
             </Button>
           </form>
         </CardContent>

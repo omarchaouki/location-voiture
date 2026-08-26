@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useIsFetching } from '@tanstack/react-query'
+import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { useRouterState } from '@tanstack/react-router'
 
 const APPEAR_AFTER_MS = 150
@@ -10,9 +10,17 @@ const TICK_MS = 120
 /**
  * Barre de progression supérieure, maison (pas NProgress).
  *
- * Deux sources : la navigation du routeur ET les requêtes en vol. Deux garde-fous :
- * elle n'apparaît qu'après 150 ms (une navigation instantanée ne doit rien afficher)
- * et reste au moins 400 ms (sinon elle clignote). docs/DESIGN.md §7.
+ * TROIS sources : la navigation du routeur, les requêtes en vol, et les MUTATIONS.
+ *
+ * La troisième a été ajoutée le 26/08/2026, et elle comblait un trou visible : se
+ * connecter n'est ni une navigation ni une lecture, c'est une mutation. Pendant les
+ * quelques centaines de millisecondes de l'appel, la barre restait donc éteinte et
+ * l'écran semblait ne rien faire — le seul retour était le libellé du bouton. Toute
+ * mutation passée par react-query allume désormais la barre, sans que l'écran ait à
+ * y penser.
+ *
+ * Deux garde-fous : elle n'apparaît qu'après 150 ms (une action instantanée ne doit
+ * rien afficher) et reste au moins 400 ms (sinon elle clignote). docs/DESIGN.md §7.
  *
  * La progression est asymptotique : elle n'atteint jamais 100 % toute seule, parce
  * qu'elle indique un travail en cours, pas une durée connue. Le remplissage final
@@ -22,7 +30,8 @@ const TICK_MS = 120
 export function TopProgress() {
   const routerStatus = useRouterState({ select: (state) => state.status })
   const fetching = useIsFetching()
-  const busy = routerStatus === 'pending' || fetching > 0
+  const mutating = useIsMutating()
+  const busy = routerStatus === 'pending' || fetching > 0 || mutating > 0
 
   const [visible, setVisible] = useState(false)
   const [progress, setProgress] = useState(0)
