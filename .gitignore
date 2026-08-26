@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.output/
+.nitro/
+.vinxi/
+.tanstack/
+*.tsbuildinfo
+
+# Base de développement — jamais versionnée, régénérable par `pnpm db:migrate && pnpm seed`
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets — aucune clé dans le dépôt (cahier des charges §15)
+.env
+.env.*
+!.env.example
+
+# Fichiers de travail
+ssr-tmp.html
+ssr-ar.html
+coverage/
+test-results/
+playwright-report/
+.DS_Store
+
+# Sonde MapLibre : les dist du greffon se retéléchargent, ils ne se versionnent pas
+tests/probes/maplibre-rtl/public/

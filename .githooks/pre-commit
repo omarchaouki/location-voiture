@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# Hook de pré-commit — les contrôles déterministes du cahier des charges §18.
+#
+# Installé par `git config core.hooksPath .githooks` (fait une fois, versionné
+# contrairement à .git/hooks). Pour passer outre en cas d'urgence : `git commit --no-verify`,
+# mais alors la CI redira la même chose.
+#
+# Refuse : chaînes en dur dans les composants, classes de marge/padding physiques,
+# `console.log` oubliés, ombres hors couche flottante, bibliothèques d'icônes tierces,
+# contrastes sous le seuil, et toute erreur de typage ou de lint.
+
+set -e
+
+echo "→ chaînes en dur, RTL, ombres, icônes"
+pnpm -s check:hardcoded
+
+echo "→ contrastes des jetons"
+pnpm -s check:tokens
+
+echo "→ lint"
+pnpm -s lint
+
+echo "→ typecheck"
+pnpm -s typecheck
+
+echo "→ tests"
+pnpm -s test
+
+echo "OK"

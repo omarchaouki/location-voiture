@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/hooks/after-edit.mjs",
+            "async": true,
+            "asyncRewake": true,
+            "timeout": 180,
+            "statusMessage": "Vérification (eslint, chaînes en dur, typecheck)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,357 @@
+@import 'tailwindcss';
+@import './fonts.css';
+@import './tokens.css';
+
+/*
+ * Jetons exposés à Tailwind. `inline` est nécessaire : les valeurs pointent vers
+ * des variables CSS qui changent selon le thème, elles doivent être résolues au
+ * moment du rendu et non figées à la compilation.
+ */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+
+  --color-stamp: var(--stamp);
+  --color-stamp-contrast: var(--stamp-contrast);
+  --color-stamp-wash: var(--stamp-wash);
+
+  --color-calm: var(--calm);
+  --color-calm-wash: var(--calm-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+
+  /* Seule elevation autorisee sur du contenu : le lisere porte des cartes. */
+  --shadow-card: var(--elevation-card);
+
+  /*
+   * UNE SEULE VOIX, ET UN SEUL NOM DE FAMILLE.
+   *
+   * `font-display`, `font-sans` et `font-mono` pointent tous vers Inter. Les trois
+   * noms restent parce qu'ils portent une INTENTION — titre, texte, chiffre — et
+   * qu'ils permettront de changer d'avis sans rouvrir vingt-cinq écrans. Ce qui a
+   * disparu, ce sont les trois polices différentes derrière : mélanger un sérif, un
+   * sans et un mono est le premier réflexe d'une maquette produite à la chaîne.
+   *
+   * Les chiffres tabulaires viennent de `font-variant-numeric` (classe `.numeric`),
+   * pas d'une police séparée.
+   */
+  --font-display: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-mono: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+}
+
+@theme {
+  /*
+   * Échelle typographique de CONSOLE, pas de site.
+   *
+   * 14 px de corps, pas 15 : c'est la densité d'une interface qu'on garde ouverte la
+   * journée, où l'on veut voir quarante lignes sans faire défiler. Les champs de
+   * saisie remontent à 16 px sous 640 px de large — la règle non superposée en bas
+   * de ce fichier — parce qu'en dessous, iOS zoome tout seul au premier appui.
+   */
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-2xs--line-height: 1.45;
+  --text-xs: 0.75rem; /* 12px */
+  --text-xs--line-height: 1.35;
+  --text-sm: 0.8125rem; /* 13px */
+  --text-sm--line-height: 1.4;
+  --text-base: 0.875rem; /* 14px */
+  --text-base--line-height: 1.45;
+  --text-md: 1rem; /* 16px */
+  --text-md--line-height: 1.5;
+  --text-lg: 1.25rem; /* 20px */
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.5rem; /* 24px */
+  --text-xl--line-height: 1.32;
+  --text-2xl: 1.75rem; /* 28px */
+  --text-2xl--line-height: 1.28;
+  --text-3xl: 2.5rem; /* 40px */
+  --text-3xl--line-height: 1.12;
+
+  /* Espacement : base 4px. */
+  --spacing: 0.25rem;
+
+  /*
+   * Rayons, calés sur ceux d'une console d'administration : 6 px pour un bouton,
+   * 8 px pour un champ, 12 px pour une carte. Au-delà, une carte de données se met à
+   * ressembler à une bulle de discussion.
+   */
+  --radius-none: 0;
+  --radius-sm: 6px; /* boutons, cachets */
+  --radius-md: 8px; /* champs, entrées de menu */
+  --radius-lg: 12px; /* cartes */
+
+  /* Hauteurs de ligne de registre — la géométrie que les squelettes doivent reproduire. */
+  --row-height-dense: 2.5rem; /* 40px, tableau de l'application */
+  --row-height-comfy: 3.25rem; /* 52px, listes tactiles */
+  --tap-target: 2.75rem; /* 44px, minimum tactile */
+}
+
+@layer base {
+  html {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    /* Inter est une variable à axe optique : sans cela, le petit corps est trop fin. */
+    font-optical-sizing: auto;
+  }
+
+  html[lang='ar'],
+  html[dir='rtl'] {
+    font-family: var(--font-arabic);
+  }
+
+  /*
+   * La hierarchie ne tient plus a un changement de police mais a la graisse et a la
+   * taille. On la pose ici une fois pour toutes plutot que sur chaque titre.
+   */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+  }
+
+  /*
+   * Le resserrement optique ne s'applique QU'AUX GRANDES TAILLES. Appliqué partout,
+   * il tasse les titres de carte de 13 px et rend la lecture pénible ; c'est une
+   * correction de dessin, pas un effet de style.
+   */
+  h1 {
+    letter-spacing: -0.015em;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    text-align: start;
+    /*
+     * Aucun débordement horizontal, jamais.
+     *
+     * Sur téléphone, un seul élément trop large fait glisser TOUTE la page de côté :
+     * l'en-tête se décale, les filets ne tombent plus en face, et l'utilisateur croit
+     * l'application cassée. Le garde-fou est ici plutôt que sur chaque écran.
+     */
+    overflow-x: hidden;
+  }
+
+  /*
+   * Le délai de 300 ms des navigateurs mobiles disparaît quand l'élément déclare
+   * qu'il n'attend pas un double-tap. Sans cela, chaque bouton du produit répond un
+   * tiers de seconde trop tard — le défaut le plus courant d'une application web sur
+   * téléphone, et le plus facile à corriger.
+   */
+  button,
+  a,
+  [role='button'],
+  summary,
+  label {
+    touch-action: manipulation;
+  }
+
+
+  /* Le produit est fait de filets. Aucun élément de contenu ne porte d'ombre. */
+  hr,
+  .rule {
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /* Chiffres, plaques, montants : toujours tabulaires, jamais proportionnels. */
+  /*
+   * Chiffres, plaques, montants : toujours tabulaires.
+   *
+   * Ce n'est plus une police différente — Inter fournit les chiffres tabulaires par
+   * `font-variant-numeric`. Une colonne de montants s'aligne donc sans changer de
+   * voix au milieu d'un tableau, ce qui était le défaut de la version au mono.
+   */
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'cv05' 1;
+  }
+
+  /*
+   * Isolation bidi : une plaque marocaine mélange chiffres latins et lettre arabe.
+   * Sans isolation, l'ordre des blocs s'inverse à la lecture, y compris en interface française.
+   * docs/DOMAIN.md §6.
+   */
+  bdi,
+  .bidi-isolate {
+    unicode-bidi: isolate;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Le focus ne se supprime jamais. Si cette règle disparaît, c'est une régression. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--stamp-wash);
+    color: var(--ink);
+  }
+}
+
+@layer utilities {
+  /*
+   * Icônes directionnelles : miroitées en RTL.
+   * Les icônes d'OBJET (voiture, clé, bidon d'huile) ne portent jamais cette classe —
+   * une voiture retournée est une voiture cassée. docs/DESIGN.md §3.
+   */
+  [dir='rtl'] .icon-directional {
+    transform: scaleX(-1);
+  }
+
+  /* `transform-origin` n'a pas d'équivalent logique en CSS : on le fournit. */
+  .origin-inline-start {
+    transform-origin: left center;
+  }
+
+  [dir='rtl'] .origin-inline-start {
+    transform-origin: right center;
+  }
+
+  /* Pastille de la frise : centrée sur le rail dans les deux sens de lecture. */
+  .rail-dot {
+    transform: translateX(-50%);
+  }
+
+  [dir='rtl'] .rail-dot {
+    transform: translateX(50%);
+  }
+
+  /* Marge de registre : le filet qui sépare l'identifiant du contenu. docs/DESIGN.md §1. */
+  .ledger-margin {
+    border-inline-end: 1px solid var(--rule);
+  }
+
+  /*
+   * BANDE DÉFILANTE — la barre de navigation sur téléphone.
+   *
+   * Sept rubriques ne tiennent pas sur 375 px. Trois options existaient :
+   *  - les faire passer à la ligne : la barre prend deux ou trois hauteurs et pousse
+   *    le contenu hors de l'écran ;
+   *  - les cacher derrière un menu « hamburger » : la navigation devient invisible,
+   *    donc oubliée (`nav-label-icon`, `persistent-nav`) ;
+   *  - les faire défiler horizontalement : la première reste visible, les autres
+   *    s'atteignent d'un glissement. C'est le choix retenu.
+   *
+   * La barre déborde EXPRÈS de la gouttière (`-mx-4 px-4`) pour que le défilement
+   * commence au bord de l'écran : un contenu qui s'arrête à 16 px du bord donne
+   * l'impression qu'il n'y a rien de plus à voir.
+   */
+  .nav-strip {
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    /* Le glissement horizontal reste au doigt ; le défilement vertical de la page
+       n'est pas capturé (`pan-y` explicite). */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+  }
+
+  .nav-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-strip > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  /* Animation de squelette — un balayage sobre, désactivé en mouvement réduit. */
+  .skeleton {
+    background-color: var(--surface-sunken);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--rule), transparent);
+    opacity: 0.45;
+    transform: translateX(-100%);
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+
+  [dir='rtl'] .skeleton::after {
+    animation-name: skeleton-sweep-rtl;
+  }
+
+  @keyframes skeleton-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes skeleton-sweep-rtl {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      display: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/*
+ * SEIZE pixels dans les champs sur téléphone — et seulement là.
+ *
+ * L'échelle typographique du produit pose le corps de texte à 15 px (docs/DESIGN.md
+ * §4), ce qui est juste sur un écran d'ordinateur. Mais Safari iOS ZOOME
+ * automatiquement dès qu'un champ de saisie descend sous 16 px : l'écran grossit à la
+ * mise au point, l'utilisateur perd le cadrage, et il doit dézoomer à la main après
+ * chaque champ. L'un des défauts les plus courants d'une application web sur iPhone,
+ * et il ne se voit jamais depuis un ordinateur.
+ *
+ * On ne touche donc pas à l'échelle : on relève les CHAMPS, en dessous de `sm`.
+ *
+ * **Hors de toute couche** (`@layer`), et c'est délibéré : les utilitaires Tailwind
+ * — `text-base` sur chaque champ — l'emportent sur la couche `base` quelle que soit
+ * la spécificité. Placée dans `base`, cette règle ne s'appliquait pas ; mesuré à
+ * l'écran, les champs restaient à 15 px.
+ */
+@media (max-width: 39.99rem) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}

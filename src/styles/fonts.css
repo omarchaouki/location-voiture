@@ -1,0 +1,29 @@
+/*
+ * Polices auto-hébergées (aucune requête vers un CDN externe).
+ *
+ * UNE SEULE FAMILLE LATINE : Inter, en variable.
+ *
+ * C'est la police des consoles d'administration qu'on prend pour modèle, et le
+ * choix vaut surtout par ce qu'il supprime. La version précédente chargeait trois
+ * familles — un sérif d'affichage, un sans de texte, un mono pour les chiffres — et
+ * mélanger plusieurs polices est le premier réflexe d'une maquette produite à la
+ * chaîne. Une console professionnelle en utilise une, et fait porter la hiérarchie
+ * par la graisse, la taille et l'espace.
+ *
+ * Les chiffres tabulaires ne demandent plus de mono : Inter les fournit par
+ * `font-variant-numeric: tabular-nums` (classe `.numeric`), ce qui aligne les
+ * montants sans changer de voix au milieu d'un tableau.
+ *
+ * `wght.css` déclare tous les sous-ensembles, mais chaque `@font-face` porte son
+ * `unicode-range` : le navigateur ne télécharge que le latin. Le cyrillique et le
+ * grec ne coûtent que les quelques lignes de CSS qui les déclarent.
+ */
+@import '@fontsource-variable/inter/wght.css';
+
+/*
+ * Arabe — IBM Plex Sans Arabic, sous-ensemble arabe uniquement.
+ * Inter ne dessine pas l'arabe ; aucune famille latine ne le fait vraiment bien.
+ */
+@import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
+@import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
+@import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';

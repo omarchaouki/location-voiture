@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1787363630188,
+      "tag": "0000_bored_frog_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787365011570,
+      "tag": "0001_fresh_sunset_bain",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787589961641,
+      "tag": "0002_organic_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787611686125,
+      "tag": "0003_overrated_thunderbolt",
+      "breakpoints": true
+    }
+  ]
+}
