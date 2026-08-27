@@ -110,7 +110,14 @@ describe('écriture en base', () => {
    */
   it('produit des alertes dans plusieurs catégories', async () => {
     await seedDemoOrganization(db, DEMO, TODAY)
-    await runAlertScan(db, DEMO)
+    /*
+      Le balayage regarde la MÊME date que celle qui a semé le jeu.
+
+      Sans cet argument, il lisait l'horloge réelle : les échéances semées au 25/08
+      sortaient de leurs seuils à mesure que le vrai calendrier s'en éloignait, et ce
+      test passait le lendemain pour échouer le surlendemain. Constaté le 27/08/2026.
+    */
+    await runAlertScan(db, DEMO, new Date(`${TODAY}T12:00:00.000Z`))
 
     const rows = await forOrg<typeof alerts.$inferSelect>(db, DEMO, alerts).list()
     const types = new Set(rows.map((row) => row.alertType))

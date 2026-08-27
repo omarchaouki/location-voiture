@@ -6,7 +6,7 @@
  *  - Les couleurs sont nommées par RÔLE, jamais par teinte.
  *  - `--stamp` (l'accent unique) ne marque que « aujourd'hui » et « la prochaine action ».
  *
- * DIRECTION : console d'administration, modèle Shopify Polaris.
+ * DIRECTION : console d'administration, dessin shadcn/ui (refonte du 26/08/2026).
  *
  * Les gris sont NEUTRES (chroma 0). C'est le changement le plus important de cette
  * révision, et le moins visible écrit ainsi : la version précédente teintait le fond,
@@ -28,9 +28,8 @@
   --rule: oklch(0.9 0 0);
   /*
    * Bordure de CONTRÔLE (champ, bouton). Volontairement plus sombre que le filet
-   * décoratif, et plus sombre que celle de Polaris : WCAG 1.4.11 demande 3:1 sur le
-   * pourtour d'un élément interactif, et un champ dont on ne voit pas les bords est
-   * un champ qu'on ne remplit pas.
+   * décoratif : WCAG 1.4.11 demande 3:1 sur le pourtour d'un élément interactif, et
+   * un champ dont on ne voit pas les bords est un champ qu'on ne remplit pas.
    */
   --rule-strong: oklch(0.615 0 0);
 

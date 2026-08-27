@@ -46,8 +46,24 @@ export interface AlertScanResult {
   resolved: number
 }
 
-export async function readAlertSnapshot(db: Db, ctx: TenantContext): Promise<AlertSnapshot> {
-  const now = new Date()
+/**
+ * L'instant de référence du balayage.
+ *
+ * Facultatif, et il ne l'est que pour une raison : les échéances se comparent à
+ * « aujourd'hui », et un jeu de données semé sur une date FIXE ne peut être vérifié
+ * que si le balayage regarde la même date. Tant que l'horloge réelle était lue ici,
+ * `tests/unit/demo.test.ts` semait au 25/08 puis balayait au jour du jour : les
+ * échéances sortaient de leurs seuils à mesure que les deux dates s'écartaient, et le
+ * test passait le lendemain pour échouer le surlendemain.
+ *
+ * En production personne ne le renseigne : c'est l'horloge réelle qui décide.
+ */
+export async function readAlertSnapshot(
+  db: Db,
+  ctx: TenantContext,
+  at: Date = new Date(),
+): Promise<AlertSnapshot> {
+  const now = at
   const today = businessCivilDate(now)
 
   const vehicleRows = await forOrg<typeof vehicles.$inferSelect>(db, ctx, vehicles).list()
@@ -139,8 +155,13 @@ export async function readAlertSnapshot(db: Db, ctx: TenantContext): Promise<Ale
   }
 }
 
-export async function runAlertScan(db: Db, ctx: TenantContext): Promise<AlertScanResult> {
-  const snapshot = await readAlertSnapshot(db, ctx)
+/** `at` traverse jusqu'au relevé : voir `readAlertSnapshot`. */
+export async function runAlertScan(
+  db: Db,
+  ctx: TenantContext,
+  at: Date = new Date(),
+): Promise<AlertScanResult> {
+  const snapshot = await readAlertSnapshot(db, ctx, at)
   const drafts = evaluateAlerts(snapshot)
   return syncAlerts(db, ctx, drafts, snapshot.now)
 }
