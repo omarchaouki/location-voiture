@@ -118,8 +118,8 @@ function NewContractPage() {
 
   return (
     <div className="max-w-2xl">
-      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('contract.add')}</h1>
+      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('contract.add')}</h1>
         <span className="ms-auto">
           <Link
             to="/$lang/app/contrats"
@@ -183,7 +183,7 @@ function NewContractPage() {
         />
 
         {preview ? (
-          <p className="numeric border-t border-rule pt-3 text-sm sm:col-span-2">
+          <p className="numeric border-t border-border pt-3 text-sm sm:col-span-2">
             {preview.days} {t('contract.days')} · {t('contract.total')}{' '}
             {formatMoney(preview.total, locale)}
           </p>
@@ -191,8 +191,8 @@ function NewContractPage() {
 
         {/* Les blocages sont montrés TOUS ensemble, pas un par un. */}
         {blocks.length > 0 ? (
-          <div className="border-s-2 border-danger ps-3 sm:col-span-2">
-            <p className="font-medium text-danger">{t('contract.blocked')}</p>
+          <div className="border-s-2 border-destructive ps-3 sm:col-span-2">
+            <p className="font-medium text-destructive">{t('contract.blocked')}</p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {blocks.map((block) => (
                 <li key={block.reason}>
@@ -203,7 +203,7 @@ function NewContractPage() {
             {overridable ? (
               <div className="mt-4">
                 <Field name="override" label={t('contract.override')} numeric={false} />
-                <p className="mt-1 text-2xs text-muted">{t('contract.overrideHint')}</p>
+                <p className="mt-1 text-2xs text-muted-foreground">{t('contract.overrideHint')}</p>
               </div>
             ) : null}
           </div>

@@ -117,7 +117,7 @@ export function ThemeMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label={t('theme.label')}>
-          <Current className="size-[18px] text-muted" aria-hidden="true" />
+          <Current className="size-[18px] text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -130,7 +130,7 @@ export function ThemeMenu() {
               checked={choice === option}
               onCheckedChange={() => setChoice(option)}
             >
-              <Icon className="size-4 text-muted" aria-hidden="true" />
+              <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
               <span>{t(`theme.${option}`)}</span>
             </DropdownMenuCheckboxItem>
           )

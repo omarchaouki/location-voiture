@@ -17,9 +17,9 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="border-y border-rule px-4 py-10 text-center">
-      <p className="font-display text-lg">{title}</p>
-      {body ? <p className="mx-auto mt-2 max-w-prose text-sm text-muted">{body}</p> : null}
+    <div className="border-y border-border px-4 py-10 text-center">
+      <p className="text-lg">{title}</p>
+      {body ? <p className="mx-auto mt-2 max-w-prose text-sm text-muted-foreground">{body}</p> : null}
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   )
@@ -40,11 +40,11 @@ export function ErrorState({
   const reference = referenceOf(error)
 
   return (
-    <div className="border-y-2 border-danger px-4 py-8">
-      <p className="font-display text-lg text-danger">{t('error.genericTitle')}</p>
+    <div className="border-y-2 border-destructive px-4 py-8">
+      <p className="text-lg text-destructive">{t('error.genericTitle')}</p>
       <p className="mt-2 max-w-prose text-sm">{t('error.genericBody')}</p>
       {reference ? (
-        <p className="mt-3 text-xs text-muted">
+        <p className="mt-3 text-xs text-muted-foreground">
           {t('error.reference')} <span className="numeric">{reference}</span>
         </p>
       ) : null}
@@ -62,8 +62,8 @@ export function NotFoundState() {
 
   return (
     <div className="px-4 py-16 text-center">
-      <p className="font-display text-2xl">{t('error.notFoundTitle')}</p>
-      <p className="mx-auto mt-3 max-w-prose text-sm text-muted">{t('error.notFoundBody')}</p>
+      <p className="text-2xl">{t('error.notFoundTitle')}</p>
+      <p className="mx-auto mt-3 max-w-prose text-sm text-muted-foreground">{t('error.notFoundBody')}</p>
     </div>
   )
 }

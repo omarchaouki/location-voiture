@@ -92,9 +92,9 @@ function FinesPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('fine.title')}</h1>
-        <span className="numeric text-xs text-muted">{fines.length}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('fine.title')}</h1>
+        <span className="numeric text-xs text-muted-foreground">{fines.length}</span>
       </header>
 
       <form method="post" className="mt-6 grid gap-4 sm:grid-cols-3" onSubmit={(event) => void submit(event)}>
@@ -121,7 +121,7 @@ function FinesPage() {
 
         {error ? <FormError>{error}</FormError> : null}
         {notice ? (
-          <p className="border-s-2 border-stamp ps-3 text-sm text-muted sm:col-span-3">{notice}</p>
+          <p className="border-s-2 border-primary ps-3 text-sm text-muted-foreground sm:col-span-3">{notice}</p>
         ) : null}
 
         <div className="sm:col-span-3">
@@ -136,7 +136,7 @@ function FinesPage() {
           <EmptyState title={t('fine.empty')} body={t('fine.emptyBody')} />
         </div>
       ) : (
-        <ul className="mt-8 border-t border-rule">
+        <ul className="mt-8 border-t border-border">
           {fines.map((fine) => (
             <FineRow
               key={fine.id}
@@ -175,20 +175,20 @@ function FineRow({
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule px-4 py-3">
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-4 py-3">
       <span className="numeric ledger-margin w-28 sm:w-44 shrink-0 pe-4 text-xs">
         {formatDateTime(fine.offenceAt, locale)}
       </span>
       <span className="text-sm">{fine.vehicleLabel}</span>
       <span className="numeric text-sm">{formatMoney(fine.amountCents, locale)}</span>
-      {fine.location ? <span className="text-xs text-muted">{fine.location}</span> : null}
+      {fine.location ? <span className="text-xs text-muted-foreground">{fine.location}</span> : null}
 
       <span className="ms-auto flex flex-wrap items-center gap-3">
         {/* Le conducteur, ou l'aveu qu'on ne le connaît pas. */}
         {fine.customerLabel ? (
           <span className="text-sm">
             {fine.customerLabel}{' '}
-            <span className="numeric text-xs text-muted">{fine.contractReference}</span>
+            <span className="numeric text-xs text-muted-foreground">{fine.contractReference}</span>
           </span>
         ) : (
           <Badge variant="warn">{t('fine.unattached')}</Badge>

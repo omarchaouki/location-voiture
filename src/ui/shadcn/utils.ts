@@ -6,7 +6,7 @@ import { twMerge } from 'tailwind-merge'
  *
  * Elle existe pour une raison précise : chaque composant de cette couche expose une
  * prop `className`, et sans fusion consciente des conflits Tailwind, un
- * `className="bg-surface"` posé par un écran perdrait contre le `bg-paper` interne du
+ * `className="bg-card"` posé par un écran perdrait contre le `bg-background` interne du
  * composant selon l'ordre de la feuille de style. `twMerge` tranche par la dernière
  * classe déclarée, ce qui est le seul comportement prévisible.
  */

@@ -91,27 +91,44 @@ interface Pair {
   decorative?: boolean
 }
 
+/**
+ * Les paires, réécrites le 27/08/2026 avec les jetons shadcn.
+ *
+ * Elles portent les mêmes questions qu'avant, posées aux nouveaux noms : le texte
+ * courant est-il lisible sur chaque surface, la sévérité se distingue-t-elle du fond,
+ * et le pourtour d'un contrôle atteint-il les 3:1 de WCAG 1.4.11.
+ */
 const PAIRS: ReadonlyArray<Pair> = [
-  { foreground: 'ink', background: 'paper', label: 'Texte principal sur papier', minimum: 4.5 },
-  { foreground: 'ink', background: 'surface', label: 'Texte principal sur surface', minimum: 4.5 },
-  { foreground: 'muted', background: 'paper', label: 'Libellés sur papier', minimum: 4.5 },
-  { foreground: 'muted', background: 'surface', label: 'Libellés sur surface', minimum: 4.5 },
-  { foreground: 'stamp', background: 'paper', label: 'Accent sur papier', minimum: 4.5 },
-  { foreground: 'stamp-contrast', background: 'stamp', label: 'Texte sur bouton accent', minimum: 4.5 },
-  { foreground: 'danger', background: 'paper', label: 'Sévérité dépassée', minimum: 4.5 },
-  { foreground: 'warn', background: 'paper', label: 'Sévérité approchante', minimum: 4.5 },
-  { foreground: 'calm', background: 'paper', label: 'Sévérité à jour', minimum: 4.5 },
+  { foreground: 'foreground', background: 'background', label: 'Texte principal sur le fond', minimum: 4.5 },
+  { foreground: 'card-foreground', background: 'card', label: 'Texte principal sur carte', minimum: 4.5 },
+  { foreground: 'popover-foreground', background: 'popover', label: 'Texte sur couche flottante', minimum: 4.5 },
+  { foreground: 'muted-foreground', background: 'background', label: 'Libellés sur le fond', minimum: 4.5 },
+  { foreground: 'muted-foreground', background: 'card', label: 'Libellés sur carte', minimum: 4.5 },
+  { foreground: 'muted-foreground', background: 'muted', label: 'Libellés sur surface sourde', minimum: 4.5 },
+  { foreground: 'primary-foreground', background: 'primary', label: 'Texte sur bouton principal', minimum: 4.5 },
+  { foreground: 'secondary-foreground', background: 'secondary', label: 'Texte sur bouton secondaire', minimum: 4.5 },
+  { foreground: 'accent-foreground', background: 'accent', label: 'Texte sur accent', minimum: 4.5 },
+  { foreground: 'destructive', background: 'background', label: 'Sévérité dépassée', minimum: 4.5 },
+  { foreground: 'destructive', background: 'card', label: 'Sévérité dépassée sur carte', minimum: 4.5 },
+  { foreground: 'warning', background: 'background', label: 'Sévérité approchante', minimum: 4.5 },
+  { foreground: 'success', background: 'background', label: 'Sévérité à jour', minimum: 4.5 },
   {
-    foreground: 'rule',
-    background: 'paper',
+    foreground: 'border',
+    background: 'background',
     label: 'Filet de séparation (décoratif)',
     minimum: 3,
     decorative: true,
   },
   {
-    foreground: 'rule-strong',
-    background: 'paper',
+    foreground: 'input',
+    background: 'background',
     label: 'Bordure de contrôle (bouton, champ)',
+    minimum: 3,
+  },
+  {
+    foreground: 'ring',
+    background: 'background',
+    label: 'Anneau de focus',
     minimum: 3,
   },
 ]

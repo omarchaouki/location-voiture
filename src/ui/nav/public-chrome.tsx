@@ -31,8 +31,8 @@ export function PublicChrome({ locale, children }: { locale: Locale; children: R
   const { t } = useTranslation()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper">
-      <header className="sticky top-0 z-30 border-b border-rule bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-[1180px] items-center gap-3 px-4 py-2 sm:px-6">
           <Link
             to="/$lang"
@@ -41,14 +41,14 @@ export function PublicChrome({ locale, children }: { locale: Locale; children: R
             style={{ minHeight: 'var(--tap-target)' }}
           >
             <BrandMark />
-            <span className="font-display text-md font-semibold tracking-tight">
+            <span className="text-base font-semibold tracking-tight">
               {t('brand.name')}
             </span>
           </Link>
 
           {/* La signature ne s'affiche qu'à partir de `lg` : en dessous, elle vole la
               place des commandes de droite sans rien apprendre à personne. */}
-          <span className="hidden text-xs text-muted lg:inline">{t('brand.tagline')}</span>
+          <span className="hidden text-xs text-muted-foreground lg:inline">{t('brand.tagline')}</span>
 
           <div className="ms-auto flex items-center gap-1">
             <ThemeMenu />
@@ -73,20 +73,20 @@ export function PublicChrome({ locale, children }: { locale: Locale; children: R
         qu'elles servent à quelque chose. Rien d'autre n'y entre — un pied de page qui
         grossit devient un second menu que personne ne lit.
       */}
-      <footer className="border-t border-rule">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-xs text-muted sm:px-6">
+      <footer className="border-t border-border">
+        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-xs text-muted-foreground sm:px-6">
           <span>{t('site.copyright', { year: new Date().getUTCFullYear() })}</span>
           <Link
             to="/$lang/mentions-legales"
             params={{ lang: locale }}
-            className="transition-colors hover:text-ink"
+            className="transition-colors hover:text-foreground"
           >
             {t('legal.notice.title')}
           </Link>
           <Link
             to="/$lang/confidentialite"
             params={{ lang: locale }}
-            className="transition-colors hover:text-ink"
+            className="transition-colors hover:text-foreground"
           >
             {t('legal.privacy.title')}
           </Link>
@@ -95,7 +95,7 @@ export function PublicChrome({ locale, children }: { locale: Locale; children: R
           <Link
             to="/$lang/connexion"
             params={{ lang: locale }}
-            className="ms-auto transition-colors hover:text-ink sm:hidden"
+            className="ms-auto transition-colors hover:text-foreground sm:hidden"
           >
             {t('auth.signIn')}
           </Link>
@@ -117,10 +117,10 @@ function BrandMark() {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-stamp"
+      className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary"
     >
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor">
-        <g className="text-stamp-contrast" strokeWidth={2.5} strokeLinecap="round">
+        <g className="text-primary-foreground" strokeWidth={2.5} strokeLinecap="round">
           <path d="M5 9h14" />
           <path d="M5 15h9" />
         </g>

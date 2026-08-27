@@ -25,16 +25,16 @@ export function LegalPage({
 
   return (
     <article className="max-w-prose">
-      <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
+      <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
         {t(titleKey)}
       </h1>
-      <p className="mt-2 text-xs text-muted">{t(updatedKey)}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{t(updatedKey)}</p>
 
       <div className="mt-8 space-y-8">
         {sectionKeys.map((key) => (
           <section key={key}>
-            <h2 className="font-display text-md font-semibold">{t(`${key}.title`)}</h2>
-            <p className="mt-2 text-sm whitespace-pre-line text-muted">{t(`${key}.body`)}</p>
+            <h2 className="text-base font-semibold">{t(`${key}.title`)}</h2>
+            <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">{t(`${key}.body`)}</p>
           </section>
         ))}
       </div>

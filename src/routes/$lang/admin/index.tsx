@@ -92,7 +92,7 @@ function Header({ locale }: { locale: Locale }) {
     <header className="flex flex-wrap items-start gap-x-4 gap-y-3">
       <div className="min-w-0 flex-1">
         <h1 className="text-lg font-semibold tracking-tight">{t('admin.overview')}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted">{t('admin.overviewBody')}</p>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t('admin.overviewBody')}</p>
       </div>
       <Button asChild>
         <Link to="/$lang/admin/organisations" params={{ lang: locale }}>
@@ -170,19 +170,19 @@ function Tiles({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale }
       {tiles.map((tile) => (
         <Card key={tile.key} className="min-w-0 gap-2 py-4">
           <CardContent>
-            <p className="text-xs text-muted">{tile.label}</p>
+            <p className="text-xs text-muted-foreground">{tile.label}</p>
             {/*
               Le chiffre porte `.numeric` : les mesures s'alignent au chiffre près, et
               le total ne saute pas quand il passe de 9 à 10.
             */}
             <p
               className={`numeric mt-1 text-xl font-semibold ${
-                tile.tone === 'danger' ? 'text-danger' : tile.tone === 'accent' ? 'text-stamp' : ''
+                tile.tone === 'danger' ? 'text-destructive' : tile.tone === 'accent' ? 'text-primary' : ''
               }`}
             >
               {tile.value}
             </p>
-            <p className="mt-0.5 text-xs text-muted">{tile.hint}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{tile.hint}</p>
           </CardContent>
         </Card>
       ))}
@@ -196,7 +196,7 @@ function RecentOrganizations({ metrics, locale }: { metrics: PlatformMetrics; lo
 
   return (
     <Card className="min-w-0 py-0">
-      <CardHeader className="border-b border-rule py-4">
+      <CardHeader className="border-b border-border py-4">
         <CardTitle>{t('admin.recentOrganizations')}</CardTitle>
         <CardAction>
           <Button asChild variant="link" size="sm" className="h-11 px-0">
@@ -210,11 +210,11 @@ function RecentOrganizations({ metrics, locale }: { metrics: PlatformMetrics; lo
         {metrics.recent.map((org) => (
           <li
             key={org.id}
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule px-5 py-3 last:border-b-0"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-5 py-3 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{org.name}</p>
-              <p className="numeric truncate text-xs text-muted">
+              <p className="numeric truncate text-xs text-muted-foreground">
                 {org.slug} · {formatDate(org.createdAt, locale)}
               </p>
             </div>
@@ -225,7 +225,7 @@ function RecentOrganizations({ metrics, locale }: { metrics: PlatformMetrics; lo
               créée et n'a jamais été remplie. C'est le seul appel à l'action de la
               page, et il ne s'affiche que quand il a un sens.
             */}
-            <span className={`numeric text-xs ${org.vehicles === 0 ? 'text-warn' : 'text-muted'}`}>
+            <span className={`numeric text-xs ${org.vehicles === 0 ? 'text-warning' : 'text-muted-foreground'}`}>
               {org.vehicles === 0
                 ? t('admin.notStarted')
                 : t('admin.vehicleCount', { count: org.vehicles })}
@@ -255,7 +255,7 @@ function PlanMix({ plans, locale }: { plans: readonly PlanBreakdown[]; locale: L
       </CardHeader>
       <CardContent>
         {plans.length === 0 ? (
-          <p className="text-sm text-muted">{t('admin.noBillableOrganizations')}</p>
+          <p className="text-sm text-muted-foreground">{t('admin.noBillableOrganizations')}</p>
         ) : (
           <ul className="space-y-3">
             {plans.map((plan) => (
@@ -267,17 +267,17 @@ function PlanMix({ plans, locale }: { plans: readonly PlanBreakdown[]; locale: L
                   </span>
                 </div>
                 <div
-                  className="mt-1 h-1.5 overflow-hidden rounded-sm bg-surface-sunken"
+                  className="mt-1 h-1.5 overflow-hidden rounded-sm bg-muted"
                   role="presentation"
                 >
                   <div
-                    className="h-full bg-stamp"
+                    className="h-full bg-primary"
                     style={{
                       inlineSize: `${highest === 0 ? 0 : Math.round((plan.organizations / highest) * 100)}%`,
                     }}
                   />
                 </div>
-                <p className="numeric mt-1 text-2xs text-muted">
+                <p className="numeric mt-1 text-2xs text-muted-foreground">
                   {formatMoney(plan.monthlyCents, locale, 'MAD', { withDecimals: false })}
                   {' · '}
                   {t('billing.perMonth')}
@@ -306,25 +306,25 @@ function Revenue({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale
       <CardHeader>
         <CardTitle>{t('admin.revenue')}</CardTitle>
         <CardAction>
-          <span className="text-2xs text-muted">{t('admin.last30Days')}</span>
+          <span className="text-2xs text-muted-foreground">{t('admin.last30Days')}</span>
         </CardAction>
       </CardHeader>
       <CardContent>
         {metrics.revenueLast30Days.length === 0 ? (
-          <p className="text-sm text-muted">{t('admin.noInvoices')}</p>
+          <p className="text-sm text-muted-foreground">{t('admin.noInvoices')}</p>
         ) : (
           <dl className="space-y-3">
             {metrics.revenueLast30Days.map((line) => (
               <div key={line.currency}>
                 <div className="flex items-baseline justify-between gap-2">
-                  <dt className="text-sm text-muted">{t('admin.collected')}</dt>
-                  <dd className="numeric text-sm text-calm">
+                  <dt className="text-sm text-muted-foreground">{t('admin.collected')}</dt>
+                  <dd className="numeric text-sm text-success">
                     {formatMoney(line.paidCents, locale, line.currency)}
                   </dd>
                 </div>
                 <div className="mt-1 flex items-baseline justify-between gap-2">
-                  <dt className="text-sm text-muted">{t('admin.outstanding')}</dt>
-                  <dd className={`numeric text-sm ${line.outstandingCents > 0 ? 'text-warn' : ''}`}>
+                  <dt className="text-sm text-muted-foreground">{t('admin.outstanding')}</dt>
+                  <dd className={`numeric text-sm ${line.outstandingCents > 0 ? 'text-warning' : ''}`}>
                     {formatMoney(line.outstandingCents, locale, line.currency)}
                   </dd>
                 </div>

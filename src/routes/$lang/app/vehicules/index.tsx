@@ -56,9 +56,9 @@ function VehiclesPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('vehicle.list.title')}</h1>
-        <span className="numeric text-xs text-muted">
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('vehicle.list.title')}</h1>
+        <span className="numeric text-xs text-muted-foreground">
           {t('vehicle.list.count', { count: vehicles.length })}
         </span>
         <span className="ms-auto">
@@ -89,7 +89,7 @@ function VehiclesPage() {
           />
         </div>
       ) : (
-        <ul className="mt-6 border-t border-rule">
+        <ul className="mt-6 border-t border-border">
           {vehicles.map((vehicle) => (
             <VehicleRow key={vehicle.id} vehicle={vehicle} locale={locale} />
           ))}
@@ -109,11 +109,11 @@ function VehicleRow({
   const { t } = useTranslation()
 
   return (
-    <li className="border-b border-rule">
+    <li className="border-b border-border">
       <Link
         to="/$lang/app/vehicules/$vehicleId"
         params={{ lang: locale, vehicleId: vehicle.id }}
-        className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface-sunken"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-muted"
         /* `--row-height-comfy` (52 px) et non `dense` : sur téléphone, une ligne de
            liste est une CIBLE, pas une rangée de tableau. */
         style={{ minHeight: 'var(--row-height-comfy)' }}
@@ -130,7 +130,7 @@ function VehicleRow({
             liste au pouce, c'est la plaque, le modèle, l'état et l'échéance. Le reste
             est à un tap de distance sur la fiche. */}
         {vehicle.year ? (
-          <span className="numeric hidden text-xs text-muted sm:inline">{vehicle.year}</span>
+          <span className="numeric hidden text-xs text-muted-foreground sm:inline">{vehicle.year}</span>
         ) : null}
 
         <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -148,7 +148,7 @@ function VehicleRow({
                 {t(`alerts.type.${vehicle.nextDeadline.alertType}`)}
               </Badge>
               {vehicle.nextDeadline.dueOn ? (
-                <span className="numeric hidden text-2xs text-muted sm:inline">
+                <span className="numeric hidden text-2xs text-muted-foreground sm:inline">
                   {formatDate(vehicle.nextDeadline.dueOn, locale)}
                 </span>
               ) : null}
@@ -158,15 +158,15 @@ function VehicleRow({
           <Badge variant={STATUS_TONES[vehicle.status] ?? 'neutral'}>
             {t(STATUS_KEYS[vehicle.status] ?? 'vehicle.status.available')}
           </Badge>
-          <span className="numeric text-xs text-muted">
+          <span className="numeric text-xs text-muted-foreground">
             {formatKilometers(vehicle.currentKm, locale)} km
           </span>
           {vehicle.dailyCents !== null ? (
-            <span className="numeric hidden text-xs text-muted sm:inline">
+            <span className="numeric hidden text-xs text-muted-foreground sm:inline">
               {formatMoney(vehicle.dailyCents, locale, 'MAD', { withDecimals: false })}
             </span>
           ) : null}
-          <ChevronEndIcon size={16} className="text-muted" />
+          <ChevronEndIcon size={16} className="text-muted-foreground" />
         </span>
       </Link>
     </li>

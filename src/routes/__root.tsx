@@ -47,7 +47,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-dvh bg-paper text-ink antialiased">
+      <body className="min-h-dvh bg-background text-foreground antialiased">
         <I18nProvider locale={locale}>
           <TopProgress />
           {children}

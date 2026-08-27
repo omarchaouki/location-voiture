@@ -19,11 +19,11 @@ import { cn } from './utils'
  *     (`color-not-only`).
  */
 const CONTROL = [
-  'block w-full min-w-0 rounded-md border border-rule-strong bg-surface px-3 py-2 shadow-control',
-  'text-base text-ink transition-colors',
-  'placeholder:text-muted focus:border-stamp',
+  'block w-full min-w-0 rounded-md border border-input bg-card px-3 py-2 shadow-control',
+  'text-base text-foreground transition-colors',
+  'placeholder:text-muted-foreground focus:border-primary',
   'disabled:cursor-not-allowed disabled:opacity-45',
-  'aria-invalid:border-danger',
+  'aria-invalid:border-destructive',
 ].join(' ')
 
 /** Hauteur minimale des contrôles d'une ligne. Les zones de texte s'en dispensent. */
@@ -33,7 +33,7 @@ export function Label({ className, ...props }: React.ComponentProps<typeof Label
   return (
     <LabelPrimitive.Root
       data-slot="label"
-      className={cn('block text-xs text-muted select-none', className)}
+      className={cn('block text-xs text-muted-foreground select-none', className)}
       {...props}
     />
   )
@@ -86,11 +86,11 @@ export function Field({
     <div data-slot="field" className={cn('grid gap-1.5', className)}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {hint && !error ? <p className="text-2xs text-muted">{hint}</p> : null}
+      {hint && !error ? <p className="text-2xs text-muted-foreground">{hint}</p> : null}
       {/* L'erreur se place SOUS le champ concerné, pas en tête de formulaire : c'est
           là que le regard revient après une soumission refusée (`error-placement`). */}
       {error ? (
-        <p role="alert" className="text-2xs text-danger">
+        <p role="alert" className="text-2xs text-destructive">
           {error}
         </p>
       ) : null}

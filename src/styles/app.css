@@ -1,66 +1,74 @@
 @import 'tailwindcss';
 /*
  * `animate-in`, `fade-in-0`, `zoom-in-95` — les utilitaires d'animation attendus par
- * les primitives Radix de `src/ui/shadcn/`. Ils ne servent QUE là : le reste du
- * produit n'anime que ses squelettes.
+ * les primitives Radix de `src/ui/shadcn/`.
  *
  * Attention, ils ne connaissent que des directions PHYSIQUES. Toute animation qui
- * glisse latéralement (tiroir, panneau) doit être décrite à la main plus bas, avec sa
- * variante `[dir='rtl']` — sinon elle entre à contresens en arabe.
+ * glisse latéralement doit être décrite à la main plus bas, avec sa variante
+ * `[dir='rtl']` — sinon elle entre à contresens en arabe.
  */
 @import 'tw-animate-css';
 @import './fonts.css';
 @import './tokens.css';
 
 /*
- * Jetons exposés à Tailwind. `inline` est nécessaire : les valeurs pointent vers
- * des variables CSS qui changent selon le thème, elles doivent être résolues au
- * moment du rendu et non figées à la compilation.
+ * Jetons exposés à Tailwind. `inline` est nécessaire : les valeurs pointent vers des
+ * variables CSS qui changent selon le thème, elles doivent être résolues au moment du
+ * rendu et non figées à la compilation.
  */
 @theme inline {
-  --color-paper: var(--paper);
-  --color-surface: var(--surface);
-  --color-surface-sunken: var(--surface-sunken);
-  --color-ink: var(--ink);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
   --color-muted: var(--muted);
-  --color-rule: var(--rule);
-  --color-rule-strong: var(--rule-strong);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --color-stamp: var(--stamp);
-  --color-stamp-contrast: var(--stamp-contrast);
-  --color-stamp-wash: var(--stamp-wash);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
 
-  --color-calm: var(--calm);
-  --color-calm-wash: var(--calm-wash);
-  --color-warn: var(--warn);
-  --color-warn-wash: var(--warn-wash);
-  --color-danger: var(--danger);
-  --color-danger-wash: var(--danger-wash);
-
-  /*
-   * Les deux élévations de CONTENU, exposées à Tailwind sous des noms de rôle.
-   *
-   * `shadow-control` sur un bouton ou un champ, `shadow-card` sur une carte, et rien
-   * d'autre : `pnpm check:hardcoded` refuse toute autre classe d'ombre. Nommer le
-   * RÔLE plutôt que l'intensité est ce qui empêche `shadow-lg` d'apparaître un jour
-   * « juste sur ce bloc-là ».
-   */
-  --shadow-control: var(--elevation-control);
-  --shadow-card: var(--elevation-card);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   /*
-   * UNE SEULE VOIX, ET UN SEUL NOM DE FAMILLE.
-   *
-   * `font-display`, `font-sans` et `font-mono` pointent tous vers Inter. Les trois
-   * noms restent parce qu'ils portent une INTENTION — titre, texte, chiffre — et
-   * qu'ils permettront de changer d'avis sans rouvrir vingt-cinq écrans. Ce qui a
-   * disparu, ce sont les trois polices différentes derrière : mélanger un sérif, un
-   * sans et un mono est le premier réflexe d'une maquette produite à la chaîne.
-   *
-   * Les chiffres tabulaires viennent de `font-variant-numeric` (classe `.numeric`),
-   * pas d'une police séparée.
+   * Les DEUX élévations de contenu, nommées par leur rôle. `pnpm check:hardcoded`
+   * refuse toute autre classe d'ombre : nommer le rôle plutôt que l'intensité est ce
+   * qui empêche une élévation graduée d'apparaître « juste sur ce bloc-là ».
    */
-  --font-display: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --shadow-control: var(--shadow-control);
+  --shadow-card: var(--shadow-card);
+
+  /*
+   * RAYONS — l'échelle de shadcn, dérivée d'une seule base. Régler l'arrondi du
+   * produit entier tient en une ligne, et les quatre marches gardent leur écart.
+   */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /*
+   * UNE SEULE VOIX. `font-sans` et `font-mono` pointent tous deux vers Inter : les
+   * deux noms portent une INTENTION — texte, chiffre — et permettront de changer
+   * d'avis sans rouvrir vingt-cinq écrans. Les chiffres tabulaires viennent de
+   * `font-variant-numeric` (classe `.numeric`), pas d'une seconde police.
+   */
   --font-sans: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-mono: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
@@ -68,62 +76,35 @@
 
 @theme {
   /*
-   * Échelle typographique de CONSOLE, pas de site.
+   * L'échelle typographique est celle de TAILWIND, telle quelle.
    *
-   * 14 px de corps, pas 15 : c'est la densité d'une interface qu'on garde ouverte la
-   * journée, où l'on veut voir quarante lignes sans faire défiler. Les champs de
-   * saisie remontent à 16 px sous 640 px de large — la règle non superposée en bas
-   * de ce fichier — parce qu'en dessous, iOS zoome tout seul au premier appui.
+   * La précédente était maison — 14 px de corps, 13 px en `sm` — pour une densité de
+   * console. Elle a été retirée avec le reste de la direction : coller un composant
+   * du catalogue shadcn dans une échelle décalée d'un cran produit un rendu qui n'est
+   * ni l'un ni l'autre, et c'est un des endroits où ça se voyait.
+   *
+   * `--text-2xs` est le seul ajout : 11 px pour les libellés de colonne et les
+   * mentions secondaires, un cran sous le `text-xs` de Tailwind.
    */
-  --text-2xs: 0.6875rem; /* 11px */
+  --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1.45;
-  --text-xs: 0.75rem; /* 12px */
-  --text-xs--line-height: 1.35;
-  --text-sm: 0.8125rem; /* 13px */
-  --text-sm--line-height: 1.4;
-  --text-base: 0.875rem; /* 14px */
-  --text-base--line-height: 1.45;
-  --text-md: 1rem; /* 16px */
-  --text-md--line-height: 1.5;
-  --text-lg: 1.25rem; /* 20px */
-  --text-lg--line-height: 1.4;
-  --text-xl: 1.5rem; /* 24px */
-  --text-xl--line-height: 1.32;
-  --text-2xl: 1.75rem; /* 28px */
-  --text-2xl--line-height: 1.28;
-  --text-3xl: 2.5rem; /* 40px */
-  --text-3xl--line-height: 1.12;
 
   /* Espacement : base 4px. */
   --spacing: 0.25rem;
 
-  /*
-   * RAYONS — l'échelle de shadcn, dérivée d'une seule base (26/08/2026).
-   *
-   * Avant : trois valeurs indépendantes (6, 8, 12 px). Elles étaient défendables une
-   * par une, mais rien ne les reliait : changer d'avis sur l'arrondi du produit
-   * demandait de rouvrir les trois et d'espérer qu'elles restent cohérentes.
-   *
-   * Maintenant tout descend de `--radius-base`. Régler l'arrondi du produit entier,
-   * c'est changer UNE ligne — et les quatre marches gardent leur écart.
-   */
-  --radius-base: 0.625rem; /* 10px */
-  --radius-none: 0;
-  --radius-sm: calc(var(--radius-base) - 4px); /* 6px — cachets, badges */
-  --radius-md: calc(var(--radius-base) - 2px); /* 8px — boutons, champs, entrées */
-  --radius-lg: var(--radius-base); /* 10px — panneaux flottants */
-  --radius-xl: calc(var(--radius-base) + 4px); /* 14px — cartes */
-
-  /* Hauteurs de ligne de registre — la géométrie que les squelettes doivent reproduire. */
-  --row-height-dense: 2.5rem; /* 40px, tableau de l'application */
-  --row-height-comfy: 3.25rem; /* 52px, listes tactiles */
-  --tap-target: 2.75rem; /* 44px, minimum tactile */
+  /* Hauteurs de ligne de tableau — la géométrie que les squelettes reproduisent. */
+  --row-height-dense: 2.5rem;
+  --row-height-comfy: 3.25rem;
 }
 
 @layer base {
+  * {
+    border-color: var(--border);
+  }
+
   html {
-    background-color: var(--paper);
-    color: var(--ink);
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans);
     font-size: 100%;
     -webkit-text-size-adjust: 100%;
@@ -136,46 +117,32 @@
     font-family: var(--font-arabic);
   }
 
-  /*
-   * La hierarchie ne tient plus a un changement de police mais a la graisse et a la
-   * taille. On la pose ici une fois pour toutes plutot que sur chaque titre.
-   */
   h1,
   h2,
   h3,
   h4 {
     font-weight: 600;
-  }
-
-  /*
-   * Le resserrement optique ne s'applique QU'AUX GRANDES TAILLES. Appliqué partout,
-   * il tasse les titres de carte de 13 px et rend la lecture pénible ; c'est une
-   * correction de dessin, pas un effet de style.
-   */
-  h1 {
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
   }
 
   body {
-    background-color: var(--paper);
-    color: var(--ink);
-    font-size: var(--text-base);
-    line-height: var(--text-base--line-height);
+    background-color: var(--background);
+    color: var(--foreground);
     text-align: start;
     /*
      * Aucun débordement horizontal, jamais.
      *
      * Sur téléphone, un seul élément trop large fait glisser TOUTE la page de côté :
-     * l'en-tête se décale, les filets ne tombent plus en face, et l'utilisateur croit
-     * l'application cassée. Le garde-fou est ici plutôt que sur chaque écran.
+     * l'en-tête se décale et l'utilisateur croit l'application cassée. Le garde-fou
+     * est ici plutôt que sur chaque écran.
      */
     overflow-x: hidden;
   }
 
   /*
    * Le délai de 300 ms des navigateurs mobiles disparaît quand l'élément déclare
-   * qu'il n'attend pas un double-tap. Sans cela, chaque bouton du produit répond un
-   * tiers de seconde trop tard — le défaut le plus courant d'une application web sur
+   * qu'il n'attend pas un double-tap. Sans cela, chaque bouton répond un tiers de
+   * seconde trop tard — le défaut le plus courant d'une application web sur
    * téléphone, et le plus facile à corriger.
    */
   button,
@@ -186,21 +153,9 @@
     touch-action: manipulation;
   }
 
-
-  /* Le produit est fait de filets. Aucun élément de contenu ne porte d'ombre. */
-  hr,
-  .rule {
-    border: 0;
-    border-block-start: 1px solid var(--rule);
-  }
-
-  /* Chiffres, plaques, montants : toujours tabulaires, jamais proportionnels. */
   /*
-   * Chiffres, plaques, montants : toujours tabulaires.
-   *
-   * Ce n'est plus une police différente — Inter fournit les chiffres tabulaires par
-   * `font-variant-numeric`. Une colonne de montants s'aligne donc sans changer de
-   * voix au milieu d'un tableau, ce qui était le défaut de la version au mono.
+   * Chiffres, plaques, montants : toujours tabulaires. Une colonne de montants
+   * s'aligne sans changer de voix au milieu d'un tableau.
    */
   .numeric {
     font-family: var(--font-mono);
@@ -210,8 +165,8 @@
 
   /*
    * Isolation bidi : une plaque marocaine mélange chiffres latins et lettre arabe.
-   * Sans isolation, l'ordre des blocs s'inverse à la lecture, y compris en interface française.
-   * docs/DOMAIN.md §6.
+   * Sans isolation, l'ordre des blocs s'inverse à la lecture, y compris en interface
+   * française. docs/DOMAIN.md §6.
    */
   bdi,
   .bidi-isolate {
@@ -219,32 +174,21 @@
   }
 
   /*
-   * L'ANNEAU DE FOCUS, dessin shadcn (26/08/2026).
-   *
-   * C'était un trait plein de 2 px à 2 px d'écart. Lisible, mais dur : sur un champ
-   * arrondi il dessinait un second contour qui semblait appartenir à un autre élément.
-   *
-   * Trois pixels à mi-opacité, collés au bord, se lisent comme un HALO autour du
-   * contrôle — c'est ce que fait shadcn avec `ring-[3px] ring-ring/50`, et c'est plus
-   * doux sans être moins visible : `--focus-ring-soft` reste la teinte de l'accent,
-   * seule son opacité baisse.
-   *
-   * Ce qui ne change pas : le focus ne se supprime JAMAIS. Si cette règle disparaît,
-   * c'est une régression.
+   * L'ANNEAU DE FOCUS, dessin shadcn : trois pixels à mi-opacité, collés au bord.
+   * Le focus ne se supprime JAMAIS. Si cette règle disparaît, c'est une régression.
    */
   :focus-visible {
-    outline: 3px solid var(--focus-ring-soft);
+    outline: 3px solid color-mix(in oklch, var(--ring) 55%, transparent);
     outline-offset: 1px;
   }
 
-  /* Le focus ne se supprime jamais. Si cette règle disparaît, c'est une régression. */
   :focus:not(:focus-visible) {
     outline: none;
   }
 
   ::selection {
-    background-color: var(--stamp-wash);
-    color: var(--ink);
+    background-color: var(--accent);
+    color: var(--accent-foreground);
   }
 }
 
@@ -252,7 +196,7 @@
   /*
    * Icônes directionnelles : miroitées en RTL.
    * Les icônes d'OBJET (voiture, clé, bidon d'huile) ne portent jamais cette classe —
-   * une voiture retournée est une voiture cassée. docs/DESIGN.md §3.
+   * une voiture retournée est une voiture cassée.
    */
   [dir='rtl'] .icon-directional {
     transform: scaleX(-1);
@@ -276,32 +220,18 @@
     transform: translateX(50%);
   }
 
-  /* Marge de registre : le filet qui sépare l'identifiant du contenu. docs/DESIGN.md §1. */
-  .ledger-margin {
-    border-inline-end: 1px solid var(--rule);
-  }
-
   /*
-   * BANDE DÉFILANTE — la barre de navigation sur téléphone.
+   * BANDE DÉFILANTE — la navigation sur téléphone.
    *
-   * Sept rubriques ne tiennent pas sur 375 px. Trois options existaient :
-   *  - les faire passer à la ligne : la barre prend deux ou trois hauteurs et pousse
-   *    le contenu hors de l'écran ;
-   *  - les cacher derrière un menu « hamburger » : la navigation devient invisible,
-   *    donc oubliée (`nav-label-icon`, `persistent-nav`) ;
-   *  - les faire défiler horizontalement : la première reste visible, les autres
-   *    s'atteignent d'un glissement. C'est le choix retenu.
-   *
-   * La barre déborde EXPRÈS de la gouttière (`-mx-4 px-4`) pour que le défilement
-   * commence au bord de l'écran : un contenu qui s'arrête à 16 px du bord donne
-   * l'impression qu'il n'y a rien de plus à voir.
+   * Sept rubriques ne tiennent pas sur 375 px. Les faire passer à la ligne prend
+   * trois hauteurs ; les cacher derrière un menu les rend invisibles, donc oubliées.
+   * Elles défilent donc horizontalement, et la bande déborde EXPRÈS de la gouttière
+   * pour que le défilement commence au bord de l'écran.
    */
   .nav-strip {
     overflow-x: auto;
     scrollbar-width: none;
     scroll-snap-type: x proximity;
-    /* Le glissement horizontal reste au doigt ; le défilement vertical de la page
-       n'est pas capturé (`pan-y` explicite). */
     touch-action: pan-x pan-y;
     overscroll-behavior-x: contain;
   }
@@ -315,9 +245,94 @@
     flex: 0 0 auto;
   }
 
-  /* Animation de squelette — un balayage sobre, désactivé en mouvement réduit. */
+  /*
+   * TIROIR — glissement en propriétés LOGIQUES.
+   *
+   * `tw-animate-css` ne fournit que des directions physiques. En arabe, un tiroir
+   * animé « depuis la gauche » entre à contresens de l'endroit où il apparaît. On
+   * écrit donc les trajets à la main, avec leur miroir RTL.
+   */
+  .sheet-side-start,
+  .sheet-side-end,
+  .sheet-side-bottom {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-fill-mode: both;
+  }
+
+  /* La sortie est plus courte que l'entrée : une fermeture qui traîne se sent lente. */
+  .sheet-side-start[data-state='closed'],
+  .sheet-side-end[data-state='closed'],
+  .sheet-side-bottom[data-state='closed'] {
+    animation-duration: 150ms;
+  }
+
+  .sheet-side-start[data-state='open'] {
+    animation-name: sheet-in-start;
+  }
+  .sheet-side-start[data-state='closed'] {
+    animation-name: sheet-out-start;
+  }
+  .sheet-side-end[data-state='open'] {
+    animation-name: sheet-in-end;
+  }
+  .sheet-side-end[data-state='closed'] {
+    animation-name: sheet-out-end;
+  }
+  .sheet-side-bottom[data-state='open'] {
+    animation-name: sheet-in-bottom;
+  }
+  .sheet-side-bottom[data-state='closed'] {
+    animation-name: sheet-out-bottom;
+  }
+
+  [dir='rtl'] .sheet-side-start[data-state='open'] {
+    animation-name: sheet-in-end;
+  }
+  [dir='rtl'] .sheet-side-start[data-state='closed'] {
+    animation-name: sheet-out-end;
+  }
+  [dir='rtl'] .sheet-side-end[data-state='open'] {
+    animation-name: sheet-in-start;
+  }
+  [dir='rtl'] .sheet-side-end[data-state='closed'] {
+    animation-name: sheet-out-start;
+  }
+
+  @keyframes sheet-in-start {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes sheet-out-start {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes sheet-in-end {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheet-out-end {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheet-in-bottom {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes sheet-out-bottom {
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  /* Squelette — un balayage sobre, désactivé en mouvement réduit. */
   .skeleton {
-    background-color: var(--surface-sunken);
+    background-color: var(--muted);
     position: relative;
     overflow: hidden;
   }
@@ -326,7 +341,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, var(--rule), transparent);
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
     opacity: 0.45;
     transform: translateX(-100%);
     animation: skeleton-sweep 1.4s ease-in-out infinite;
@@ -369,23 +384,17 @@
   }
 }
 
-
 /*
  * SEIZE pixels dans les champs sur téléphone — et seulement là.
  *
- * L'échelle typographique du produit pose le corps de texte à 15 px (docs/DESIGN.md
- * §4), ce qui est juste sur un écran d'ordinateur. Mais Safari iOS ZOOME
- * automatiquement dès qu'un champ de saisie descend sous 16 px : l'écran grossit à la
- * mise au point, l'utilisateur perd le cadrage, et il doit dézoomer à la main après
- * chaque champ. L'un des défauts les plus courants d'une application web sur iPhone,
- * et il ne se voit jamais depuis un ordinateur.
- *
- * On ne touche donc pas à l'échelle : on relève les CHAMPS, en dessous de `sm`.
+ * Safari iOS ZOOME automatiquement dès qu'un champ de saisie descend sous 16 px :
+ * l'écran grossit à la mise au point, l'utilisateur perd le cadrage, et il doit
+ * dézoomer à la main après chaque champ. L'un des défauts les plus courants d'une
+ * application web sur iPhone, et il ne se voit jamais depuis un ordinateur.
  *
  * **Hors de toute couche** (`@layer`), et c'est délibéré : les utilitaires Tailwind
- * — `text-base` sur chaque champ — l'emportent sur la couche `base` quelle que soit
- * la spécificité. Placée dans `base`, cette règle ne s'appliquait pas ; mesuré à
- * l'écran, les champs restaient à 15 px.
+ * l'emportent sur la couche `base` quelle que soit la spécificité. Placée dans
+ * `base`, cette règle ne s'appliquait pas — mesuré à l'écran.
  */
 @media (max-width: 39.99rem) {
   input,

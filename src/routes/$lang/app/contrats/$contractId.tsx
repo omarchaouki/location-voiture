@@ -77,8 +77,8 @@ function ContractPage() {
 
   return (
     <div className="max-w-3xl">
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-rule pb-3">
-        <span className="numeric font-display text-2xl">{contract.reference}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-border pb-3">
+        <span className="numeric text-2xl">{contract.reference}</span>
         <Badge variant={STATUS_TONES[contract.status] ?? 'neutral'}>
           {t(`contract.statuses.${contract.status}`)}
         </Badge>
@@ -94,7 +94,7 @@ function ContractPage() {
       </header>
 
       {/* --- Les parties et la période, comme sur un contrat papier. --- */}
-      <dl className="mt-6 grid gap-px bg-rule sm:grid-cols-2">
+      <dl className="mt-6 grid gap-px bg-border sm:grid-cols-2">
         <Row label={t('contract.customer')} value={file.customerLabel} />
         <Row label={t('contract.vehicle')} value={file.vehicleLabel} />
         <Row
@@ -124,7 +124,7 @@ function ContractPage() {
       </dl>
 
       {/* --- Les montants, en chiffres tabulaires alignés. --- */}
-      <dl className="mt-8 border-t border-rule">
+      <dl className="mt-8 border-t border-border">
         <Money label={`${contract.daysBilled} ${t('contract.days')}`} value={contract.subtotalCents} locale={locale} />
         <Money label={t('contract.vat')} value={contract.vatCents} locale={locale} />
         <Money label={t('contract.total')} value={contract.totalCents} locale={locale} strong />
@@ -146,7 +146,7 @@ function ContractPage() {
       {/* --- Les gestes du comptoir. --- */}
       {contract.status === 'reservation' ? (
         <form method="post"
-          className="mt-8 grid gap-4 border-t border-rule pt-6 sm:grid-cols-2"
+          className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"
           onSubmit={(event) => {
             event.preventDefault()
             const form = new FormData(event.currentTarget)
@@ -173,7 +173,7 @@ function ContractPage() {
 
       {contract.status === 'active' || contract.status === 'late' ? (
         <form method="post"
-          className="mt-8 grid gap-4 border-t border-rule pt-6 sm:grid-cols-2"
+          className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2"
           onSubmit={(event) => {
             event.preventDefault()
             const form = new FormData(event.currentTarget)
@@ -208,7 +208,7 @@ function ContractPage() {
       {/* --- Encaissement, tant qu'il reste quelque chose à payer. --- */}
       {remaining > 0 && contract.status !== 'cancelled' ? (
         <form method="post"
-          className="mt-8 grid gap-4 border-t border-rule pt-6 sm:grid-cols-3"
+          className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-3"
           onSubmit={(event) => {
             event.preventDefault()
             const form = new FormData(event.currentTarget)
@@ -244,7 +244,7 @@ function ContractPage() {
 
       {contract.status === 'reservation' || contract.status === 'active' ? (
         <form method="post"
-          className="mt-8 flex flex-wrap items-end gap-4 border-t border-rule pt-6"
+          className="mt-8 flex flex-wrap items-end gap-4 border-t border-border pt-6"
           onSubmit={(event) => {
             event.preventDefault()
             const form = new FormData(event.currentTarget)
@@ -269,8 +269,8 @@ function ContractPage() {
 
 function Row({ label, value, numeric }: { label: string; value: string; numeric?: boolean }) {
   return (
-    <div className="bg-paper p-3">
-      <dt className="text-xs text-muted">{label}</dt>
+    <div className="bg-background p-3">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className={`mt-1 text-sm${numeric ? ' numeric' : ''}`}>{value}</dd>
     </div>
   )
@@ -290,10 +290,10 @@ function Money({
   warn?: boolean
 }) {
   return (
-    <div className="flex items-baseline justify-between border-b border-rule py-2">
-      <dt className={`text-sm${strong ? ' font-medium' : ' text-muted'}`}>{label}</dt>
+    <div className="flex items-baseline justify-between border-b border-border py-2">
+      <dt className={`text-sm${strong ? ' font-medium' : ' text-muted-foreground'}`}>{label}</dt>
       <dd
-        className={`numeric text-sm${strong ? ' font-medium' : ''}${warn ? ' text-warn' : ''}`}
+        className={`numeric text-sm${strong ? ' font-medium' : ''}${warn ? ' text-warning' : ''}`}
       >
         {formatMoney(value, locale)}
       </dd>

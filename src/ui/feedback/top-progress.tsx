@@ -77,7 +77,7 @@ export function TopProgress() {
   return (
     <div className="pointer-events-none fixed top-0 start-0 end-0 z-50 h-[2px]" aria-hidden="true">
       <div
-        className="origin-inline-start h-full bg-stamp transition-[transform,opacity] duration-150 ease-out"
+        className="origin-inline-start h-full bg-primary transition-[transform,opacity] duration-150 ease-out"
         style={{ transform: `scaleX(${displayed})`, opacity: busy ? 1 : 0 }}
       />
     </div>

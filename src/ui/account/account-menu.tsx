@@ -46,7 +46,7 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('account.menuLabel')}
-        className="flex w-full items-center gap-2.5 rounded-md px-2 text-sm text-muted transition-colors hover:bg-surface-sunken hover:text-ink data-[state=open]:bg-surface-sunken"
+        className="flex w-full items-center gap-2.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted"
         style={{ minHeight: 'var(--tap-target)' }}
       >
         <Initials name={viewer.name} />
@@ -58,16 +58,16 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
 
       <DropdownMenuContent align="end" className="min-w-60">
         <div className="px-2 py-2">
-          <p className="text-sm font-medium text-ink">{viewer.name}</p>
+          <p className="text-sm font-medium text-foreground">{viewer.name}</p>
           {/* L'adresse peut être longue : elle se coupe proprement plutôt que de
               forcer le panneau à s'élargir. */}
-          <p className="truncate text-2xs text-muted" title={viewer.email}>
+          <p className="truncate text-2xs text-muted-foreground" title={viewer.email}>
             {viewer.email}
           </p>
 
           {organization ? (
             <p className="mt-2.5 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-ink">{organization.name}</span>
+              <span className="text-xs text-foreground">{organization.name}</span>
               <Badge variant="secondary">{t(`role.${organization.role}`)}</Badge>
             </p>
           ) : null}
@@ -88,7 +88,7 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
                   void navigate({ to: '/$lang/app/reglages', params: { lang: locale } })
                 }}
               >
-                <Settings className="text-muted" aria-hidden="true" />
+                <Settings className="text-muted-foreground" aria-hidden="true" />
                 <span>{t('nav.settings')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -96,7 +96,7 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
                   void navigate({ to: '/$lang/app/abonnement', params: { lang: locale } })
                 }}
               >
-                <Receipt className="text-muted" aria-hidden="true" />
+                <Receipt className="text-muted-foreground" aria-hidden="true" />
                 <span>{t('nav.billing')}</span>
               </DropdownMenuItem>
             </>
@@ -108,7 +108,7 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
                 void navigate({ to: '/$lang/admin', params: { lang: locale } })
               }}
             >
-              <LayoutDashboard className="text-muted" aria-hidden="true" />
+              <LayoutDashboard className="text-muted-foreground" aria-hidden="true" />
               <span>{t('admin.title')}</span>
             </DropdownMenuItem>
           ) : null}
@@ -153,7 +153,7 @@ function Initials({ name }: { name: string }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-md bg-stamp-wash text-2xs font-semibold text-stamp"
+      className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-2xs font-semibold text-primary"
     >
       {initials}
     </span>

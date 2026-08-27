@@ -40,12 +40,12 @@ import type { Destination } from './destinations'
  * l'ICÔNE seule — présence de la marque, sans confusion de rôle.
  */
 const SIDE_LINK =
-  'group flex items-center gap-3 rounded-md px-2.5 text-sm text-muted transition-colors hover:bg-surface-sunken hover:text-ink aria-[current=page]:bg-surface-sunken aria-[current=page]:font-medium aria-[current=page]:text-ink'
+  'group flex items-center gap-3 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground'
 
-const SIDE_ICON = 'shrink-0 text-muted group-aria-[current=page]:text-stamp'
+const SIDE_ICON = 'shrink-0 text-muted-foreground group-aria-[current=page]:text-primary'
 
 const STRIP_LINK =
-  'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2.5 text-sm text-muted transition-colors hover:text-ink aria-[current=page]:bg-surface-sunken aria-[current=page]:font-medium aria-[current=page]:text-ink'
+  'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground'
 
 const TAP = { minHeight: 'var(--tap-target)' } as const
 
@@ -148,17 +148,17 @@ export function Shell({
   return (
     <div className="lg:flex lg:min-h-dvh">
       {/* ---- Barre latérale : à partir de 1024 px seulement ---- */}
-      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-e lg:border-rule lg:bg-surface">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-e lg:border-border lg:bg-card">
         <div className="px-4 py-4">
-          <Link to={home} params={{ lang: locale }} className="text-md font-semibold">
+          <Link to={home} params={{ lang: locale }} className="text-base font-semibold">
             {t('brand.name')}
           </Link>
-          {subtitle ? <p className="mt-0.5 truncate text-xs text-muted">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p> : null}
         </div>
 
         <SideRail locale={locale} destinations={destinations} label={t('nav.primary')} />
 
-        <div className="border-t border-rule p-3">
+        <div className="border-t border-border p-3">
           <div className="mb-2 flex items-center gap-3">
             <ThemeMenu />
             <LanguageSwitcher current={locale} />
@@ -169,9 +169,9 @@ export function Shell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- En-tête de téléphone et de tablette ---- */}
-        <header className="sticky top-0 z-20 border-b border-rule bg-surface lg:hidden">
+        <header className="sticky top-0 z-20 border-b border-border bg-card lg:hidden">
           <div className="flex items-center gap-3 px-4 py-2 sm:px-6">
-            <Link to={home} params={{ lang: locale }} className="text-md font-semibold">
+            <Link to={home} params={{ lang: locale }} className="text-base font-semibold">
               {t('brand.name')}
             </Link>
             <div className="ms-auto flex items-center gap-3">
@@ -185,7 +185,7 @@ export function Shell({
           </div>
         </header>
 
-        {banners ? <div className="border-b border-rule">{banners}</div> : null}
+        {banners ? <div className="border-b border-border">{banners}</div> : null}
 
         <main id="content" className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}

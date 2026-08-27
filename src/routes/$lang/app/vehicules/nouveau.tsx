@@ -107,8 +107,8 @@ function NewVehiclePage() {
 
   return (
     <div className="max-w-2xl">
-      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('vehicle.form.title')}</h1>
+      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('vehicle.form.title')}</h1>
         <span className="ms-auto">
           <Link
             to="/$lang/app/vehicules"
@@ -148,16 +148,16 @@ function NewVehiclePage() {
         <Text name="deposit" label={t('vehicle.form.deposit')} type="number" />
 
         <label className="block sm:col-span-2">
-          <span className="text-xs text-muted">{t('vehicle.form.notes')}</span>
+          <span className="text-xs text-muted-foreground">{t('vehicle.form.notes')}</span>
           <textarea
             name="notes"
             rows={3}
-            className="mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+            className="mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
           />
         </label>
 
         {error ? (
-          <p role="alert" className="border-s-2 border-danger ps-3 text-sm text-danger sm:col-span-2">
+          <p role="alert" className="border-s-2 border-destructive ps-3 text-sm text-destructive sm:col-span-2">
             {error}
           </p>
         ) : null}
@@ -187,15 +187,15 @@ function Text({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <input
         name={name}
         type={type}
         required={required}
-        className="numeric mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+        className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
         style={{ minHeight: 'var(--tap-target)' }}
       />
-      {hint ? <span className="mt-1 block text-2xs text-muted">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-2xs text-muted-foreground">{hint}</span> : null}
     </label>
   )
 }
@@ -216,10 +216,10 @@ function Select({
 
   return (
     <label className="block">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <select
         name={name}
-        className="mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+        className="mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
         style={{ minHeight: 'var(--tap-target)' }}
       >
         {options.map((option) => (

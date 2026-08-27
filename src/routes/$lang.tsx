@@ -44,7 +44,7 @@ function LanguageLayout() {
     <div className="min-h-dvh">
       <a
         href="#content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:border focus:border-rule-strong focus:bg-surface focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:border focus:border-input focus:bg-card focus:px-3 focus:py-2"
       >
         {t('nav.skipToContent')}
       </a>

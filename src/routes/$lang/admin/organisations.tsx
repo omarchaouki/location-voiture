@@ -151,7 +151,7 @@ function AdminOrganizationsPage() {
       <header className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1">
           <h1 className="text-lg font-semibold tracking-tight">{t('admin.organizations')}</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted">{t('admin.organizationsBody')}</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t('admin.organizationsBody')}</p>
         </div>
         <Badge variant="secondary" className="numeric">
           {organizations.length} {t('admin.organizationsCount')}
@@ -194,7 +194,7 @@ function AdminOrganizationsPage() {
                 <TableRow key={org.id}>
                   <TableCell>
                     <span className="font-medium">{org.name}</span>
-                    <span className="numeric block text-xs text-muted">
+                    <span className="numeric block text-xs text-muted-foreground">
                       {org.slug}
                       {org.city ? ` · ${org.city}` : ''}
                     </span>
@@ -213,7 +213,7 @@ function AdminOrganizationsPage() {
                     <Badge variant={org.status === 'active' ? 'calm' : 'warn'}>{org.status}</Badge>
                   </TableCell>
                   <TableCell className="numeric text-end">{org.memberCount}</TableCell>
-                  <TableCell className="numeric hidden text-end text-muted lg:table-cell">
+                  <TableCell className="numeric hidden text-end text-muted-foreground lg:table-cell">
                     {formatDate(org.createdAt, locale)}
                   </TableCell>
                   <TableCell className="text-end">
@@ -243,7 +243,7 @@ function AdminOrganizationsPage() {
       */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-md">{t('admin.newOrganization')}</CardTitle>
+          <CardTitle className="text-base">{t('admin.newOrganization')}</CardTitle>
           <CardDescription>{t('admin.ownerEmailHint')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -326,7 +326,7 @@ function RowNotice({
 
   if (notice?.kind === 'sent') {
     return (
-      <p role="status" className="mt-1.5 text-xs text-calm">
+      <p role="status" className="mt-1.5 text-xs text-success">
         {t('admin.invitationResent', { email: notice.message })}
       </p>
     )
@@ -334,7 +334,7 @@ function RowNotice({
 
   if (notice?.kind === 'error') {
     return (
-      <p role="alert" className="mt-1.5 text-xs text-danger">
+      <p role="alert" className="mt-1.5 text-xs text-destructive">
         {notice.message}
       </p>
     )
@@ -343,7 +343,7 @@ function RowNotice({
   if (org.ownerUserId === null) {
     return (
       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-xs text-warn">{t('admin.noOwnerYet')}</span>
+        <span className="text-xs text-warning">{t('admin.noOwnerYet')}</span>
         {/*
           Le bouton n'apparaît QUE s'il y a une adresse à qui écrire.
 
@@ -355,7 +355,7 @@ function RowNotice({
         */}
         {org.pendingInviteEmail ? (
           <>
-            <span className="text-xs text-muted">{org.pendingInviteEmail}</span>
+            <span className="text-xs text-muted-foreground">{org.pendingInviteEmail}</span>
             <Button
               variant="link"
               size="sm"
@@ -367,7 +367,7 @@ function RowNotice({
             </Button>
           </>
         ) : (
-          <span className="text-xs text-muted">{t('admin.noInvitationOnFile')}</span>
+          <span className="text-xs text-muted-foreground">{t('admin.noInvitationOnFile')}</span>
         )}
       </div>
     )

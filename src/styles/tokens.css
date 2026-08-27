@@ -1,141 +1,159 @@
 /*
- * JETONS DE DESIGN. Source : docs/DESIGN.md.
+ * JETONS DE DESIGN — le thème shadcn/ui, repris tel quel.
  *
- * Règles qui ne se négocient pas :
- *  - Aucune couleur littérale ailleurs que dans ce fichier.
- *  - Les couleurs sont nommées par RÔLE, jamais par teinte.
- *  - `--stamp` (l'accent unique) ne marque que « aujourd'hui » et « la prochaine action ».
+ * Réécrits de zéro le 27/08/2026. Ce qui les précédait était une direction maison
+ * (« Registre ») : papier beige puis gris, accent vert, structure aux filets, cachets
+ * inclinés. Elle a été retirée entièrement, pas adaptée.
  *
- * DIRECTION : console d'administration, dessin shadcn/ui (refonte du 26/08/2026).
+ * Les noms sont désormais ceux de shadcn — `--background`, `--foreground`, `--card`,
+ * `--primary`, `--muted`, `--border`, `--ring` — et ce n'est pas cosmétique : c'est
+ * ce qui permet de coller un composant du catalogue sans traduire une seule classe.
+ * C'était l'écart qui faisait que le produit « ressemblait au même design » alors que
+ * Radix tournait déjà dessous.
  *
- * Les gris sont NEUTRES (chroma 0). C'est le changement le plus important de cette
- * révision, et le moins visible écrit ainsi : la version précédente teintait le fond,
- * l'encre et les filets en vert, ce qui donne à toute interface l'aspect d'un thème
- * appliqué par-dessus — le « tout est de la même couleur » qui trahit une maquette
- * générée. Une console professionnelle est grise, et sa couleur de marque n'apparaît
- * que là où il faut agir.
+ * TROIS AJOUTS au thème d'origine, et ils sont tous les trois du métier :
+ *
+ *  - `--warning` et `--success`. shadcn ne livre que `--destructive`, ce qui suffit à
+ *    une application de démonstration. Un loueur a besoin de distinguer « expire dans
+ *    trente jours » de « expiré depuis hier » : deux niveaux de gravité, deux
+ *    couleurs, et la couleur ne porte jamais l'information seule.
+ *  - `--tap-target`. 44 px, non négociable : l'écran principal du produit est un
+ *    téléphone posé sur un comptoir, pas un écran de bureau.
+ *  - `--overlay-backdrop`. Le voile des tiroirs et dialogues, assez opaque pour que
+ *    l'arrière-plan cesse de rivaliser.
+ *
+ * Règles inchangées : aucune couleur littérale ailleurs que dans ce fichier, et les
+ * couleurs sont nommées par RÔLE, jamais par teinte. `pnpm check:tokens` mesure les
+ * contrastes réels dans les deux thèmes et échoue sous le seuil.
  */
 
 :root {
   color-scheme: light;
 
-  /* --- Surfaces et encre. Chroma 0 : aucun gris n'est teinté. ---------- */
-  --paper: oklch(0.966 0 0);
-  --surface: oklch(1 0 0);
-  --surface-sunken: oklch(0.978 0 0);
-  --ink: oklch(0.29 0 0);
-  --muted: oklch(0.5 0 0);
-  --rule: oklch(0.9 0 0);
-  /*
-   * Bordure de CONTRÔLE (champ, bouton). Volontairement plus sombre que le filet
-   * décoratif : WCAG 1.4.11 demande 3:1 sur le pourtour d'un élément interactif, et
-   * un champ dont on ne voit pas les bords est un champ qu'on ne remplit pas.
-   */
-  --rule-strong: oklch(0.615 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
 
-  /* --- Accent unique : le vert de la marque --------------------------- */
-  --stamp: oklch(0.49 0.115 163);
-  --stamp-contrast: oklch(1 0 0);
-  --stamp-wash: oklch(0.958 0.024 163);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
 
   /* --- Sévérité : fonctionnelle, jamais décorative -------------------- */
-  --calm: oklch(0.5 0.09 172);
-  --calm-wash: oklch(0.955 0.024 172);
-  --warn: oklch(0.548 0.132 66);
-  --warn-wash: oklch(0.958 0.042 75);
-  --danger: oklch(0.505 0.19 26);
-  --danger-wash: oklch(0.955 0.03 26);
+  --destructive: oklch(0.505 0.19 26);
+  --destructive-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.548 0.132 66);
+  --warning-foreground: oklch(0.985 0 0);
+  --success: oklch(0.5 0.09 172);
+  --success-foreground: oklch(0.985 0 0);
 
-  /* --- Élévation ------------------------------------------------------
-   * TROIS jetons, et trois seulement. Aucune ombre écrite à la main n'est permise
-   * ailleurs — `pnpm check:hardcoded` le vérifie, et n'accepte que les classes qui
-   * résolvent vers l'un de ces trois.
-   *
-   *  - `--elevation-control` : boutons, champs, sélecteurs. Ajoutée le 26/08/2026
-   *    avec l'adoption du dessin shadcn. C'est UN pixel de portée, pas un relief :
-   *    elle décolle le contrôle du papier juste assez pour qu'on le lise comme
-   *    cliquable, ce que le filet seul ne faisait pas.
-   *  - `--elevation-card` : le liseré porté des cartes. Il ne remplace pas le filet,
-   *    il l'accompagne.
-   *  - `--overlay-shadow` : réservée à la couche flottante (menu, dialogue, tiroir),
-   *    la seule famille de surfaces autorisée à vraiment décoller.
-   *
-   * La règle qui n'a PAS changé : l'ombre est un jeton, jamais une valeur écrite dans
-   * un composant. C'est ainsi qu'une interface dérive — une ombre à la fois.
+  --border: oklch(0.922 0 0);
+  /*
+   * Bordure de CONTRÔLE (champ, bouton), plus sombre que le filet décoratif.
+   * WCAG 1.4.11 demande 3:1 sur le pourtour d'un élément interactif, et un champ
+   * dont on ne voit pas les bords est un champ qu'on ne remplit pas. shadcn met ici
+   * la même valeur que `--border` ; on la fonce, c'est le seul écart de teinte.
    */
-  --elevation-card: 0 1px 0 oklch(0 0 0 / 0.04), 0 1px 3px oklch(0 0 0 / 0.06);
-  --elevation-control: 0 1px 2px oklch(0 0 0 / 0.05);
-  --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.08), 0 12px 32px oklch(0 0 0 / 0.14);
-  --overlay-backdrop: oklch(0.29 0 0 / 0.36);
+  --input: oklch(0.62 0 0);
+  --ring: oklch(0.62 0 0);
 
-  /* --- Focus ---------------------------------------------------------- */
-  --focus-ring: oklch(0.49 0.115 163);
-  --focus-ring-soft: oklch(0.49 0.115 163 / 0.45);
-  --focus-ring-offset: var(--paper);
+  --radius: 0.625rem;
+
+  /* --- Élévation : trois jetons, et trois seulement ------------------- */
+  --shadow-control: 0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.08), 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow-overlay: 0 4px 6px oklch(0 0 0 / 0.05), 0 10px 32px oklch(0 0 0 / 0.14);
+  --overlay-backdrop: oklch(0.145 0 0 / 0.4);
+
+  /* Cible tactile minimale. Ce n'est pas du style, c'est un comptoir de location. */
+  --tap-target: 2.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
 
-    --paper: oklch(0.185 0 0);
-    --surface: oklch(0.232 0 0);
-    --surface-sunken: oklch(0.158 0 0);
-    --ink: oklch(0.94 0 0);
-    --muted: oklch(0.68 0 0);
-    --rule: oklch(0.32 0 0);
-    --rule-strong: oklch(0.51 0 0);
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
 
-    --stamp: oklch(0.76 0.145 163);
-    --stamp-contrast: oklch(0.17 0.03 163);
-    --stamp-wash: oklch(0.28 0.05 163);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.269 0 0);
+    --popover-foreground: oklch(0.985 0 0);
 
-    --calm: oklch(0.735 0.1 172);
-    --calm-wash: oklch(0.26 0.036 172);
-    --warn: oklch(0.775 0.135 70);
-    --warn-wash: oklch(0.29 0.05 70);
-    --danger: oklch(0.68 0.165 26);
-    --danger-wash: oklch(0.285 0.06 26);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
 
-    --elevation-card: 0 1px 0 oklch(0 0 0 / 0.3), 0 1px 3px oklch(0 0 0 / 0.4);
-    --elevation-control: 0 1px 2px oklch(0 0 0 / 0.35);
-    --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.5), 0 12px 32px oklch(0 0 0 / 0.55);
-    --overlay-backdrop: oklch(0.09 0 0 / 0.64);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.371 0 0);
+    --accent-foreground: oklch(0.985 0 0);
 
-    --focus-ring: oklch(0.76 0.145 163);
-    --focus-ring-soft: oklch(0.76 0.145 163 / 0.45);
-    --focus-ring-offset: var(--paper);
+    /* Remontées en clarté : une couleur de sévérité sur fond sombre doit rester
+       lisible, et les valeurs du thème clair y tombent sous le seuil. */
+    --destructive: oklch(0.68 0.165 26);
+    --destructive-foreground: oklch(0.145 0 0);
+    --warning: oklch(0.775 0.135 70);
+    --warning-foreground: oklch(0.145 0 0);
+    --success: oklch(0.735 0.1 172);
+    --success-foreground: oklch(0.145 0 0);
+
+    --border: oklch(0.35 0 0);
+    --input: oklch(0.556 0 0);
+    --ring: oklch(0.556 0 0);
+
+    --shadow-control: 0 1px 2px oklch(0 0 0 / 0.35);
+    --shadow-card: 0 1px 3px oklch(0 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.35);
+    --shadow-overlay: 0 4px 6px oklch(0 0 0 / 0.4), 0 10px 32px oklch(0 0 0 / 0.55);
+    --overlay-backdrop: oklch(0 0 0 / 0.6);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --paper: oklch(0.185 0 0);
-  --surface: oklch(0.232 0 0);
-  --surface-sunken: oklch(0.158 0 0);
-  --ink: oklch(0.94 0 0);
-  --muted: oklch(0.68 0 0);
-  --rule: oklch(0.32 0 0);
-  --rule-strong: oklch(0.51 0 0);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
 
-  --stamp: oklch(0.76 0.145 163);
-  --stamp-contrast: oklch(0.17 0.03 163);
-  --stamp-wash: oklch(0.28 0.05 163);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.985 0 0);
 
-  --calm: oklch(0.735 0.1 172);
-  --calm-wash: oklch(0.26 0.036 172);
-  --warn: oklch(0.775 0.135 70);
-  --warn-wash: oklch(0.29 0.05 70);
-  --danger: oklch(0.68 0.165 26);
-  --danger-wash: oklch(0.285 0.06 26);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
 
-  --elevation-card: 0 1px 0 oklch(0 0 0 / 0.3), 0 1px 3px oklch(0 0 0 / 0.4);
-  --elevation-control: 0 1px 2px oklch(0 0 0 / 0.35);
-  --overlay-shadow: 0 1px 2px oklch(0 0 0 / 0.5), 0 12px 32px oklch(0 0 0 / 0.55);
-  --overlay-backdrop: oklch(0.09 0 0 / 0.64);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
 
-  --focus-ring: oklch(0.76 0.145 163);
-  --focus-ring-soft: oklch(0.76 0.145 163 / 0.45);
-  --focus-ring-offset: var(--paper);
+  --destructive: oklch(0.68 0.165 26);
+  --destructive-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.775 0.135 70);
+  --warning-foreground: oklch(0.145 0 0);
+  --success: oklch(0.735 0.1 172);
+  --success-foreground: oklch(0.145 0 0);
+
+  --border: oklch(0.35 0 0);
+  --input: oklch(0.556 0 0);
+  --ring: oklch(0.556 0 0);
+
+  --shadow-control: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.5), 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-overlay: 0 4px 6px oklch(0 0 0 / 0.4), 0 10px 32px oklch(0 0 0 / 0.55);
+  --overlay-backdrop: oklch(0 0 0 / 0.6);
 }

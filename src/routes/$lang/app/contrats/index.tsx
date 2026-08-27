@@ -38,9 +38,9 @@ function ContractsPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('contract.title')}</h1>
-        <span className="numeric text-xs text-muted">{contracts.length}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('contract.title')}</h1>
+        <span className="numeric text-xs text-muted-foreground">{contracts.length}</span>
         <span className="ms-auto">
           <Link
             to="/$lang/app/contrats/nouveau"
@@ -57,23 +57,23 @@ function ContractsPage() {
           <EmptyState title={t('contract.empty')} body={t('contract.emptyBody')} />
         </div>
       ) : (
-        <ul className="mt-6 border-t border-rule">
+        <ul className="mt-6 border-t border-border">
           {contracts.map((contract) => (
-            <li key={contract.id} className="border-b border-rule">
+            <li key={contract.id} className="border-b border-border">
               <Link
                 to="/$lang/app/contrats/$contractId"
                 params={{ lang: locale, contractId: contract.id }}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-surface-sunken"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-muted"
                 style={{ minHeight: 'var(--row-height-dense)' }}
               >
                 <span className="ledger-margin numeric w-32 shrink-0 pe-4">
                   {contract.reference}
                 </span>
                 <span className="font-medium">{contract.customerLabel}</span>
-                <span className="text-xs text-muted">{contract.vehicleLabel}</span>
+                <span className="text-xs text-muted-foreground">{contract.vehicleLabel}</span>
 
                 <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className="numeric text-xs text-muted">
+                  <span className="numeric text-xs text-muted-foreground">
                     {formatDate(contract.plannedStartAt.slice(0, 10), locale)} →{' '}
                     {formatDate(contract.plannedEndAt.slice(0, 10), locale)}
                   </span>
@@ -83,7 +83,7 @@ function ContractsPage() {
                   <Badge variant={STATUS_TONES[contract.status] ?? 'neutral'}>
                     {t(`contract.statuses.${contract.status}`)}
                   </Badge>
-                  <ChevronEndIcon size={16} className="text-muted" />
+                  <ChevronEndIcon size={16} className="text-muted-foreground" />
                 </span>
               </Link>
             </li>

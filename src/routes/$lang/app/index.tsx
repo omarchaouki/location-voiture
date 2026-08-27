@@ -145,7 +145,7 @@ function NextDeadlines({ overview, locale }: { overview: AgencyOverview; locale:
           <Link
             to="/$lang/app/alertes"
             params={{ lang: locale }}
-            className="text-xs text-stamp underline underline-offset-4"
+            className="text-xs text-primary underline underline-offset-4"
           >
             {t('alerts.seeAll')}
           </Link>
@@ -161,7 +161,7 @@ function NextDeadlines({ overview, locale }: { overview: AgencyOverview; locale:
           {overview.alerts.soonest.map((alert) => (
             <li
               key={alert.id}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule px-4 py-3 last:border-b-0 sm:px-5"
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3 last:border-b-0 sm:px-5"
             >
               <span className="min-w-0 flex-1 truncate text-sm">
                 {t(`alerts.type.${alert.alertType}`)}
@@ -173,7 +173,7 @@ function NextDeadlines({ overview, locale }: { overview: AgencyOverview; locale:
               <Badge variant={alert.severity === 'critical' ? 'danger' : 'warn'}>
                 {t(`alerts.severity.${alert.severity}`)}
               </Badge>
-              <span className="numeric text-xs text-muted">
+              <span className="numeric text-xs text-muted-foreground">
                 {alert.dueOn ? formatDate(alert.dueOn, locale) : '—'}
               </span>
             </li>
@@ -211,7 +211,7 @@ function FleetBreakdown({ overview, locale }: { overview: AgencyOverview; locale
           <Link
             to="/$lang/app/vehicules"
             params={{ lang: locale }}
-            className="text-xs text-stamp underline underline-offset-4"
+            className="text-xs text-primary underline underline-offset-4"
           >
             {t('admin.seeAll')}
           </Link>
@@ -219,7 +219,7 @@ function FleetBreakdown({ overview, locale }: { overview: AgencyOverview; locale
       />
       <CardBody>
         {fleet.total === 0 ? (
-          <p className="text-sm text-muted">{t('home.fleetEmpty')}</p>
+          <p className="text-sm text-muted-foreground">{t('home.fleetEmpty')}</p>
         ) : (
           <ul className="space-y-3">
             {lines.map((line) => (
@@ -231,11 +231,11 @@ function FleetBreakdown({ overview, locale }: { overview: AgencyOverview; locale
                   </span>
                 </div>
                 <div
-                  className="mt-1 h-1.5 overflow-hidden rounded-sm bg-surface-sunken"
+                  className="mt-1 h-1.5 overflow-hidden rounded-sm bg-muted"
                   role="presentation"
                 >
                   <div
-                    className="h-full bg-stamp"
+                    className="h-full bg-primary"
                     style={{
                       inlineSize: `${Math.round((line.value / fleet.total) * 100)}%`,
                     }}

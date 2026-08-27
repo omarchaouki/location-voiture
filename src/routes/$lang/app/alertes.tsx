@@ -38,11 +38,11 @@ const SEVERITY_TONES: Record<string, BadgeVariant> = {
 }
 
 const SEVERITY_BORDER: Record<string, string> = {
-  blocking: 'border-danger',
-  critical: 'border-danger',
-  high: 'border-warn',
-  medium: 'border-rule-strong',
-  low: 'border-rule',
+  blocking: 'border-destructive',
+  critical: 'border-destructive',
+  high: 'border-warning',
+  medium: 'border-input',
+  low: 'border-border',
 }
 
 function AlertsPage() {
@@ -65,9 +65,9 @@ function AlertsPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('alerts.title')}</h1>
-        <span className="numeric text-xs text-muted">{alerts.length}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('alerts.title')}</h1>
+        <span className="numeric text-xs text-muted-foreground">{alerts.length}</span>
         <span className="ms-auto">
           <Button onClick={() => void rescan()} disabled={busy}>
             {busy ? t('auth.working') : t('alerts.rescan')}
@@ -80,7 +80,7 @@ function AlertsPage() {
           <EmptyState title={t('alerts.none')} body={t('alerts.noneBody')} />
         </div>
       ) : (
-        <ul className="mt-6 border-t border-rule">
+        <ul className="mt-6 border-t border-border">
           {alerts.map((alert) => (
             <AlertRow key={alert.id} alert={alert} locale={locale} />
           ))}
@@ -116,8 +116,8 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
 
   return (
     <li
-      className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule border-s-2 px-4 py-3 ${
-        SEVERITY_BORDER[alert.severity] ?? 'border-s-rule'
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border border-s-2 px-4 py-3 ${
+        SEVERITY_BORDER[alert.severity] ?? 'border-s-border'
       }`}
     >
       <Badge variant={SEVERITY_TONES[alert.severity] ?? 'neutral'}>
@@ -125,15 +125,15 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
       </Badge>
 
       <span className="font-medium">{t(`alerts.type.${alert.alertType}`)}</span>
-      {subject ? <span className="text-sm text-muted">{subject}</span> : null}
+      {subject ? <span className="text-sm text-muted-foreground">{subject}</span> : null}
 
       {alert.dueOn ? (
-        <span className="numeric text-xs text-muted">{formatDate(alert.dueOn, locale)}</span>
+        <span className="numeric text-xs text-muted-foreground">{formatDate(alert.dueOn, locale)}</span>
       ) : null}
 
       {alert.state === 'acknowledged' ? <Badge variant="calm">{t('alerts.acknowledged')}</Badge> : null}
       {alert.state === 'snoozed' && alert.snoozedUntilAt ? (
-        <span className="numeric text-xs text-muted">
+        <span className="numeric text-xs text-muted-foreground">
           {t('alerts.snoozedUntil')} {formatDate(alert.snoozedUntilAt.slice(0, 10), locale)}
         </span>
       ) : null}
@@ -143,7 +143,7 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
           <Link
             to="/$lang/app/vehicules/$vehicleId"
             params={{ lang: locale, vehicleId: alert.entityId }}
-            className="px-2 text-xs text-stamp underline underline-offset-4"
+            className="px-2 text-xs text-primary underline underline-offset-4"
           >
             {t('alerts.open')}
           </Link>

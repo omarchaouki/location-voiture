@@ -50,7 +50,7 @@ function AdminLeadsPage() {
         title={t('admin.leads')}
         description={t('admin.leadsBody')}
         meta={
-          <span className="numeric text-xs text-muted">
+          <span className="numeric text-xs text-muted-foreground">
             {t('admin.leadsPending', { count: pending })}
           </span>
         }
@@ -69,7 +69,7 @@ function AdminLeadsPage() {
             rowKey={(lead) => lead.id}
             rowDetail={(lead) =>
               lead.message ? (
-                <p className="border-s-2 border-rule ps-3 text-xs whitespace-pre-line text-muted">
+                <p className="border-s-2 border-border ps-3 text-xs whitespace-pre-line text-muted-foreground">
                   {lead.message}
                 </p>
               ) : null
@@ -81,7 +81,7 @@ function AdminLeadsPage() {
                 cell: (lead) => (
                   <>
                     <span className="font-medium">{lead.name}</span>
-                    <span className="numeric block text-xs text-muted">
+                    <span className="numeric block text-xs text-muted-foreground">
                       {/*
                         Rangé en E.164, affiché en forme nationale : c'est celle
                         qu'un gérant marocain reconnaît, et celle qu'il recompose.

@@ -34,12 +34,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-stamp text-stamp-contrast hover:opacity-90 active:opacity-95',
-        destructive: 'border border-danger bg-transparent text-danger hover:bg-danger-wash',
-        outline: 'border border-rule-strong bg-surface text-ink hover:bg-surface-sunken',
-        secondary: 'bg-surface-sunken text-ink hover:bg-rule',
-        ghost: 'text-ink shadow-none hover:bg-surface-sunken',
-        link: 'text-stamp shadow-none underline-offset-4 hover:underline',
+        default: 'bg-primary text-primary-foreground hover:opacity-90 active:opacity-95',
+        destructive: 'border border-destructive bg-transparent text-destructive hover:bg-destructive/10',
+        outline: 'border border-input bg-card text-foreground hover:bg-muted',
+        secondary: 'bg-muted text-foreground hover:bg-border',
+        ghost: 'text-foreground shadow-none hover:bg-muted',
+        link: 'text-primary shadow-none underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-11 px-4 py-2',

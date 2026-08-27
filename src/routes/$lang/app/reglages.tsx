@@ -68,17 +68,17 @@ function SettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('settings.title')}</h1>
-        <span className="text-xs text-muted">{t('settings.subtitle')}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('settings.title')}</h1>
+        <span className="text-xs text-muted-foreground">{t('settings.subtitle')}</span>
       </header>
 
-      <h2 className="mt-8 border-b border-rule pb-2 font-display text-md">
+      <h2 className="mt-8 border-b border-border pb-2 text-base">
         {t('settings.orgSection')}
       </h2>
 
       {settings.canEdit ? null : (
-        <p className="mt-3 text-xs text-muted">{t('settings.readOnlyHint')}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{t('settings.readOnlyHint')}</p>
       )}
 
       <form method="post" className="mt-4 grid gap-5 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
@@ -111,12 +111,12 @@ function SettingsPage() {
         />
 
         <label className="block">
-          <span className="text-xs text-muted">{t('settings.defaultLocale')}</span>
+          <span className="text-xs text-muted-foreground">{t('settings.defaultLocale')}</span>
           <select
             name="localeDefault"
             defaultValue={settings.localeDefault}
             disabled={!settings.canEdit}
-            className="mt-1 block w-full rounded-sm border border-rule-strong bg-surface px-3 py-2 text-base disabled:opacity-50"
+            className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base disabled:opacity-50"
             style={{ minHeight: 'var(--tap-target)' }}
           >
             {LOCALES.map((value) => (
@@ -128,13 +128,13 @@ function SettingsPage() {
         </label>
 
         <label className="block">
-          <span className="text-xs text-muted">{t('settings.timezone')}</span>
+          <span className="text-xs text-muted-foreground">{t('settings.timezone')}</span>
           {/* Le fuseau n'est pas modifiable : tout le métier est calculé à
               Africa/Casablanca, y compris son passage à UTC+0 pendant le Ramadan. */}
           <input
             value={settings.timezone}
             readOnly
-            className="numeric mt-1 block w-full rounded-sm border border-rule bg-surface-sunken px-3 py-2 text-base text-muted"
+            className="numeric mt-1 block w-full rounded-sm border border-border bg-muted px-3 py-2 text-base text-muted-foreground"
             style={{ minHeight: 'var(--tap-target)' }}
           />
         </label>
@@ -145,7 +145,7 @@ function SettingsPage() {
               {busy ? t('auth.working') : t('settings.save')}
             </Button>
             {saved ? (
-              <span role="status" className="text-xs text-calm">
+              <span role="status" className="text-xs text-success">
                 {t('settings.saved')}
               </span>
             ) : null}
@@ -153,7 +153,7 @@ function SettingsPage() {
         ) : null}
       </form>
 
-      <h2 className="mt-10 border-b border-rule pb-2 font-display text-md">
+      <h2 className="mt-10 border-b border-border pb-2 text-base">
         {t('settings.planSection')}
       </h2>
       <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -168,10 +168,10 @@ function SettingsPage() {
         </Link>
       </div>
 
-      <h2 className="mt-10 border-b border-rule pb-2 font-display text-md">
+      <h2 className="mt-10 border-b border-border pb-2 text-base">
         {t('settings.preferences')}
       </h2>
-      <p className="mt-3 text-xs text-muted">{t('settings.preferencesHint')}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{t('settings.preferencesHint')}</p>
       <div className="mt-4 flex flex-wrap items-center gap-6">
         <ThemeMenu />
         <LanguageSwitcher current={locale} />
@@ -197,14 +197,14 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <input
         name={name}
         type={type}
         defaultValue={defaultValue}
         disabled={disabled}
         required={required}
-        className="mt-1 block w-full rounded-sm border border-rule-strong bg-surface px-3 py-2 text-base disabled:opacity-50"
+        className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base disabled:opacity-50"
         style={{ minHeight: 'var(--tap-target)' }}
       />
     </label>

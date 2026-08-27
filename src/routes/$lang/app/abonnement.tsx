@@ -68,9 +68,9 @@ function BillingPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('billing.title')}</h1>
-        <span className="text-xs text-muted">{t('billing.subtitle')}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('billing.title')}</h1>
+        <span className="text-xs text-muted-foreground">{t('billing.subtitle')}</span>
         <span className="ms-auto">
           <Button
             disabled={busy}
@@ -91,12 +91,12 @@ function BillingPage() {
         chose de cet écran qui appelle une action, et elle doit se voir sans crier.
       */}
       {billing.status === 'read_only' ? (
-        <p role="status" className="mt-6 border-y-2 border-danger px-4 py-3 text-sm text-danger">
+        <p role="status" className="mt-6 border-y-2 border-destructive px-4 py-3 text-sm text-destructive">
           {t('billing.readOnlyNotice')}
         </p>
       ) : null}
       {billing.status === 'past_due' ? (
-        <p role="status" className="mt-6 border-y-2 border-warn px-4 py-3 text-sm">
+        <p role="status" className="mt-6 border-y-2 border-warning px-4 py-3 text-sm">
           {t('billing.pastDueNotice')}
         </p>
       ) : null}
@@ -128,11 +128,11 @@ function BillingPage() {
       </dl>
 
       {billing.cancelAtPeriodEnd ? (
-        <p className="mt-4 text-xs text-muted">{t('billing.cancelAtPeriodEnd')}</p>
+        <p className="mt-4 text-xs text-muted-foreground">{t('billing.cancelAtPeriodEnd')}</p>
       ) : null}
 
       <section className="mt-10">
-        <h2 className="border-b border-rule pb-2 font-display text-md">{t('billing.usageTitle')}</h2>
+        <h2 className="border-b border-border pb-2 text-base">{t('billing.usageTitle')}</h2>
         <ul className="mt-2">
           {billing.usage.map((line) => (
             <UsageRow key={line.counter} line={line} locale={locale} />
@@ -141,22 +141,22 @@ function BillingPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="border-b border-rule pb-2 font-display text-md">
+        <h2 className="border-b border-border pb-2 text-base">
           {t('billing.invoicesTitle')}
         </h2>
         {billing.invoices.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">{t('billing.invoicesEmpty')}</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t('billing.invoicesEmpty')}</p>
         ) : (
           <ul className="mt-2">
             {billing.invoices.map((invoice) => (
               <li
                 key={invoice.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule px-4 py-2"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2"
                 style={{ minHeight: 'var(--row-height-dense)' }}
               >
                 <span className="ledger-margin numeric w-24 sm:w-32 shrink-0 pe-4">{invoice.number}</span>
                 {invoice.issuedOn ? (
-                  <span className="numeric text-xs text-muted">
+                  <span className="numeric text-xs text-muted-foreground">
                     {formatDate(invoice.issuedOn, locale)}
                   </span>
                 ) : null}
@@ -177,8 +177,8 @@ function BillingPage() {
 
 function Line({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-baseline gap-3 border-b border-rule pb-2">
-      <dt className="text-xs text-muted">{label}</dt>
+    <div className="flex items-baseline gap-3 border-b border-border pb-2">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="ms-auto">{children}</dd>
     </div>
   )
@@ -195,7 +195,7 @@ function UsageRow({ line, locale }: { line: UsageLine; locale: Locale }) {
 
   return (
     <li
-      className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule px-4 py-2"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2"
       style={{ minHeight: 'var(--row-height-dense)' }}
     >
       <span className="text-sm">{t(COUNTER_KEYS[line.counter] ?? 'billing.counterVehicles')}</span>

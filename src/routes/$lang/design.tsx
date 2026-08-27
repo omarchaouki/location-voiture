@@ -59,15 +59,15 @@ const PALETTE: ReadonlyArray<{ token: string; role: string }> = [
 ]
 
 const TYPE_SCALE: ReadonlyArray<{ className: string; label: string }> = [
-  { className: 'text-3xl font-display', label: '3xl · 40 · display' },
-  { className: 'text-2xl font-display', label: '2xl · 32 · display' },
-  { className: 'text-xl font-display', label: 'xl · 25 · display' },
+  { className: 'text-3xl', label: '3xl · 40 · display' },
+  { className: 'text-2xl', label: '2xl · 32 · display' },
+  { className: 'text-xl', label: 'xl · 25 · display' },
   { className: 'text-lg', label: 'lg · 20 · sans' },
-  { className: 'text-md', label: 'md · 17 · sans' },
+  { className: 'text-base', label: 'md · 17 · sans' },
   { className: 'text-base', label: 'base · 15 · sans' },
   { className: 'text-sm', label: 'sm · 13 · sans' },
-  { className: 'text-xs text-muted', label: 'xs · 12 · sans' },
-  { className: 'text-2xs text-muted', label: '2xs · 11 · sans' },
+  { className: 'text-xs text-muted-foreground', label: 'xs · 12 · sans' },
+  { className: 'text-2xs text-muted-foreground', label: '2xs · 11 · sans' },
 ]
 
 function DesignPage() {
@@ -92,19 +92,19 @@ function DesignPage() {
   return (
     <div className="space-y-14">
       <header className="max-w-prose">
-        <h1 className="font-display text-2xl">{t('design.title')}</h1>
-        <p className="mt-3 text-sm text-muted">{t('design.intro')}</p>
-        <p className="mt-2 text-xs text-muted">
+        <h1 className="text-2xl">{t('design.title')}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{t('design.intro')}</p>
+        <p className="mt-2 text-xs text-muted-foreground">
           <span className="numeric">{i18n.language}</span> · {today}
         </p>
       </header>
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('design.timeline')}>
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-rule pb-3">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-border pb-3">
           <Plate value="12345 | أ | 6" size="lg" />
-          <span className="font-display text-md">Dacia Logan 2023</span>
-          <span className="text-xs text-muted">
+          <span className="text-base">Dacia Logan 2023</span>
+          <span className="text-xs text-muted-foreground">
             {formatKilometers(91340, locale)} km · {formatMoney(28000, locale)}
           </span>
           <span className="ms-auto">
@@ -116,17 +116,17 @@ function DesignPage() {
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('design.palette')}>
-        <ul className="grid gap-px bg-rule sm:grid-cols-2">
+        <ul className="grid gap-px bg-border sm:grid-cols-2">
           {PALETTE.map((swatch) => (
-            <li key={swatch.token} className="flex items-center gap-3 bg-paper p-3">
+            <li key={swatch.token} className="flex items-center gap-3 bg-background p-3">
               <span
-                className="h-9 w-9 shrink-0 border border-rule-strong"
+                className="h-9 w-9 shrink-0 border border-input"
                 style={{ backgroundColor: `var(${swatch.token})` }}
                 aria-hidden="true"
               />
               <span className="min-w-0">
                 <code className="numeric text-xs">{swatch.token}</code>
-                <span className="block text-xs text-muted">{swatch.role}</span>
+                <span className="block text-xs text-muted-foreground">{swatch.role}</span>
               </span>
             </li>
           ))}
@@ -135,15 +135,15 @@ function DesignPage() {
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('design.typography')}>
-        <ul className="divide-y divide-rule">
+        <ul className="divide-y divide-border">
           {TYPE_SCALE.map((step) => (
             <li key={step.label} className="flex flex-wrap items-baseline gap-x-6 gap-y-1 py-3">
               <span className={step.className}>{t('brand.tagline')}</span>
-              <span className="numeric ms-auto text-2xs text-muted">{step.label}</span>
+              <span className="numeric ms-auto text-2xs text-muted-foreground">{step.label}</span>
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-rule pt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-4">
           <Plate value="12345 | أ | 6" />
           <Plate value="27819 | ب | 1" />
           <Plate value="WW 4471" />
@@ -154,11 +154,11 @@ function DesignPage() {
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('design.icons')}>
-        <ul className="grid grid-cols-3 gap-px bg-rule sm:grid-cols-6 lg:grid-cols-8">
+        <ul className="grid grid-cols-3 gap-px bg-border sm:grid-cols-6 lg:grid-cols-8">
           {ICON_REGISTRY.map(({ name, Component }) => (
-            <li key={name} className="flex flex-col items-center gap-2 bg-paper p-3 text-center">
+            <li key={name} className="flex flex-col items-center gap-2 bg-background p-3 text-center">
               <Component size={24} />
-              <span className="text-2xs break-all text-muted">{name}</span>
+              <span className="text-2xs break-all text-muted-foreground">{name}</span>
             </li>
           ))}
         </ul>
@@ -217,7 +217,7 @@ function DesignPage() {
       {/* Le rail vertical — ce que l'on voit à partir de 1024 px. Posé dans une boîte
           de la largeur réelle de la colonne (240 px) pour être mesurable ici. */}
       <Section title="Rail de navigation">
-        <div className="flex w-60 flex-col border border-rule bg-surface">
+        <div className="flex w-60 flex-col border border-border bg-card">
           <SideRail locale={locale} destinations={APP_DESTINATIONS} label="Rail de démonstration" />
         </div>
       </Section>
@@ -313,7 +313,7 @@ const MAP_DEMO_TRACK = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-4 border-b-2 border-rule-strong pb-2 font-display text-lg">{title}</h2>
+      <h2 className="mb-4 border-b-2 border-input pb-2 text-lg">{title}</h2>
       {children}
     </section>
   )

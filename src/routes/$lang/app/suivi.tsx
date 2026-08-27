@@ -127,11 +127,11 @@ function TrackingPage() {
   return (
     <div>
       <PageHeader locale={locale}>
-        <span className="numeric text-xs text-muted">
+        <span className="numeric text-xs text-muted-foreground">
           {t('gps.count', { count: snapshot.positions.length })}
         </span>
         <span className="ms-auto flex items-center gap-3">
-          {notice ? <span className="text-xs text-muted">{notice}</span> : null}
+          {notice ? <span className="text-xs text-muted-foreground">{notice}</span> : null}
           <Button
             onClick={() => {
               void refresh()
@@ -160,15 +160,15 @@ function TrackingPage() {
             label={t('gps.mapLabel')}
           />
           {snapshot.styleUrl === null ? (
-            <p className="mt-2 text-2xs text-muted">{t('gps.blankStyle')}</p>
+            <p className="mt-2 text-2xs text-muted-foreground">{t('gps.blankStyle')}</p>
           ) : null}
         </div>
       )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         <section>
-          <h2 className="flex items-center gap-2 border-b border-rule pb-2 font-display text-md">
-            <GpsIcon size={16} className="text-muted" />
+          <h2 className="flex items-center gap-2 border-b border-border pb-2 text-base">
+            <GpsIcon size={16} className="text-muted-foreground" />
             <span>{t('gps.title')}</span>
           </h2>
           <ul>
@@ -185,20 +185,20 @@ function TrackingPage() {
 
           {snapshot.untracked.length > 0 ? (
             <div className="mt-6">
-              <h3 className="border-b border-rule pb-2 text-sm text-muted">
+              <h3 className="border-b border-border pb-2 text-sm text-muted-foreground">
                 {t('gps.untrackedTitle')}
               </h3>
-              <p className="mt-2 text-xs text-muted">{t('gps.untrackedBody')}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{t('gps.untrackedBody')}</p>
               <ul className="mt-2">
                 {snapshot.untracked.map((vehicle) => (
                   <li
                     key={vehicle.id}
-                    className="flex items-center gap-4 border-b border-rule px-4 py-2"
+                    className="flex items-center gap-4 border-b border-border px-4 py-2"
                   >
                     <span className="ledger-margin w-24 sm:w-28 shrink-0 pe-4">
                       <Plate value={vehicle.plate} size="sm" />
                     </span>
-                    <span className="text-sm text-muted">
+                    <span className="text-sm text-muted-foreground">
                       {vehicle.make} {vehicle.model}
                     </span>
                   </li>
@@ -209,12 +209,12 @@ function TrackingPage() {
         </section>
 
         <section>
-          <h2 className="flex items-center gap-2 border-b border-rule pb-2 font-display text-md">
-            <GeofenceIcon size={16} className="text-muted" />
+          <h2 className="flex items-center gap-2 border-b border-border pb-2 text-base">
+            <GeofenceIcon size={16} className="text-muted-foreground" />
             <span>{t('gps.zonesTitle')}</span>
           </h2>
           {snapshot.geofences.length === 0 ? (
-            <p className="mt-3 max-w-prose text-sm text-muted">{t('gps.zonesEmpty')}</p>
+            <p className="mt-3 max-w-prose text-sm text-muted-foreground">{t('gps.zonesEmpty')}</p>
           ) : (
             <ul className="mt-2">
               {snapshot.geofences.map((zone) => (
@@ -253,17 +253,17 @@ function TrackingPage() {
             }}
           />
 
-          <h2 className="mt-8 border-b border-rule pb-2 font-display text-md">
+          <h2 className="mt-8 border-b border-border pb-2 text-base">
             {t('gps.crossingsTitle')}
           </h2>
           {crossings.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">{t('gps.crossingsEmpty')}</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t('gps.crossingsEmpty')}</p>
           ) : (
             <ul className="mt-2">
               {crossings.map((crossing) => (
                 <li
                   key={crossing.id}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule px-4 py-2"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2"
                 >
                   <span className="ledger-margin w-24 sm:w-28 shrink-0 pe-4">
                     <Plate value={crossing.plate} size="sm" />
@@ -272,7 +272,7 @@ function TrackingPage() {
                     {crossing.kind === 'exit' ? t('gps.crossingExit') : t('gps.crossingEnter')}
                   </Badge>
                   <span className="text-sm">{crossing.geofenceName}</span>
-                  <span className="numeric ms-auto text-xs text-muted">
+                  <span className="numeric ms-auto text-xs text-muted-foreground">
                     {formatDateTime(crossing.occurredAt, locale)}
                   </span>
                 </li>
@@ -289,9 +289,9 @@ function PageHeader({ locale, children }: { locale: Locale; children?: React.Rea
   const { t } = useTranslation()
 
   return (
-    <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-      <h1 className="font-display text-2xl">{t('gps.title')}</h1>
-      <span className="text-xs text-muted">{t('gps.subtitle')}</span>
+    <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+      <h1 className="text-2xl">{t('gps.title')}</h1>
+      <span className="text-xs text-muted-foreground">{t('gps.subtitle')}</span>
       {children}
       <Link
         to="/$lang/app/vehicules"
@@ -329,11 +329,11 @@ function PositionRow({
   const { t } = useTranslation()
 
   return (
-    <li className={`border-b ${selected ? 'border-stamp' : 'border-rule'}`}>
+    <li className={`border-b ${selected ? 'border-primary' : 'border-border'}`}>
       <button
         type="button"
         onClick={onSelect}
-        className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-start hover:bg-surface-sunken"
+        className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-start hover:bg-muted"
         /* 44 px et non la hauteur de ligne dense de 40 px : cette ligne est ce qui
            rachète le repère de carte, trop petit pour un pouce. Il faut donc qu'elle
            soit, elle, une vraie cible tactile. */
@@ -350,7 +350,7 @@ function PositionRow({
           {position.stale ? (
             <Badge variant="neutral">{t('gps.stale')}</Badge>
           ) : (
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               {isMoving(position) ? t('gps.moving') : t('gps.parked')}
             </span>
           )}
@@ -359,7 +359,7 @@ function PositionRow({
               {t('gps.speed', { speed: formatNumber(Math.round(position.speedKmh), locale) })}
             </span>
           ) : null}
-          <span className="numeric text-xs text-muted">
+          <span className="numeric text-xs text-muted-foreground">
             {/* En minutes tant que c'est parlant, en heures ensuite : « il y a 4
                 minutes » se lit sans calcul, « 14:32 » demande de savoir l'heure. */}
             {position.ageMinutes < 90
@@ -419,20 +419,20 @@ function ZoneComposer({
   }
 
   return (
-    <section className="mt-6 border-t border-rule pt-4">
-      <h3 className="text-sm text-muted">{t('gps.newZone')}</h3>
+    <section className="mt-6 border-t border-border pt-4">
+      <h3 className="text-sm text-muted-foreground">{t('gps.newZone')}</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="text-xs text-muted">{t('gps.zoneName')}</span>
+          <span className="text-xs text-muted-foreground">{t('gps.zoneName')}</span>
           <input
             value={name}
             onChange={(event) => onName(event.target.value)}
-            className="mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+            className="mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
             style={{ minHeight: 'var(--tap-target)' }}
           />
         </label>
         <label className="block">
-          <span className="text-xs text-muted">{t('gps.zoneRadiusField')}</span>
+          <span className="text-xs text-muted-foreground">{t('gps.zoneRadiusField')}</span>
           <input
             type="number"
             min={50}
@@ -440,12 +440,12 @@ function ZoneComposer({
             step={50}
             value={radius}
             onChange={(event) => onRadius(Number(event.target.value))}
-            className="numeric mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+            className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
             style={{ minHeight: 'var(--tap-target)' }}
           />
         </label>
       </div>
-      <p className="mt-2 text-2xs text-muted">
+      <p className="mt-2 text-2xs text-muted-foreground">
         {centre
           ? t('gps.zoneCentreSet', {
               lat: formatCoordinate(centre.lat, locale),
@@ -498,10 +498,10 @@ function DeviceComposer({
   }
 
   return (
-    <section className="mt-6 border-t border-rule pt-4">
-      <h3 className="text-sm text-muted">{t('gps.newDevice')}</h3>
+    <section className="mt-6 border-t border-border pt-4">
+      <h3 className="text-sm text-muted-foreground">{t('gps.newDevice')}</h3>
       {untracked.length === 0 ? (
-        <p className="mt-2 text-xs text-muted">{t('gps.deviceNoVehicle')}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{t('gps.deviceNoVehicle')}</p>
       ) : (
         <>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -521,16 +521,16 @@ function DeviceComposer({
               }))}
             />
             <label className="block">
-              <span className="text-xs text-muted">{t('gps.deviceExternalId')}</span>
+              <span className="text-xs text-muted-foreground">{t('gps.deviceExternalId')}</span>
               <input
                 value={externalId}
                 onChange={(event) => setExternalId(event.target.value)}
-                className="numeric mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+                className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
                 style={{ minHeight: 'var(--tap-target)' }}
               />
             </label>
           </div>
-          <p className="mt-2 max-w-prose text-2xs text-muted">{t('gps.deviceHint')}</p>
+          <p className="mt-2 max-w-prose text-2xs text-muted-foreground">{t('gps.deviceHint')}</p>
           <div className="mt-3">
             <Button
               disabled={saving || !vehicleId || externalId.trim().length === 0}
@@ -567,14 +567,14 @@ function ZoneRow({
         : t('gps.zoneScopeAll')
 
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule px-4 py-2">
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2">
       <span className="text-sm">{zone.name}</span>
-      <span className="numeric text-xs text-muted">
+      <span className="numeric text-xs text-muted-foreground">
         {zone.geometry.kind === 'circle'
           ? t('gps.zoneRadius', { radius: formatNumber(zone.geometry.radiusM, locale) })
           : t('gps.zonePolygon', { count: zone.geometry.ring.length })}
       </span>
-      <span className="ms-auto text-xs text-muted">{scope}</span>
+      <span className="ms-auto text-xs text-muted-foreground">{scope}</span>
       {zone.isActive ? null : <Badge variant="neutral">{t('gps.zoneInactive')}</Badge>}
       {/* Suppression DOUCE côté serveur : les franchissements déjà constatés gardent
           une zone à nommer, sinon l'historique parlerait d'un identifiant nu. */}

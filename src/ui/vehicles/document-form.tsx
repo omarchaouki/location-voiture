@@ -92,15 +92,15 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
   const currentYear = new Date().getFullYear()
 
   return (
-    <form method="post" onSubmit={(event) => void submit(event)} className="border-t border-rule pt-6">
-      <fieldset className="flex flex-wrap items-center gap-0 border border-rule">
+    <form method="post" onSubmit={(event) => void submit(event)} className="border-t border-border pt-6">
+      <fieldset className="flex flex-wrap items-center gap-0 border border-border">
         <legend className="sr-only">{t('vehicle.file.documentType')}</legend>
         {DOCUMENT_TYPES.map((option) => (
           <label
             key={option}
             style={{ minHeight: 'var(--tap-target)' }}
             className={`flex cursor-pointer items-center px-3 text-2xs tracking-wide uppercase ${
-              type === option ? 'bg-stamp text-stamp-contrast' : 'text-muted hover:text-ink'
+              type === option ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <input
@@ -160,7 +160,7 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
               label={t('vehicle.file.firstRegisteredOn')}
               type="date"
             />
-            <p className="text-xs text-muted sm:col-span-2">
+            <p className="text-xs text-muted-foreground sm:col-span-2">
               {t('vehicle.file.registrationNoExpiry')}
             </p>
           </>
@@ -168,7 +168,7 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
       </div>
 
       {error ? (
-        <p role="alert" className="mt-4 border-s-2 border-danger ps-3 text-sm text-danger">
+        <p role="alert" className="mt-4 border-s-2 border-destructive ps-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
@@ -201,13 +201,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <input
         name={name}
         type={type}
         required={required}
         defaultValue={defaultValue}
-        className="numeric mt-1 block w-full border border-rule-strong bg-surface px-3 py-2 text-base"
+        className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
         style={{ minHeight: 'var(--tap-target)' }}
       />
     </label>

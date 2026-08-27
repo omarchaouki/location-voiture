@@ -28,16 +28,16 @@ const badgeVariants = cva(
     variants: {
       variant: {
         /* Vocabulaire shadcn */
-        default: 'border-transparent bg-stamp-wash text-stamp',
-        secondary: 'border-rule bg-surface-sunken text-muted',
-        destructive: 'border-transparent bg-danger-wash text-danger',
-        outline: 'border-rule text-ink',
+        default: 'border-transparent bg-accent text-primary',
+        secondary: 'border-border bg-muted text-muted-foreground',
+        destructive: 'border-transparent bg-destructive/10 text-destructive',
+        outline: 'border-border text-foreground',
         /* Vocabulaire métier — même dessin, nom qui dit ce que ça signifie */
-        accent: 'border-transparent bg-stamp-wash text-stamp',
-        neutral: 'border-rule bg-surface-sunken text-muted',
-        danger: 'border-transparent bg-danger-wash text-danger',
-        warn: 'border-transparent bg-warn-wash text-warn',
-        calm: 'border-transparent bg-calm-wash text-calm',
+        accent: 'border-transparent bg-accent text-primary',
+        neutral: 'border-border bg-muted text-muted-foreground',
+        danger: 'border-transparent bg-destructive/10 text-destructive',
+        warn: 'border-transparent bg-warning/10 text-warning',
+        calm: 'border-transparent bg-success/10 text-success',
       },
     },
     defaultVariants: { variant: 'default' },

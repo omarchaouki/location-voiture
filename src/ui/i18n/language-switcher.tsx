@@ -37,7 +37,7 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2 px-2.5" aria-label={t('language.label')}>
-          <Globe className="size-[18px] text-muted" aria-hidden="true" />
+          <Globe className="size-[18px] text-muted-foreground" aria-hidden="true" />
           {/*
             Le code sur deux lettres suffit et tient partout ; le nom complet est dans
             le panneau. Écrire « Français » dans le déclencheur ramènerait le
@@ -68,7 +68,7 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
               <span className="flex-1">{LOCALE_NAMES[locale]}</span>
               {/* Le code courant reste lisible sans dépendre de la couleur. */}
               {locale === current ? (
-                <span className="text-2xs uppercase text-stamp">{locale}</span>
+                <span className="text-2xs uppercase text-primary">{locale}</span>
               ) : null}
             </Link>
           </DropdownMenuItem>

@@ -33,9 +33,9 @@ function CustomersPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('customer.title')}</h1>
-        <span className="numeric text-xs text-muted">{customers.length}</span>
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('customer.title')}</h1>
+        <span className="numeric text-xs text-muted-foreground">{customers.length}</span>
         <span className="ms-auto">
           <Link
             to="/$lang/app/clients/nouveau"
@@ -52,7 +52,7 @@ function CustomersPage() {
           <EmptyState title={t('customer.empty')} body={t('customer.emptyBody')} />
         </div>
       ) : (
-        <ul className="mt-6 border-t border-rule">
+        <ul className="mt-6 border-t border-border">
           {customers.map((customer) => {
             const expired =
               customer.licenceExpiresOn !== null &&
@@ -61,18 +61,18 @@ function CustomersPage() {
             return (
               <li
                 key={customer.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule px-4 py-3"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-3"
                 style={{ minHeight: 'var(--row-height-dense)' }}
               >
                 <span className="ledger-margin w-28 sm:w-40 shrink-0 pe-4 font-medium">
                   {customer.label}
                 </span>
-                <span className="text-xs text-muted">{t(`customer.kinds.${customer.kind}`)}</span>
+                <span className="text-xs text-muted-foreground">{t(`customer.kinds.${customer.kind}`)}</span>
                 {customer.phone ? (
-                  <span className="numeric text-xs text-muted">{customer.phone}</span>
+                  <span className="numeric text-xs text-muted-foreground">{customer.phone}</span>
                 ) : null}
                 {customer.city ? (
-                  <span className="text-xs text-muted">{customer.city}</span>
+                  <span className="text-xs text-muted-foreground">{customer.city}</span>
                 ) : null}
 
                 <span className="ms-auto flex flex-wrap items-center gap-3">
@@ -84,7 +84,7 @@ function CustomersPage() {
                   ) : expired ? (
                     <Badge variant="danger">{t('customer.licenceExpired')}</Badge>
                   ) : (
-                    <span className="numeric text-xs text-muted">
+                    <span className="numeric text-xs text-muted-foreground">
                       {formatDate(customer.licenceExpiresOn, locale)}
                     </span>
                   )}

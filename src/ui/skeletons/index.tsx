@@ -14,7 +14,7 @@ import { Skeleton, SkeletonRegion } from '~/ui/feedback/skeleton'
 function LedgerRow({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="flex items-center gap-4 border-b border-rule px-4"
+      className="flex items-center gap-4 border-b border-border px-4"
       style={{ height: 'var(--row-height-dense)' }}
     >
       {children}
@@ -28,7 +28,7 @@ export function VehicleTableSkeleton({ rows = 8 }: { rows?: number }) {
 
   return (
     <SkeletonRegion label={t('loading.vehicles')}>
-      <div className="border-t border-rule">
+      <div className="border-t border-border">
         {Array.from({ length: rows }, (_, index) => (
           <LedgerRow key={index}>
             <span className="ledger-margin w-24 shrink-0 pe-4">
@@ -56,12 +56,12 @@ export function DashboardSkeleton() {
 
   return (
     <SkeletonRegion label={t('loading.dashboard')}>
-      <div className="border-y-2 border-rule-strong px-4 py-3">
+      <div className="border-y-2 border-input px-4 py-3">
         <Skeleton width="18rem" height="1rem" />
       </div>
-      <div className="grid grid-cols-2 gap-px bg-rule sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="bg-paper p-4">
+          <div key={index} className="bg-background p-4">
             <Skeleton width="5rem" height="0.75rem" />
             <span className="mt-3 block">
               <Skeleton width="3.5rem" height="1.75rem" />
@@ -69,7 +69,7 @@ export function DashboardSkeleton() {
           </div>
         ))}
       </div>
-      <div className="mt-6 border-t border-rule">
+      <div className="mt-6 border-t border-border">
         {Array.from({ length: 5 }, (_, index) => (
           <LedgerRow key={index}>
             <Skeleton width="1.25rem" height="1.25rem" />
@@ -97,14 +97,14 @@ export function VehicleFileSkeleton() {
           <Skeleton width="5rem" height="1.5rem" />
         </span>
       </div>
-      <div className="border-y border-rule py-3">
+      <div className="border-y border-border py-3">
         <Skeleton width="20rem" height="0.85rem" />
       </div>
       <div className="mt-6 ps-8">
         {Array.from({ length: 6 }, (_, index) => (
           <div key={index} className="relative py-4">
             <span
-              className="absolute top-0 bottom-0 border-s border-rule"
+              className="absolute top-0 bottom-0 border-s border-border"
               style={{ insetInlineStart: '-1.25rem' }}
             />
             <div className="flex items-center gap-4">
@@ -127,7 +127,7 @@ export function AlertListSkeleton({ rows = 6 }: { rows?: number }) {
 
   return (
     <SkeletonRegion label={t('loading.alerts')}>
-      <div className="border-t border-rule">
+      <div className="border-t border-border">
         {Array.from({ length: rows }, (_, index) => (
           <LedgerRow key={index}>
             <Skeleton width="0.25rem" height="1.5rem" />
@@ -169,7 +169,7 @@ export function BillingSkeleton() {
     <SkeletonRegion label={t('loading.billing')}>
       <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="flex items-baseline gap-3 border-b border-rule pb-2">
+          <div key={index} className="flex items-baseline gap-3 border-b border-border pb-2">
             <Skeleton width="5rem" height="0.75rem" />
             <span className="ms-auto">
               <Skeleton width="7rem" height="0.85rem" />
@@ -177,7 +177,7 @@ export function BillingSkeleton() {
           </div>
         ))}
       </div>
-      <div className="mt-10 border-t border-rule">
+      <div className="mt-10 border-t border-border">
         {Array.from({ length: 3 }, (_, index) => (
           <LedgerRow key={index}>
             <Skeleton width="6rem" height="0.85rem" />
@@ -221,7 +221,7 @@ export function AdminOrganizationsSkeleton({ rows = 10 }: { rows?: number }) {
 
   return (
     <SkeletonRegion label={t('loading.organizations')}>
-      <div className="border-t border-rule">
+      <div className="border-t border-border">
         {Array.from({ length: rows }, (_, index) => (
           <LedgerRow key={index}>
             <span className="ledger-margin w-12 shrink-0 pe-4">
@@ -258,7 +258,7 @@ export function AdminDashboardSkeleton() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="rounded-md border border-rule bg-surface px-4 py-3">
+          <div key={index} className="rounded-md border border-border bg-card px-4 py-3">
             <Skeleton width="6rem" height="0.7rem" />
             <div className="mt-2">
               <Skeleton width="4.5rem" height="1.3rem" />
@@ -271,12 +271,12 @@ export function AdminDashboardSkeleton() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="rounded-md border border-rule bg-surface">
-          <div className="border-b border-rule px-4 py-3 sm:px-5">
+        <div className="rounded-md border border-border bg-card">
+          <div className="border-b border-border px-4 py-3 sm:px-5">
             <Skeleton width="9rem" height="0.9rem" />
           </div>
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="border-b border-rule px-4 py-3 last:border-b-0 sm:px-5">
+            <div key={index} className="border-b border-border px-4 py-3 last:border-b-0 sm:px-5">
               <Skeleton width="10rem" height="0.85rem" />
               <div className="mt-1">
                 <Skeleton width="13rem" height="0.7rem" />
@@ -287,8 +287,8 @@ export function AdminDashboardSkeleton() {
 
         <div className="grid gap-6 self-start">
           {Array.from({ length: 2 }, (_, index) => (
-            <div key={index} className="rounded-md border border-rule bg-surface">
-              <div className="border-b border-rule px-4 py-3 sm:px-5">
+            <div key={index} className="rounded-md border border-border bg-card">
+              <div className="border-b border-border px-4 py-3 sm:px-5">
                 <Skeleton width="7rem" height="0.9rem" />
               </div>
               <div className="space-y-3 px-4 py-4 sm:px-5">
@@ -322,7 +322,7 @@ export function AgencyDashboardSkeleton() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="rounded-md border border-rule bg-surface px-4 py-3">
+          <div key={index} className="rounded-md border border-border bg-card px-4 py-3">
             <Skeleton width="6rem" height="0.7rem" />
             <div className="mt-2">
               <Skeleton width="3.5rem" height="1.3rem" />
@@ -335,19 +335,19 @@ export function AgencyDashboardSkeleton() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="rounded-md border border-rule bg-surface">
-          <div className="border-b border-rule px-4 py-3 sm:px-5">
+        <div className="rounded-md border border-border bg-card">
+          <div className="border-b border-border px-4 py-3 sm:px-5">
             <Skeleton width="9rem" height="0.9rem" />
           </div>
           {Array.from({ length: 5 }, (_, index) => (
-            <div key={index} className="border-b border-rule px-4 py-3 last:border-b-0 sm:px-5">
+            <div key={index} className="border-b border-border px-4 py-3 last:border-b-0 sm:px-5">
               <Skeleton width="11rem" height="0.85rem" />
             </div>
           ))}
         </div>
 
-        <div className="self-start rounded-md border border-rule bg-surface">
-          <div className="border-b border-rule px-4 py-3 sm:px-5">
+        <div className="self-start rounded-md border border-border bg-card">
+          <div className="border-b border-border px-4 py-3 sm:px-5">
             <Skeleton width="5rem" height="0.9rem" />
           </div>
           <div className="space-y-4 px-4 py-4 sm:px-5">
@@ -376,14 +376,14 @@ export function AdminLeadsSkeleton({ rows = 8 }: { rows?: number }) {
         <Skeleton width="10rem" height="1.4rem" />
       </div>
 
-      <div className="rounded-md border border-rule bg-surface">
-        <div className="border-b border-rule px-4 py-3 sm:px-5">
+      <div className="rounded-md border border-border bg-card">
+        <div className="border-b border-border px-4 py-3 sm:px-5">
           <Skeleton width="8rem" height="0.9rem" />
         </div>
         {Array.from({ length: rows }, (_, index) => (
           <div
             key={index}
-            className="flex flex-wrap items-center gap-3 border-b border-rule px-4 py-3 last:border-b-0 sm:px-5"
+            className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 sm:px-5"
           >
             <span className="flex-1">
               <Skeleton width="9rem" height="0.85rem" />

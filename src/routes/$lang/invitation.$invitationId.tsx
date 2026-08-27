@@ -100,7 +100,7 @@ function InvitationPage() {
       <CardHeader>
         <CardTitle className="text-lg tracking-tight">{t('auth.invitationTitle')}</CardTitle>
         <CardDescription className="mt-1 flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium text-ink">{invitation.organizationName}</span>
+          <span className="font-medium text-foreground">{invitation.organizationName}</span>
           <Badge variant="secondary">{t(`role.${invitation.role}`)}</Badge>
         </CardDescription>
         <CardDescription className="mt-2 text-sm">{t('auth.invitationIntro')}</CardDescription>
@@ -113,7 +113,7 @@ function InvitationPage() {
             {/* L'adresse vient de l'invitation et ne se modifie pas : on ne choisit
                 pas pour qui on crée le compte. Un champ désactivé serait trompeur —
                 il donnerait l'apparence d'un contrôle qui n'en est pas un. */}
-            <p className="numeric rounded-sm border border-rule bg-surface-sunken px-3 py-2 text-sm">
+            <p className="numeric rounded-sm border border-border bg-muted px-3 py-2 text-sm">
               {invitation.email}
             </p>
           </div>

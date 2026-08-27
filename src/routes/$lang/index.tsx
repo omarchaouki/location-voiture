@@ -78,14 +78,14 @@ function Hero({ locale }: { locale: Locale }) {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-14 sm:py-20">
+    <section className="border-b border-border py-14 sm:py-20">
       <div className="max-w-3xl">
         <Badge variant="secondary">{t('site.badge')}</Badge>
 
         <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
           {t('site.heroTitle')}
         </h1>
-        <p className="mt-4 max-w-2xl text-md text-muted">{t('site.heroBody')}</p>
+        <p className="mt-4 max-w-2xl text-base text-muted-foreground">{t('site.heroBody')}</p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
@@ -103,7 +103,7 @@ function Hero({ locale }: { locale: Locale }) {
           </Button>
         </div>
 
-        <p className="mt-5 text-xs text-muted">{t('site.heroNote')}</p>
+        <p className="mt-5 text-xs text-muted-foreground">{t('site.heroNote')}</p>
       </div>
     </section>
   )
@@ -133,18 +133,18 @@ function Capabilities() {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-14 sm:py-16">
+    <section className="border-b border-border py-14 sm:py-16">
       <h2 className="text-lg font-semibold tracking-tight">{t('site.capabilitiesTitle')}</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.capabilitiesBody')}</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.capabilitiesBody')}</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CAPABILITIES.map((capability) => (
           <Card key={capability.key} className="gap-3">
             <CardHeader>
-              <span className="flex size-9 items-center justify-center rounded-md bg-stamp-wash text-stamp">
+              <span className="flex size-9 items-center justify-center rounded-md bg-accent text-primary">
                 <capability.icon size={19} />
               </span>
-              <CardTitle className="mt-3 text-md">
+              <CardTitle className="mt-3 text-base">
                 {t(`site.capability.${capability.key}.title`)}
               </CardTitle>
             </CardHeader>
@@ -177,15 +177,15 @@ function MadeForMorocco() {
   const points = ['plates', 'arabic', 'time', 'money'] as const
 
   return (
-    <section className="border-b border-rule py-14 sm:py-16">
+    <section className="border-b border-border py-14 sm:py-16">
       <h2 className="text-lg font-semibold tracking-tight">{t('site.localTitle')}</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.localBody')}</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.localBody')}</p>
 
       <ul className="mt-8 grid gap-x-12 gap-y-2 sm:grid-cols-2">
         {points.map((point) => (
-          <li key={point} className="border-t border-rule py-5">
+          <li key={point} className="border-t border-border py-5">
             <h3 className="text-sm font-semibold">{t(`site.local.${point}.title`)}</h3>
-            <p className="mt-1.5 text-sm text-muted">{t(`site.local.${point}.body`)}</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">{t(`site.local.${point}.body`)}</p>
           </li>
         ))}
       </ul>
@@ -206,9 +206,9 @@ function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Loca
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-rule py-14 sm:py-16">
+    <section className="border-b border-border py-14 sm:py-16">
       <h2 className="text-lg font-semibold tracking-tight">{t('site.pricingTitle')}</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted">{t('site.pricingBody')}</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.pricingBody')}</p>
 
       <Card className="mt-8 py-0">
         <Table>
@@ -228,7 +228,7 @@ function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Loca
                 <TableCell>
                   <span className="font-medium">{t(plan.nameKey)}</span>
                   {plan.trialDays > 0 ? (
-                    <span className="block text-xs text-muted">
+                    <span className="block text-xs text-muted-foreground">
                       {t('site.trialDays', { days: plan.trialDays })}
                     </span>
                   ) : null}
@@ -242,7 +242,7 @@ function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Loca
                 <TableCell className="numeric text-end">
                   <Limit value={plan.maxUsers} locale={locale} />
                 </TableCell>
-                <TableCell className="numeric text-end text-muted">
+                <TableCell className="numeric text-end text-muted-foreground">
                   <Limit value={plan.maxBranches} locale={locale} />
                 </TableCell>
               </TableRow>
@@ -251,7 +251,7 @@ function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Loca
         </Table>
       </Card>
 
-      <p className="mt-3 text-xs text-muted">{t('site.pricingNote')}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{t('site.pricingNote')}</p>
     </section>
   )
 }
@@ -311,8 +311,8 @@ function DemoForm({ locale }: { locale: Locale }) {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_28rem]">
         <div className="lg:self-center">
           <h2 className="text-xl font-semibold tracking-tight">{t('site.demoTitle')}</h2>
-          <p className="mt-3 max-w-xl text-sm text-muted">{t('site.demoBody')}</p>
-          <p className="mt-4 max-w-xl text-xs text-muted">{t('site.demoPrivacy')}</p>
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground">{t('site.demoBody')}</p>
+          <p className="mt-4 max-w-xl text-xs text-muted-foreground">{t('site.demoPrivacy')}</p>
         </div>
 
         <Card>

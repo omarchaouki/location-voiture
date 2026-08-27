@@ -57,15 +57,15 @@ function VehicleFilePage() {
   return (
     <div>
       {/* --- Identité : la plaque est l'identifiant, en tête et isolée en bidi. --- */}
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-rule pb-3">
+      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-border pb-3">
         <Plate value={vehicle.plate} size="lg" />
-        <span className="font-display text-md">
+        <span className="text-base">
           {vehicle.make} {vehicle.model}
           {vehicle.year ? ` ${vehicle.year}` : ''}
         </span>
-        {vehicle.fuel ? <span className="text-xs text-muted">{t(`vehicle.fuel.${vehicle.fuel}`)}</span> : null}
+        {vehicle.fuel ? <span className="text-xs text-muted-foreground">{t(`vehicle.fuel.${vehicle.fuel}`)}</span> : null}
         {vehicle.gearbox ? (
-          <span className="text-xs text-muted">{t(`vehicle.gearbox.${vehicle.gearbox}`)}</span>
+          <span className="text-xs text-muted-foreground">{t(`vehicle.gearbox.${vehicle.gearbox}`)}</span>
         ) : null}
         <span className="ms-auto flex items-center gap-4">
           <Badge variant={STATUS_TONES[vehicle.status] ?? 'neutral'}>
@@ -82,17 +82,17 @@ function VehicleFilePage() {
       </header>
 
       {/* --- Relevé : ce qui pilote toutes les échéances d'entretien. --- */}
-      <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-rule py-3 text-sm">
-        <span className="numeric text-md">
+      <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-border py-3 text-sm">
+        <span className="numeric text-base">
           {formatKilometers(vehicle.currentKm, locale)} km
         </span>
-        <span className="text-xs text-muted">
+        <span className="text-xs text-muted-foreground">
           {vehicle.currentKmAt
             ? `${t('vehicle.file.recordedAt')} ${formatDateTime(vehicle.currentKmAt, locale)}`
             : t('vehicle.file.never')}
         </span>
         {vehicle.dailyCents !== null ? (
-          <span className="numeric ms-auto text-xs text-muted">
+          <span className="numeric ms-auto text-xs text-muted-foreground">
             {formatMoney(vehicle.dailyCents, locale)}
           </span>
         ) : null}
@@ -100,7 +100,7 @@ function VehicleFilePage() {
 
       {/* --- LE CARNET. --- */}
       <section className="mt-8">
-        <h2 className="mb-2 font-display text-lg">{t('vehicle.file.logbook')}</h2>
+        <h2 className="mb-2 text-lg">{t('vehicle.file.logbook')}</h2>
         {file.entries.length === 0 ? (
           <EmptyState
             title={t('vehicle.file.noEntries')}
@@ -113,10 +113,10 @@ function VehicleFilePage() {
 
       {/* --- Documents : ce que le carnet résume, sous forme de pièces. --- */}
       <section className="mt-12">
-        <h2 className="mb-4 border-b border-rule pb-2 font-display text-lg">
+        <h2 className="mb-4 border-b border-border pb-2 text-lg">
           {t('vehicle.file.documents')}
         </h2>
-        <ul className="grid gap-px bg-rule sm:grid-cols-2">
+        <ul className="grid gap-px bg-border sm:grid-cols-2">
           <DocumentCard
             icon={<InsuranceShieldIcon size={20} />}
             label={t('deadline.insurance')}
@@ -163,7 +163,7 @@ function VehicleFilePage() {
         </ul>
 
         <div className="mt-8">
-          <h3 className="mb-4 font-display text-md">{t('vehicle.file.addDocument')}</h3>
+          <h3 className="mb-4 text-base">{t('vehicle.file.addDocument')}</h3>
           <DocumentForm vehicleId={vehicle.id} />
         </div>
       </section>
@@ -186,16 +186,16 @@ function DocumentCard({
   const { t } = useTranslation()
 
   return (
-    <li className="flex items-start gap-3 bg-paper p-4">
-      <span className="mt-[2px] text-muted">{icon}</span>
+    <li className="flex items-start gap-3 bg-background p-4">
+      <span className="mt-[2px] text-muted-foreground">{icon}</span>
       <span className="min-w-0">
-        <span className="block text-xs text-muted">{label}</span>
+        <span className="block text-xs text-muted-foreground">{label}</span>
         {value === null ? (
-          <span className="mt-1 block text-sm text-warn">{t('vehicle.file.missing')}</span>
+          <span className="mt-1 block text-sm text-warning">{t('vehicle.file.missing')}</span>
         ) : (
           <>
             <span className="mt-1 block text-sm">{value}</span>
-            {detail ? <span className="numeric block text-xs text-muted">{detail}</span> : null}
+            {detail ? <span className="numeric block text-xs text-muted-foreground">{detail}</span> : null}
           </>
         )}
       </span>

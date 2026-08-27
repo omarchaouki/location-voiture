@@ -83,12 +83,12 @@ function CriticalBanner({ locale, critical }: { locale: Locale; critical: number
   if (critical === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-danger bg-danger-wash px-4 py-3 sm:px-6">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-destructive bg-destructive/10 px-4 py-3 sm:px-6">
       <Badge variant="danger">{t('alerts.criticalBanner', { count: critical })}</Badge>
       <Link
         to="/$lang/app/alertes"
         params={{ lang: locale }}
-        className="ms-auto text-sm text-danger underline underline-offset-4"
+        className="ms-auto text-sm text-destructive underline underline-offset-4"
       >
         {t('alerts.seeAll')}
       </Link>
@@ -111,11 +111,11 @@ function ImpersonationBanner({ viewer }: { viewer: ViewerState }) {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b-2 border-danger bg-danger-wash px-4 py-3 sm:px-6"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b-2 border-destructive bg-destructive/10 px-4 py-3 sm:px-6"
     >
       <Badge variant="danger">{t('app.impersonationBanner', { org: viewer.organization.name })}</Badge>
       {!viewer.impersonation.canWrite ? (
-        <span className="text-xs text-danger">{t('app.impersonationReadOnly')}</span>
+        <span className="text-xs text-destructive">{t('app.impersonationReadOnly')}</span>
       ) : null}
       <span className="ms-auto">
         <Button
@@ -151,10 +151,10 @@ function DemoBanner({ viewer }: { viewer: ViewerState }) {
   if (!viewer.organization?.isDemo) return null
 
   return (
-    <div role="status" className="border-b border-rule bg-surface-sunken px-4 py-3 sm:px-6">
+    <div role="status" className="border-b border-border bg-muted px-4 py-3 sm:px-6">
       <Badge variant="accent">{t('app.demo')}</Badge>
       <p className="mt-2 text-sm">{t('demo.banner')}</p>
-      <p className="mt-1 text-xs text-muted">{t('demo.bannerDetail')}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t('demo.bannerDetail')}</p>
     </div>
   )
 }
@@ -166,7 +166,7 @@ function ReadOnlyBanner({ viewer }: { viewer: ViewerState }) {
   if (!org || org.canWrite || viewer.impersonation) return null
 
   return (
-    <div role="status" className="border-b border-warn bg-warn-wash px-4 py-3 sm:px-6">
+    <div role="status" className="border-b border-warning bg-warning/10 px-4 py-3 sm:px-6">
       <Badge variant="warn">{t('app.readOnly')}</Badge>
     </div>
   )

@@ -76,12 +76,12 @@ export function LogbookRail({
       {/* Le rail lui-même : plein au-dessus d'aujourd'hui, pointillé en dessous. */}
       <span
         aria-hidden="true"
-        className="absolute w-px bg-rule"
+        className="absolute w-px bg-border"
         style={{ insetInlineStart: '5.75rem', top: 0, height: layout.todayY }}
       />
       <span
         aria-hidden="true"
-        className="absolute w-px border-s border-dashed border-rule"
+        className="absolute w-px border-s border-dashed border-border"
         style={{
           insetInlineStart: '5.75rem',
           top: layout.todayY,
@@ -94,10 +94,10 @@ export function LogbookRail({
         className="absolute start-0 end-0 flex items-center gap-3"
         style={{ top: layout.todayY, transform: 'translateY(-50%)' }}
       >
-        <span className="numeric w-23 shrink-0 text-end text-2xs tracking-wide text-stamp uppercase">
+        <span className="numeric w-23 shrink-0 text-end text-2xs tracking-wide text-primary uppercase">
           {t('deadline.today')}
         </span>
-        <span aria-hidden="true" className="h-0 flex-1 border-t-2 border-double border-stamp" />
+        <span aria-hidden="true" className="h-0 flex-1 border-t-2 border-double border-primary" />
       </div>
 
       <ol className="contents">
@@ -115,7 +115,7 @@ export function LogbookRail({
             >
               <time
                 dateTime={entry.date}
-                className="numeric w-23 shrink-0 pt-[2px] text-end text-xs text-muted"
+                className="numeric w-23 shrink-0 pt-[2px] text-end text-xs text-muted-foreground"
               >
                 {formatDateShort(entry.date, locale)}
               </time>
@@ -123,7 +123,7 @@ export function LogbookRail({
               <span
                 aria-hidden="true"
                 className={`rail-dot mt-[6px] h-[7px] w-[7px] shrink-0 rounded-full ${
-                  isOverdue ? 'bg-danger' : isDone ? 'bg-rule-strong' : 'bg-ink'
+                  isOverdue ? 'bg-destructive' : isDone ? 'bg-input' : 'bg-foreground'
                 }`}
               />
 
@@ -131,15 +131,15 @@ export function LogbookRail({
                 <span className="flex items-center gap-2">
                   <IconComponent
                     size={17}
-                    className={isOverdue ? 'text-danger' : isDone ? 'text-muted' : 'text-ink'}
+                    className={isOverdue ? 'text-destructive' : isDone ? 'text-muted-foreground' : 'text-foreground'}
                   />
-                  <span className={`text-sm ${isDone ? 'text-muted' : ''}`}>
+                  <span className={`text-sm ${isDone ? 'text-muted-foreground' : ''}`}>
                     {t(`deadline.${entry.kind}`)}
                   </span>
                 </span>
 
                 {entry.detail ? (
-                  <span className="numeric text-xs text-muted">{entry.detail}</span>
+                  <span className="numeric text-xs text-muted-foreground">{entry.detail}</span>
                 ) : null}
 
                 <span className="ms-auto flex items-center gap-2">
@@ -147,7 +147,7 @@ export function LogbookRail({
                     <Badge variant="danger">{t('deadline.expired')}</Badge>
                   ) : (
                     <span
-                      className={`text-xs ${isDone ? 'text-muted' : days <= 7 ? 'text-warn' : 'text-muted'}`}
+                      className={`text-xs ${isDone ? 'text-muted-foreground' : days <= 7 ? 'text-warning' : 'text-muted-foreground'}`}
                     >
                       {relativeLabel(days, isDone, t)}
                     </span>

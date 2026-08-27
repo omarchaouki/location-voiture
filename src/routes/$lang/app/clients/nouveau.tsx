@@ -68,8 +68,8 @@ function NewCustomerPage() {
 
   return (
     <div className="max-w-2xl">
-      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-rule-strong pb-3">
-        <h1 className="font-display text-2xl">{t('customer.new')}</h1>
+      <header className="flex flex-wrap items-baseline gap-x-4 border-b-2 border-input pb-3">
+        <h1 className="text-2xl">{t('customer.new')}</h1>
         <span className="ms-auto">
           <Link
             to="/$lang/app/clients"

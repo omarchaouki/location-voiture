@@ -30,7 +30,7 @@ export function Card({
 }) {
   return (
     <As
-      className={`overflow-hidden rounded-lg border border-rule bg-surface shadow-card ${className ?? ''}`.trim()}
+      className={`overflow-hidden rounded-lg border border-border bg-card shadow-card ${className ?? ''}`.trim()}
     >
       {children}
     </As>
@@ -48,9 +48,9 @@ export function CardHeader({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3">
       <h2 className="text-sm font-semibold">{title}</h2>
-      {hint ? <span className="text-xs text-muted">{hint}</span> : null}
+      {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
       {action ? <span className="ms-auto">{action}</span> : null}
     </div>
   )
@@ -74,11 +74,11 @@ export function CardBody({
 export type TileTone = 'neutral' | 'accent' | 'calm' | 'warn' | 'danger'
 
 const TILE_VALUE_TONE: Record<TileTone, string> = {
-  neutral: 'text-ink',
-  accent: 'text-stamp',
-  calm: 'text-calm',
-  warn: 'text-warn',
-  danger: 'text-danger',
+  neutral: 'text-foreground',
+  accent: 'text-primary',
+  calm: 'text-success',
+  warn: 'text-warning',
+  danger: 'text-destructive',
 }
 
 export interface Tile {
@@ -112,17 +112,17 @@ export function StatGroup({ items }: { items: readonly Tile[] }) {
             className={[
               'px-4 py-3',
               // Filet vertical : partout sauf en début de rangée.
-              index % 2 !== 0 ? 'border-s border-rule' : '',
-              'lg:border-s lg:border-rule',
+              index % 2 !== 0 ? 'border-s border-border' : '',
+              'lg:border-s lg:border-border',
               index % 4 === 0 ? 'lg:border-s-0' : '',
               // Filet horizontal : partout sauf sur la première rangée.
-              index >= 2 ? 'border-t border-rule' : '',
+              index >= 2 ? 'border-t border-border' : '',
               index >= 4 ? 'lg:border-t' : 'lg:border-t-0',
             ]
               .filter(Boolean)
               .join(' ')}
           >
-            <p className="text-xs text-muted">{item.label}</p>
+            <p className="text-xs text-muted-foreground">{item.label}</p>
             {/*
               Le chiffre porte `.numeric` : les mesures d'une même rangée s'alignent au
               chiffre près, et le total ne saute pas quand il passe de 9 à 10.
@@ -132,7 +132,7 @@ export function StatGroup({ items }: { items: readonly Tile[] }) {
             >
               {item.value}
             </p>
-            {item.hint ? <p className="mt-0.5 text-xs text-muted">{item.hint}</p> : null}
+            {item.hint ? <p className="mt-0.5 text-xs text-muted-foreground">{item.hint}</p> : null}
           </div>
         ))}
       </div>
@@ -162,7 +162,7 @@ export function PageHeader({
     <header className="mb-5 flex flex-wrap items-start gap-x-4 gap-y-3">
       <div className="min-w-0 flex-1">
         <h1 className="text-lg font-semibold">{title}</h1>
-        {description ? <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p> : null}
+        {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
         {meta ? <div className="mt-2 flex flex-wrap items-center gap-2">{meta}</div> : null}
       </div>
       {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}

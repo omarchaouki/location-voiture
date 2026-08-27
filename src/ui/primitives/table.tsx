@@ -60,13 +60,13 @@ export function DataTable<TRow>({
       <table className="hidden w-full border-collapse text-sm md:table">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b border-rule bg-surface-sunken">
+          <tr className="border-b border-border bg-muted">
             {columns.map((column) => (
               <th
                 key={column.key}
                 scope="col"
                 style={column.width ? { width: column.width } : undefined}
-                className={`px-4 py-2 text-xs font-medium text-muted ${
+                className={`px-4 py-2 text-xs font-medium text-muted-foreground ${
                   column.numeric ? 'text-end' : 'text-start'
                 } ${column.secondary ? 'hidden lg:table-cell' : ''}`}
               >
@@ -81,7 +81,7 @@ export function DataTable<TRow>({
             return (
               <tr
                 key={rowKey(row)}
-                className="border-b border-rule transition-colors last:border-b-0 hover:bg-surface-sunken"
+                className="border-b border-border transition-colors last:border-b-0 hover:bg-muted"
               >
                 {columns.map((column) => (
                   <td
@@ -114,7 +114,7 @@ export function DataTable<TRow>({
           return (
             <li
               key={rowKey(row)}
-              className="border-b border-rule px-4 py-3 last:border-b-0"
+              className="border-b border-border px-4 py-3 last:border-b-0"
             >
               <dl className="grid gap-1">
                 {columns.map((column, index) => (
@@ -127,7 +127,7 @@ export function DataTable<TRow>({
                     }
                   >
                     {index === 0 ? null : (
-                      <dt className="shrink-0 text-muted">{column.header}</dt>
+                      <dt className="shrink-0 text-muted-foreground">{column.header}</dt>
                     )}
                     <dd className={index === 0 ? 'font-medium' : 'text-end'}>
                       {column.cell(row)}

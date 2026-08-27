@@ -11,7 +11,7 @@ import { Combobox } from './combobox'
  */
 
 const INPUT_CLASS =
-  'mt-1 block w-full rounded-sm border border-rule-strong bg-surface px-3 py-2 text-base transition-colors focus:border-stamp'
+  'mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base transition-colors focus:border-primary'
 
 export function Field({
   name,
@@ -44,7 +44,7 @@ export function Field({
 }) {
   return (
     <label className={`block ${className ?? ''}`.trim()}>
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <input
         name={name}
         type={type}
@@ -55,7 +55,7 @@ export function Field({
         className={`${numeric ? 'numeric ' : ''}${INPUT_CLASS}`}
         style={{ minHeight: 'var(--tap-target)' }}
       />
-      {hint ? <span className="mt-1 block text-2xs text-muted">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-2xs text-muted-foreground">{hint}</span> : null}
     </label>
   )
 }
@@ -71,7 +71,7 @@ export function TextArea({
 }) {
   return (
     <label className="block sm:col-span-2">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <textarea name={name} rows={rows} className={INPUT_CLASS} />
     </label>
   )
@@ -95,7 +95,7 @@ export function Select({
 
   return (
     <label className="block">
-      <span className="text-xs text-muted">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <select
         name={name}
         defaultValue={defaultValue}
@@ -161,7 +161,7 @@ export function Picker({
 
 export function FormError({ children }: { children: React.ReactNode }) {
   return (
-    <p role="alert" className="border-s-2 border-danger ps-3 text-sm text-danger sm:col-span-2">
+    <p role="alert" className="border-s-2 border-destructive ps-3 text-sm text-destructive sm:col-span-2">
       {children}
     </p>
   )

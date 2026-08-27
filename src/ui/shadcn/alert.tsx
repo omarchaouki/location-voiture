@@ -19,10 +19,10 @@ import { cn } from './utils'
 const alertVariants = cva('rounded-md border-s-2 px-3 py-2 text-sm', {
   variants: {
     variant: {
-      default: 'border-rule-strong bg-surface-sunken text-ink',
-      success: 'border-calm bg-calm-wash text-calm',
-      warn: 'border-warn bg-warn-wash text-warn',
-      destructive: 'border-danger bg-danger-wash text-danger',
+      default: 'border-input bg-muted text-foreground',
+      success: 'border-success bg-success/10 text-success',
+      warn: 'border-warning bg-warning/10 text-warning',
+      destructive: 'border-destructive bg-destructive/10 text-destructive',
     },
   },
   defaultVariants: { variant: 'default' },

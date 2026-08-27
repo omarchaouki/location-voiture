@@ -47,14 +47,23 @@ parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien d
 - **Aucune propriété physique** : `ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`, jamais
   `ml-`, `pr-`, `left-`, `text-left`.
 - **Aucune ombre** écrite à la main. Trois jetons, et trois seulement : `shadow-control`
-  sur les boutons et les champs, `shadow-card` sur les cartes, `--overlay-shadow` sur la couche
-  flottante (`src/ui/shadcn/`). La structure reste portée par les filets (`--rule`).
+  sur les boutons et les champs, `shadow-card` sur les cartes, `--shadow-overlay` sur la couche
+  flottante (`src/ui/shadcn/`).
 - **UN seul jeu d'icônes tiers** : `lucide-react`, pour l'interface (chevrons, croix, coches).
   Heroicons et react-icons sont refusés — deux jeux, ce sont deux graisses de trait dans la même
   barre. Les objets du MÉTIER restent dessinés à la main dans `src/ui/icons/` : voiture, clé,
   bidon d'huile, plaque.
 - **Aucun `Intl` direct** : tout passe par `src/i18n/format.ts` (locale `ar-MA`, jamais `ar`).
-- Couleurs uniquement par jeton de rôle (`--ink`, `--rule`, `--stamp`…), jamais littérales.
+- **Le thème est celui de shadcn/ui**, réécrit de zéro le 27/08/2026 : `--background`,
+  `--foreground`, `--card`, `--primary`, `--muted`, `--border`, `--ring`, plus `--warning` et
+  `--success` que shadcn ne livre pas et dont un loueur a besoin. Couleurs uniquement par jeton de
+  RÔLE, jamais littérales, et jamais ailleurs que dans `src/styles/tokens.css`.
+- **Les cibles font 44 px** (`--tap-target`). Ce n'est pas du style : l'écran principal du produit
+  est un téléphone posé sur un comptoir. shadcn dessine ses contrôles à 36 px ; on ne le suit pas
+  là-dessus.
+- `pnpm check:tokens` mesure les contrastes réels dans les deux thèmes. Il a d'ailleurs attrapé
+  deux valeurs par défaut de shadcn qui échouent en clair — `--muted-foreground` et `--input` —,
+  foncées ici pour tenir WCAG.
 
 ## Deux pièges vérifiés, à ne pas réintroduire
 

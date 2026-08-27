@@ -264,7 +264,7 @@ export function MapView({
       ref={container}
       role="region"
       aria-label={label}
-      className="border border-rule bg-surface-sunken"
+      className="border border-border bg-muted"
       style={{ height }}
     />
   )

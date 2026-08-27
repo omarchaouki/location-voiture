@@ -199,7 +199,7 @@ export function Combobox({
     <div className={layout === 'inline' ? 'relative w-56 max-w-full' : 'relative'}>
       <label className={layout === 'inline' ? 'block' : 'block'}>
         {layout === 'field' ? (
-          <span className="text-xs text-muted">
+          <span className="text-xs text-muted-foreground">
             {label}
             {required ? <span aria-hidden="true"> *</span> : null}
           </span>
@@ -233,7 +233,7 @@ export function Combobox({
           onFocus={() => setOpen(true)}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
-          className={`block w-full rounded-md border border-rule-strong bg-surface transition-colors focus:border-stamp ${
+          className={`block w-full rounded-md border border-input bg-card transition-colors focus:border-primary ${
             layout === 'inline' ? 'px-2 py-1 text-sm' : 'mt-1 px-3 py-2 text-base'
           }`}
           style={{ minHeight: 'var(--tap-target)' }}
@@ -243,7 +243,7 @@ export function Combobox({
       {/* En mode strict, la valeur réelle voyage à part. */}
       {mode === 'strict' ? <input type="hidden" name={name} value={selected} /> : null}
 
-      {hint ? <span className="mt-1 block text-2xs text-muted">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-2xs text-muted-foreground">{hint}</span> : null}
 
       {/* Annonce discrète : sans elle, taper dans le champ ne dit rien à qui n'y voit pas. */}
       <span aria-live="polite" className="sr-only">
@@ -255,11 +255,11 @@ export function Combobox({
           id={listId}
           role="listbox"
           aria-label={label}
-          className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-rule bg-surface py-1"
-          style={{ boxShadow: 'var(--overlay-shadow)' }}
+          className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border bg-card py-1"
+          style={{ boxShadow: 'var(--shadow-overlay)' }}
         >
           {matches.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-muted">{emptyLabel}</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">{emptyLabel}</li>
           ) : (
             matches.map((option, index) => (
               <li
@@ -278,12 +278,12 @@ export function Combobox({
                 }}
                 onMouseEnter={() => setActive(index)}
                 className={`cursor-pointer px-3 py-2 text-sm ${
-                  index === active ? 'bg-surface-sunken text-ink' : 'text-ink'
+                  index === active ? 'bg-muted text-foreground' : 'text-foreground'
                 }`}
               >
                 {option.label}
                 {option.detail ? (
-                  <span className="numeric block text-xs text-muted">{option.detail}</span>
+                  <span className="numeric block text-xs text-muted-foreground">{option.detail}</span>
                 ) : null}
               </li>
             ))
