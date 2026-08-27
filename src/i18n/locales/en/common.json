@@ -26,6 +26,7 @@
     "forbidden": "This page is for platform administration only.",
     "impersonate": "View",
     "impersonateFailed": "Could not start the session",
+    "invitationResent": "Invitation resent to {{email}}.",
     "last30Days": "last 30 days",
     "leadStatus": {
       "contacted": "called back",
@@ -41,6 +42,7 @@
     "members": "Members",
     "newOrganization": "New organisation",
     "noBillableOrganizations": "No billable agency yet.",
+    "noInvitationOnFile": "No invitation on file — recreate the agency with an owner address.",
     "noInvoices": "No invoice issued in this period.",
     "noLeads": "No request yet.",
     "noLeadsBody": "The website form writes here. While it is empty, nobody has asked for a demo yet.",
@@ -60,6 +62,7 @@
     "plan": "Plan",
     "planMix": "Plan mix",
     "recentOrganizations": "Latest agencies",
+    "resendInvitation": "Resend the invitation",
     "revenue": "Invoicing",
     "seeAll": "See all",
     "slug": "URL identifier",
@@ -560,6 +563,7 @@
   },
   "nav": {
     "billing": "Subscription",
+    "breadcrumb": "Breadcrumb",
     "contracts": "Contracts",
     "customers": "Customers",
     "dashboard": "Dashboard",

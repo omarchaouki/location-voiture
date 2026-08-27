@@ -1,12 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest, getRequestIP, setResponseHeader } from '@tanstack/react-start/server'
-import { and, count, desc, eq, isNull } from 'drizzle-orm'
+import { and, count, desc, eq, gt, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { requirePlatformOwner } from '~/auth/context'
 import { getAuth } from '~/auth/server'
 import { getDb } from '~/db/client'
-import { members, organizations, users } from '~/db/schema/auth'
+import { invitations, members, organizations, users } from '~/db/schema/auth'
 import { impersonationSessions } from '~/db/schema/platform'
 import { platformMetrics, type PlatformMetrics } from '~/db/repositories/platform'
 import { audit } from './audit'
@@ -40,6 +40,16 @@ export interface AdminOrganization {
   isDemo: boolean
   memberCount: number
   ownerUserId: string | null
+  /**
+   * Adresse de l'invitation de propriétaire encore EN COURS, s'il y en a une.
+   *
+   * Elle existe pour sortir d'un cul-de-sac signalé le 27/08/2026 : une agence dont
+   * personne n'a accepté l'invitation affichait « impossible de consulter cet
+   * espace » et rien d'autre. Le constat était juste, mais il ne menait à aucune
+   * action — or la seule chose à faire, relancer l'invitation, demande de savoir À
+   * QUI elle a été envoyée.
+   */
+  pendingInviteEmail: string | null
   createdAt: string
 }
 
@@ -85,13 +95,111 @@ export const listOrganizations = createServerFn({ method: 'GET' }).handler(
 
     const ownerByOrg = new Map(owners.map((row) => [row.organizationId, row.userId]))
 
+    /*
+     * Les invitations de propriétaire encore en cours, en UNE requête.
+     *
+     * Même raison que pour les propriétaires juste au-dessus : une lecture par ligne
+     * ferait un N+1 sur un écran qui affiche tout l'annuaire.
+     */
+    const pending = await db
+      .select({ organizationId: invitations.organizationId, email: invitations.email })
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.role, 'owner'),
+          eq(invitations.status, 'pending'),
+          gt(invitations.expiresAt, new Date()),
+        ),
+      )
+
+    const inviteByOrg = new Map(pending.map((row) => [row.organizationId, row.email]))
+
     return rows.map((row) => ({
       ...row,
       ownerUserId: ownerByOrg.get(row.id) ?? null,
+      pendingInviteEmail: inviteByOrg.get(row.id) ?? null,
       createdAt: row.createdAt.toISOString(),
     }))
   },
 )
+
+export const ResendInvitationInput = z.object({ organizationId: z.string().min(1) })
+
+/**
+ * RELANCER l'invitation du propriétaire.
+ *
+ * Sans elle, une agence dont l'invitation a expiré ou n'a jamais été ouverte était
+ * définitivement bloquée depuis l'interface : plus de propriétaire à qui parler, donc
+ * pas d'impersonation, et aucun moyen de renvoyer le lien.
+ *
+ * **La danse d'appartenance temporaire est obligatoire, et elle n'est pas jolie.**
+ * Better Auth exige d'être membre de l'organisation pour y créer une invitation ; or
+ * un propriétaire de plateforme n'est membre d'aucune organisation cliente, et c'est
+ * la règle qui sépare la plateforme de ses clients (docs/DOMAIN.md §3.1). On entre
+ * donc, on invite, et on ressort — exactement ce que fait déjà
+ * `createOrganizationWithOwner`, où l'appartenance est posée par la création et
+ * retirée juste après.
+ *
+ * `cancelPendingInvitationsOnReInvite` étant actif, la précédente invitation est
+ * annulée : il n'existe jamais deux liens valides pour la même adresse.
+ */
+export const resendOwnerInvitation = createServerFn({ method: 'POST' })
+  .validator(ResendInvitationInput)
+  .handler(async ({ data }) => {
+    const { headers } = getRequest()
+    const session = await requirePlatformOwner(headers)
+    const auth = getAuth()
+    const db = getDb()
+
+    // À qui ? L'invitation en cours le dit ; sinon l'adresse de contact de l'agence.
+    const invited = await db
+      .select({ email: invitations.email })
+      .from(invitations)
+      .where(and(eq(invitations.organizationId, data.organizationId), eq(invitations.role, 'owner')))
+      .orderBy(desc(invitations.createdAt))
+      .limit(1)
+
+    const fallback = await db
+      .select({ email: organizations.contactEmail })
+      .from(organizations)
+      .where(eq(organizations.id, data.organizationId))
+      .limit(1)
+
+    const email = invited[0]?.email ?? fallback[0]?.email
+    if (!email) throw new Error('no owner address on file for this organization')
+
+    const membership = { id: crypto.randomUUID(), userId: session.userId }
+    await db.insert(members).values({
+      id: membership.id,
+      organizationId: data.organizationId,
+      userId: membership.userId,
+      role: 'owner',
+      createdAt: new Date(),
+    })
+
+    try {
+      await auth.api.createInvitation({
+        body: { email, role: 'owner', organizationId: data.organizationId },
+        headers,
+      })
+    } finally {
+      // Dans un `finally` : si l'invitation échoue, le propriétaire de plateforme ne
+      // doit PAS rester membre d'une organisation cliente.
+      await db.delete(members).where(eq(members.id, membership.id))
+    }
+
+    await audit({
+      orgId: data.organizationId,
+      actorUserId: session.userId,
+      action: 'invitation.resend',
+      entityType: 'organization',
+      entityId: data.organizationId,
+      after: { email },
+      request: { ip: getRequestIP() ?? null, userAgent: headers.get('user-agent') },
+    })
+
+    return { email }
+  })
 
 /**
  * Le flux principal du produit : créer l'organisation ET inviter son propriétaire,

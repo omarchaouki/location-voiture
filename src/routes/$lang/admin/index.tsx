@@ -1,22 +1,21 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import type { PlanBreakdown, PlatformMetrics } from '~/db/repositories/platform'
 import { formatDate, formatMoney, formatNumber } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { fetchPlatformMetrics } from '~/server/admin'
-import type { PlanBreakdown, PlatformMetrics } from '~/db/repositories/platform'
-import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AdminDashboardSkeleton } from '~/ui/skeletons'
-import { Card, CardBody, CardHeader, PageHeader, StatGroup } from '~/ui/primitives/card'
 import { Badge } from '~/ui/shadcn/badge'
+import { Button } from '~/ui/shadcn/button'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '~/ui/shadcn/card'
 
 /**
  * TABLEAU DE BORD DE PLATEFORME.
  *
- * Le back-office n'avait qu'un écran — l'annuaire des agences — et il fallait le lire
- * ligne à ligne pour savoir comment allait le produit. Cet écran répond aux quatre
- * questions qu'on se pose vraiment en l'ouvrant le matin :
+ * Il répond aux quatre questions qu'on se pose vraiment en l'ouvrant le matin :
  *
  *  1. combien d'agences, et combien viennent d'arriver ;
  *  2. combien rapportent, et combien sont en retard de paiement ;
@@ -27,6 +26,13 @@ import { Badge } from '~/ui/shadcn/badge'
  * un client, pas une plaque. Le back-office lit des compteurs ; pour voir les données
  * d'un client, il faut passer par l'impersonation, qui est tracée et expire en trente
  * minutes.
+ *
+ * **Redessiné le 27/08/2026.** Les cinq mesures étaient serrées dans une seule carte
+ * découpée par des filets calculés à l'index (`index % 4 === 0 ? …`). Le montage
+ * tenait, mais il produisait des rangées bancales dès que la largeur changeait : à
+ * deux colonnes, la cinquième mesure occupait seule toute une rangée. Cinq cartes
+ * dans une grille se réarrangent d'elles-mêmes, et chacune peut porter sa sévérité
+ * sans qu'on recalcule ses voisines.
  */
 export const Route = createFileRoute('/$lang/admin/')({
   loader: async () => ({ metrics: await fetchPlatformMetrics() }),
@@ -42,50 +48,35 @@ function AdminDashboardPage() {
 
   if (metrics.organizations.total === 0) {
     return (
-      <div>
-        <PageHeader title={t('admin.overview')} description={t('admin.overviewBody')} />
+      <div className="grid gap-6">
+        <Header locale={locale} />
         <Card>
-          <CardBody>
+          <CardContent>
             <EmptyState
               title={t('admin.noOrganizations')}
               body={t('admin.noOrganizationsBody')}
               action={
-                <Link
-                  to="/$lang/admin/organisations"
-                  params={{ lang: locale }}
-                  className={buttonVariants()}
-                >
-                  {t('admin.newOrganization')}
-                </Link>
+                <Button asChild>
+                  <Link to="/$lang/admin/organisations" params={{ lang: locale }}>
+                    {t('admin.newOrganization')}
+                  </Link>
+                </Button>
               }
             />
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     )
   }
 
   return (
-    <div>
-      <PageHeader
-        title={t('admin.overview')}
-        description={t('admin.overviewBody')}
-        action={
-          <Link
-            to="/$lang/admin/organisations"
-            params={{ lang: locale }}
-            className={buttonVariants()}
-          >
-            {t('admin.newOrganization')}
-          </Link>
-        }
-      />
-
+    <div className="grid gap-6">
+      <Header locale={locale} />
       <Tiles metrics={metrics} locale={locale} />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <RecentOrganizations metrics={metrics} locale={locale} />
-        <div className="grid gap-6 self-start">
+        <div className="grid min-w-0 gap-6 self-start">
           <PlanMix plans={metrics.plans} locale={locale} />
           <Revenue metrics={metrics} locale={locale} />
         </div>
@@ -94,12 +85,30 @@ function AdminDashboardPage() {
   )
 }
 
+function Header({ locale }: { locale: Locale }) {
+  const { t } = useTranslation()
+
+  return (
+    <header className="flex flex-wrap items-start gap-x-4 gap-y-3">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-lg font-semibold tracking-tight">{t('admin.overview')}</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted">{t('admin.overviewBody')}</p>
+      </div>
+      <Button asChild>
+        <Link to="/$lang/admin/organisations" params={{ lang: locale }}>
+          <Plus aria-hidden="true" />
+          {t('admin.newOrganization')}
+        </Link>
+      </Button>
+    </header>
+  )
+}
+
+/** Sévérité d'une mesure. `null` = neutre, et c'est le cas le plus fréquent. */
+type TileTone = 'danger' | 'accent' | null
+
 /**
- * La barre de mesures.
- *
- * Cinq chiffres dans UNE carte, séparés par des filets — pas cinq cartes détachées.
- * Une rangée de vignettes se survole ; une barre continue se lit d'un coup d'œil,
- * ce qui est exactement ce qu'on demande à la première ligne d'un tableau de bord.
+ * La rangée de mesures.
  *
  * Seuls « en difficulté » et « prospects » ont le droit de se colorer, et seulement
  * quand ils ne valent pas zéro : une mesure rouge affichant « 0 » depuis trois mois
@@ -109,78 +118,99 @@ function Tiles({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale }
   const { t } = useTranslation()
   const { organizations, fleet, rentals } = metrics
 
+  const tiles: ReadonlyArray<{
+    key: string
+    label: string
+    value: string
+    hint: string
+    tone: TileTone
+  }> = [
+    {
+      key: 'organizations',
+      label: t('admin.tileOrganizations'),
+      value: formatNumber(organizations.total, locale),
+      hint: t('admin.tileOrganizationsHint', {
+        active: formatNumber(organizations.active, locale),
+        trialing: formatNumber(organizations.trialing, locale),
+      }),
+      tone: null,
+    },
+    {
+      key: 'mrr',
+      label: t('admin.tileMrr'),
+      value: formatMoney(metrics.mrrCents, locale, 'MAD', { withDecimals: false }),
+      hint: t('admin.tileMrrHint', { created: organizations.createdLast30Days }),
+      tone: null,
+    },
+    {
+      key: 'vehicles',
+      label: t('admin.tileVehicles'),
+      value: formatNumber(fleet.vehicles, locale),
+      hint: t('admin.tileVehiclesHint', { rented: fleet.rented }),
+      tone: null,
+    },
+    {
+      key: 'atRisk',
+      label: t('admin.tileAtRisk'),
+      value: formatNumber(organizations.atRisk, locale),
+      hint: t('admin.tileAtRiskHint', { rentals: rentals.active }),
+      tone: organizations.atRisk > 0 ? 'danger' : null,
+    },
+    {
+      key: 'leads',
+      label: t('admin.tileLeads'),
+      value: formatNumber(metrics.newLeads, locale),
+      hint: t('admin.tileLeadsHint'),
+      tone: metrics.newLeads > 0 ? 'accent' : null,
+    },
+  ]
+
   return (
-    <StatGroup
-      items={[
-        {
-          key: 'organizations',
-          label: t('admin.tileOrganizations'),
-          value: formatNumber(organizations.total, locale),
-          hint: t('admin.tileOrganizationsHint', {
-            active: formatNumber(organizations.active, locale),
-            trialing: formatNumber(organizations.trialing, locale),
-          }),
-        },
-        {
-          key: 'mrr',
-          label: t('admin.tileMrr'),
-          value: formatMoney(metrics.mrrCents, locale, 'MAD', { withDecimals: false }),
-          hint: t('admin.tileMrrHint', { created: organizations.createdLast30Days }),
-        },
-        {
-          key: 'vehicles',
-          label: t('admin.tileVehicles'),
-          value: formatNumber(fleet.vehicles, locale),
-          hint: t('admin.tileVehiclesHint', { rented: fleet.rented }),
-        },
-        {
-          key: 'atRisk',
-          label: t('admin.tileAtRisk'),
-          tone: organizations.atRisk > 0 ? ('danger' as const) : ('neutral' as const),
-          value: formatNumber(organizations.atRisk, locale),
-          hint: t('admin.tileAtRiskHint', { rentals: rentals.active }),
-        },
-        {
-          key: 'leads',
-          label: t('admin.tileLeads'),
-          tone: metrics.newLeads > 0 ? ('accent' as const) : ('neutral' as const),
-          value: formatNumber(metrics.newLeads, locale),
-          hint: t('admin.tileLeadsHint'),
-        },
-      ]}
-    />
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {tiles.map((tile) => (
+        <Card key={tile.key} className="min-w-0 gap-2 py-4">
+          <CardContent>
+            <p className="text-xs text-muted">{tile.label}</p>
+            {/*
+              Le chiffre porte `.numeric` : les mesures s'alignent au chiffre près, et
+              le total ne saute pas quand il passe de 9 à 10.
+            */}
+            <p
+              className={`numeric mt-1 text-xl font-semibold ${
+                tile.tone === 'danger' ? 'text-danger' : tile.tone === 'accent' ? 'text-stamp' : ''
+              }`}
+            >
+              {tile.value}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">{tile.hint}</p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   )
 }
 
 /** Les six dernières agences. Une agence sans voiture est une agence qui n'a pas démarré. */
-function RecentOrganizations({
-  metrics,
-  locale,
-}: {
-  metrics: PlatformMetrics
-  locale: Locale
-}) {
+function RecentOrganizations({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale }) {
   const { t } = useTranslation()
 
   return (
-    <Card>
-      <CardHeader
-        title={t('admin.recentOrganizations')}
-        action={
-          <Link
-            to="/$lang/admin/organisations"
-            params={{ lang: locale }}
-            className="text-xs text-stamp underline underline-offset-4"
-          >
-            {t('admin.seeAll')}
-          </Link>
-        }
-      />
+    <Card className="min-w-0 py-0">
+      <CardHeader className="border-b border-rule py-4">
+        <CardTitle>{t('admin.recentOrganizations')}</CardTitle>
+        <CardAction>
+          <Button asChild variant="link" size="sm" className="h-11 px-0">
+            <Link to="/$lang/admin/organisations" params={{ lang: locale }}>
+              {t('admin.seeAll')}
+            </Link>
+          </Button>
+        </CardAction>
+      </CardHeader>
       <ul>
         {metrics.recent.map((org) => (
           <li
             key={org.id}
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule px-4 py-3 last:border-b-0 sm:px-5"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-rule px-5 py-3 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{org.name}</p>
@@ -189,15 +219,13 @@ function RecentOrganizations({
               </p>
             </div>
             {org.isDemo ? <Badge variant="accent">{t('app.demo')}</Badge> : null}
-            <Badge>{org.planCode}</Badge>
+            <Badge variant="secondary">{org.planCode}</Badge>
             {/*
               Zéro voiture n'est pas une statistique, c'est un signal : l'agence a été
               créée et n'a jamais été remplie. C'est le seul appel à l'action de la
               page, et il ne s'affiche que quand il a un sens.
             */}
-            <span
-              className={`numeric text-xs ${org.vehicles === 0 ? 'text-warn' : 'text-muted'}`}
-            >
+            <span className={`numeric text-xs ${org.vehicles === 0 ? 'text-warn' : 'text-muted'}`}>
               {org.vehicles === 0
                 ? t('admin.notStarted')
                 : t('admin.vehicleCount', { count: org.vehicles })}
@@ -221,9 +249,11 @@ function PlanMix({ plans, locale }: { plans: readonly PlanBreakdown[]; locale: L
   const highest = plans.reduce((max, plan) => Math.max(max, plan.organizations), 0)
 
   return (
-    <Card>
-      <CardHeader title={t('admin.planMix')} />
-      <CardBody>
+    <Card className="min-w-0">
+      <CardHeader>
+        <CardTitle>{t('admin.planMix')}</CardTitle>
+      </CardHeader>
+      <CardContent>
         {plans.length === 0 ? (
           <p className="text-sm text-muted">{t('admin.noBillableOrganizations')}</p>
         ) : (
@@ -256,7 +286,7 @@ function PlanMix({ plans, locale }: { plans: readonly PlanBreakdown[]; locale: L
             ))}
           </ul>
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   )
 }
@@ -272,9 +302,14 @@ function Revenue({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale
   const { t } = useTranslation()
 
   return (
-    <Card>
-      <CardHeader title={t('admin.revenue')} hint={t('admin.last30Days')} />
-      <CardBody>
+    <Card className="min-w-0">
+      <CardHeader>
+        <CardTitle>{t('admin.revenue')}</CardTitle>
+        <CardAction>
+          <span className="text-2xs text-muted">{t('admin.last30Days')}</span>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
         {metrics.revenueLast30Days.length === 0 ? (
           <p className="text-sm text-muted">{t('admin.noInvoices')}</p>
         ) : (
@@ -289,9 +324,7 @@ function Revenue({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale
                 </div>
                 <div className="mt-1 flex items-baseline justify-between gap-2">
                   <dt className="text-sm text-muted">{t('admin.outstanding')}</dt>
-                  <dd
-                    className={`numeric text-sm ${line.outstandingCents > 0 ? 'text-warn' : ''}`}
-                  >
+                  <dd className={`numeric text-sm ${line.outstandingCents > 0 ? 'text-warn' : ''}`}>
                     {formatMoney(line.outstandingCents, locale, line.currency)}
                   </dd>
                 </div>
@@ -299,7 +332,7 @@ function Revenue({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale
             ))}
           </dl>
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   )
 }

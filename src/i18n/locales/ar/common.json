@@ -26,6 +26,7 @@
     "forbidden": "هذه الصفحة مخصّصة لإدارة المنصة.",
     "impersonate": "اطّلاع",
     "impersonateFailed": "تعذّر بدء الاطلاع",
+    "invitationResent": "أُعيد إرسال الدعوة إلى {{email}}.",
     "last30Days": "آخر 30 يومًا",
     "leadStatus": {
       "contacted": "تم الاتصال",
@@ -45,6 +46,7 @@
     "members": "الأعضاء",
     "newOrganization": "مؤسسة جديدة",
     "noBillableOrganizations": "لا توجد وكالة قابلة للفوترة حاليًا.",
+    "noInvitationOnFile": "لا توجد دعوة في الملف — أعد إنشاء الوكالة بعنوان مالك.",
     "noInvoices": "لم تصدر أي فاتورة خلال الفترة.",
     "noLeads": "لا يوجد أي طلب حاليًا.",
     "noLeadsBody": "استمارة الموقع تكتب هنا. ما دامت فارغة، فلم يطلب أحد بعدُ عرضًا تجريبيًا.",
@@ -64,6 +66,7 @@
     "plan": "الباقة",
     "planMix": "التوزيع حسب الباقة",
     "recentOrganizations": "أحدث الوكالات",
+    "resendInvitation": "إعادة إرسال الدعوة",
     "revenue": "الفوترة",
     "seeAll": "عرض الكل",
     "slug": "معرّف الرابط",
@@ -604,6 +607,7 @@
   },
   "nav": {
     "billing": "الاشتراك",
+    "breadcrumb": "مسار التنقل",
     "contracts": "العقود",
     "customers": "الزبناء",
     "dashboard": "لوحة القيادة",

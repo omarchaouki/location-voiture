@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { fetchViewer } from '~/server/session'
+import { AdminBreadcrumb } from '~/ui/admin/admin-breadcrumb'
 import { ADMIN_DESTINATIONS } from '~/ui/nav/destinations'
 import { Shell } from '~/ui/nav/shell'
 
@@ -45,6 +46,10 @@ function AdminShell() {
       home="/$lang/admin"
       subtitle={t('admin.title')}
     >
+      {/* Toujours au-dessus du contenu, quelle que soit la largeur : c'est la seule
+          remontée vers le tableau de bord qui survit à la disparition de la barre
+          latérale sous 1024 px. Voir src/ui/admin/admin-breadcrumb.tsx. */}
+      <AdminBreadcrumb locale={locale} />
       <Outlet />
     </Shell>
   )

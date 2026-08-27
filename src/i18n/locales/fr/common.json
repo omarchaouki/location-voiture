@@ -26,6 +26,7 @@
     "forbidden": "Cette page est réservée à l'administration de la plateforme.",
     "impersonate": "Consulter",
     "impersonateFailed": "La consultation n'a pas pu démarrer",
+    "invitationResent": "Invitation renvoyée à {{email}}.",
     "last30Days": "30 derniers jours",
     "leadStatus": {
       "contacted": "rappelé",
@@ -41,6 +42,7 @@
     "members": "Membres",
     "newOrganization": "Nouvelle organisation",
     "noBillableOrganizations": "Aucune agence facturable pour l’instant.",
+    "noInvitationOnFile": "Aucune invitation au dossier — recréez l'agence avec une adresse de propriétaire.",
     "noInvoices": "Aucune facture émise sur la période.",
     "noLeads": "Aucune demande pour le moment.",
     "noLeadsBody": "Le formulaire du site écrit ici. Tant qu'il est vide, c'est que personne n'a encore demandé de démonstration.",
@@ -60,6 +62,7 @@
     "plan": "Plan",
     "planMix": "Répartition par offre",
     "recentOrganizations": "Dernières agences",
+    "resendInvitation": "Relancer l'invitation",
     "revenue": "Facturation",
     "seeAll": "Tout voir",
     "slug": "Identifiant d'URL",
@@ -560,6 +563,7 @@
   },
   "nav": {
     "billing": "Abonnement",
+    "breadcrumb": "Fil d'Ariane",
     "contracts": "Contrats",
     "customers": "Clients",
     "dashboard": "Tableau de bord",
