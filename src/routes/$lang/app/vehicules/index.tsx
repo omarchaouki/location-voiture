@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { formatDate, formatKilometers, formatMoney } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { listVehicles, type VehicleListRow } from '~/server/vehicles'
+import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { ChevronEndIcon } from '~/ui/icons'
-import { BUTTON_STYLE, buttonClasses } from '~/ui/primitives/button'
 import { Plate } from '~/ui/primitives/plate'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { VehicleTableSkeleton } from '~/ui/skeletons'
 
 /**
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/$lang/app/vehicules/')({
   component: VehiclesPage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   available: 'calm',
   rented: 'accent',
   maintenance: 'warn',
@@ -32,7 +32,7 @@ const STATUS_TONES: Record<string, StampTone> = {
 }
 
 /** Sévérité → cachet. La couleur double le libellé, elle ne le remplace pas. */
-const SEVERITY_TONES: Record<string, StampTone> = {
+const SEVERITY_TONES: Record<string, BadgeVariant> = {
   blocking: 'danger',
   critical: 'danger',
   high: 'warn',
@@ -65,8 +65,7 @@ function VehiclesPage() {
           <Link
             to="/$lang/app/vehicules/nouveau"
             params={{ lang: locale }}
-            className={buttonClasses('primary')}
-            style={BUTTON_STYLE}
+            className={buttonVariants()}
           >
             <span>{t('vehicle.list.add')}</span>
           </Link>
@@ -82,8 +81,7 @@ function VehiclesPage() {
               <Link
                 to="/$lang/app/vehicules/nouveau"
                 params={{ lang: locale }}
-                className={buttonClasses('primary')}
-                style={BUTTON_STYLE}
+                className={buttonVariants()}
               >
                 <span>{t('vehicle.list.add')}</span>
               </Link>
@@ -146,9 +144,9 @@ function VehicleRow({
           */}
           {vehicle.nextDeadline ? (
             <span className="flex items-center gap-2">
-              <Stamp tone={SEVERITY_TONES[vehicle.nextDeadline.severity] ?? 'neutral'}>
+              <Badge variant={SEVERITY_TONES[vehicle.nextDeadline.severity] ?? 'neutral'}>
                 {t(`alerts.type.${vehicle.nextDeadline.alertType}`)}
-              </Stamp>
+              </Badge>
               {vehicle.nextDeadline.dueOn ? (
                 <span className="numeric hidden text-2xs text-muted sm:inline">
                   {formatDate(vehicle.nextDeadline.dueOn, locale)}
@@ -157,9 +155,9 @@ function VehicleRow({
             </span>
           ) : null}
 
-          <Stamp tone={STATUS_TONES[vehicle.status] ?? 'neutral'}>
+          <Badge variant={STATUS_TONES[vehicle.status] ?? 'neutral'}>
             {t(STATUS_KEYS[vehicle.status] ?? 'vehicle.status.available')}
-          </Stamp>
+          </Badge>
           <span className="numeric text-xs text-muted">
             {formatKilometers(vehicle.currentKm, locale)} km
           </span>

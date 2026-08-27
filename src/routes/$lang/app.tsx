@@ -5,10 +5,10 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { stopImpersonation } from '~/server/admin'
 import { countCriticalAlerts } from '~/server/alerts'
 import { fetchViewer, type ViewerState } from '~/server/session'
+import { Button } from '~/ui/shadcn/button'
 import { APP_DESTINATIONS } from '~/ui/nav/destinations'
 import { Shell } from '~/ui/nav/shell'
-import { Button } from '~/ui/primitives/button'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * Coquille de l'espace de travail client.
@@ -84,7 +84,7 @@ function CriticalBanner({ locale, critical }: { locale: Locale; critical: number
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-danger bg-danger-wash px-4 py-3 sm:px-6">
-      <Stamp tone="danger">{t('alerts.criticalBanner', { count: critical })}</Stamp>
+      <Badge variant="danger">{t('alerts.criticalBanner', { count: critical })}</Badge>
       <Link
         to="/$lang/app/alertes"
         params={{ lang: locale }}
@@ -113,13 +113,13 @@ function ImpersonationBanner({ viewer }: { viewer: ViewerState }) {
       role="status"
       className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b-2 border-danger bg-danger-wash px-4 py-3 sm:px-6"
     >
-      <Stamp tone="danger">{t('app.impersonationBanner', { org: viewer.organization.name })}</Stamp>
+      <Badge variant="danger">{t('app.impersonationBanner', { org: viewer.organization.name })}</Badge>
       {!viewer.impersonation.canWrite ? (
         <span className="text-xs text-danger">{t('app.impersonationReadOnly')}</span>
       ) : null}
       <span className="ms-auto">
         <Button
-          variant="danger"
+          variant="destructive"
           onClick={() => {
             void stopImpersonation().then(() => {
               // Rechargement complet : les cookies de session viennent de changer.
@@ -152,7 +152,7 @@ function DemoBanner({ viewer }: { viewer: ViewerState }) {
 
   return (
     <div role="status" className="border-b border-rule bg-surface-sunken px-4 py-3 sm:px-6">
-      <Stamp tone="accent">{t('app.demo')}</Stamp>
+      <Badge variant="accent">{t('app.demo')}</Badge>
       <p className="mt-2 text-sm">{t('demo.banner')}</p>
       <p className="mt-1 text-xs text-muted">{t('demo.bannerDetail')}</p>
     </div>
@@ -167,7 +167,7 @@ function ReadOnlyBanner({ viewer }: { viewer: ViewerState }) {
 
   return (
     <div role="status" className="border-b border-warn bg-warn-wash px-4 py-3 sm:px-6">
-      <Stamp tone="warn">{t('app.readOnly')}</Stamp>
+      <Badge variant="warn">{t('app.readOnly')}</Badge>
     </div>
   )
 }

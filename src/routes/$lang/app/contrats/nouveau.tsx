@@ -9,10 +9,10 @@ import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { checkContractSignature, createContract } from '~/server/contracts'
 import { listCustomers } from '~/server/customers'
 import { listVehicles } from '~/server/vehicles'
+import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { Field, FormError, Picker, Select } from '~/ui/forms/fields'
 import { choiceField, textField } from '~/ui/forms/form-data'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * Nouveau contrat.
@@ -124,8 +124,7 @@ function NewContractPage() {
           <Link
             to="/$lang/app/contrats"
             params={{ lang: locale }}
-            className={buttonClasses('ghost')}
-            style={BUTTON_STYLE}
+            className={buttonVariants({ variant: 'ghost' })}
           >
             <span>{t('contract.back')}</span>
           </Link>
@@ -197,7 +196,7 @@ function NewContractPage() {
             <ul className="mt-2 flex flex-wrap gap-2">
               {blocks.map((block) => (
                 <li key={block.reason}>
-                  <Stamp tone="danger">{t(`contract.blocks.${block.reason}`)}</Stamp>
+                  <Badge variant="danger">{t(`contract.blocks.${block.reason}`)}</Badge>
                 </li>
               ))}
             </ul>
@@ -215,7 +214,7 @@ function NewContractPage() {
         <div className="sm:col-span-2">
           <Button
             type="submit"
-            variant="primary"
+            variant="default"
             disabled={busy || (blocks.length > 0 && !overridable)}
           >
             {busy ? t('auth.working') : t('contract.submit')}

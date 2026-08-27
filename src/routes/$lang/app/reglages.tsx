@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '~/i18n/locales'
 import { loadSettings, updateSettings } from '~/server/settings'
+import { Button, buttonVariants } from '~/ui/shadcn/button'
+import { cn } from '~/ui/shadcn/utils'
 import { choiceField, textField } from '~/ui/forms/form-data'
 import { LanguageSwitcher } from '~/ui/i18n/language-switcher'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 import { ThemeMenu } from '~/ui/theme/theme'
 import { SettingsSkeleton } from '~/ui/skeletons'
 
@@ -140,7 +141,7 @@ function SettingsPage() {
 
         {settings.canEdit ? (
           <div className="flex items-center gap-4 sm:col-span-2">
-            <Button type="submit" variant="primary" disabled={busy}>
+            <Button type="submit" variant="default" disabled={busy}>
               {busy ? t('auth.working') : t('settings.save')}
             </Button>
             {saved ? (
@@ -157,12 +158,11 @@ function SettingsPage() {
       </h2>
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <span className="font-medium">{settings.planCode}</span>
-        <Stamp tone={settings.status === 'active' ? 'calm' : 'warn'}>{settings.status}</Stamp>
+        <Badge variant={settings.status === 'active' ? 'calm' : 'warn'}>{settings.status}</Badge>
         <Link
           to="/$lang/app/abonnement"
           params={{ lang: locale }}
-          className={buttonClasses('secondary', 'ms-auto')}
-          style={BUTTON_STYLE}
+          className={cn(buttonVariants({ variant: 'outline' }), 'ms-auto')}
         >
           <span>{t('settings.seeBilling')}</span>
         </Link>

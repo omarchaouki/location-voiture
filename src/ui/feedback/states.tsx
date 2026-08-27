@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button } from '~/ui/shadcn/button'
 
-import { Button } from '~/ui/primitives/button'
 
 /**
  * État vide : une phrase qui dit ce qui manque, et le bouton qui le crée.

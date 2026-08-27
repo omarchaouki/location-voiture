@@ -16,12 +16,12 @@ import {
   type FleetSnapshot,
   type GeofenceSummary,
 } from '~/server/gps'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { GeofenceIcon, GpsIcon } from '~/ui/icons'
 import { MapView, type MapMarker, type MapShape } from '~/ui/map/map-view'
-import { Button } from '~/ui/primitives/button'
 import { Plate } from '~/ui/primitives/plate'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 import { MapSkeleton } from '~/ui/skeletons'
 import { Picker } from '~/ui/forms/fields'
 
@@ -268,9 +268,9 @@ function TrackingPage() {
                   <span className="ledger-margin w-24 sm:w-28 shrink-0 pe-4">
                     <Plate value={crossing.plate} size="sm" />
                   </span>
-                  <Stamp tone={crossing.kind === 'exit' ? 'warn' : 'calm'}>
+                  <Badge variant={crossing.kind === 'exit' ? 'warn' : 'calm'}>
                     {crossing.kind === 'exit' ? t('gps.crossingExit') : t('gps.crossingEnter')}
-                  </Stamp>
+                  </Badge>
                   <span className="text-sm">{crossing.geofenceName}</span>
                   <span className="numeric ms-auto text-xs text-muted">
                     {formatDateTime(crossing.occurredAt, locale)}
@@ -348,7 +348,7 @@ function PositionRow({
 
         <span className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
           {position.stale ? (
-            <Stamp tone="neutral">{t('gps.stale')}</Stamp>
+            <Badge variant="neutral">{t('gps.stale')}</Badge>
           ) : (
             <span className="text-xs text-muted">
               {isMoving(position) ? t('gps.moving') : t('gps.parked')}
@@ -455,7 +455,7 @@ function ZoneComposer({
       </p>
       <div className="mt-3">
         <Button
-          variant="primary"
+          variant="default"
           disabled={saving || !centre || name.trim().length === 0}
           onClick={() => {
             void save()
@@ -575,7 +575,7 @@ function ZoneRow({
           : t('gps.zonePolygon', { count: zone.geometry.ring.length })}
       </span>
       <span className="ms-auto text-xs text-muted">{scope}</span>
-      {zone.isActive ? null : <Stamp tone="neutral">{t('gps.zoneInactive')}</Stamp>}
+      {zone.isActive ? null : <Badge variant="neutral">{t('gps.zoneInactive')}</Badge>}
       {/* Suppression DOUCE côté serveur : les franchissements déjà constatés gardent
           une zone à nommer, sinon l'historique parlerait d'un identifiant nu. */}
       <Button

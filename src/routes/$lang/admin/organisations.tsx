@@ -10,15 +10,15 @@ import {
   startImpersonation,
   type AdminOrganization,
 } from '~/server/admin'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { CityCombobox } from '~/ui/forms/city-combobox'
 import { DataTable } from '~/ui/primitives/table'
 import { Field, Select } from '~/ui/forms/fields'
 import { choiceField, textField } from '~/ui/forms/form-data'
 import { AdminOrganizationsSkeleton } from '~/ui/skeletons'
-import { Button } from '~/ui/primitives/button'
 import { Card, CardBody, CardHeader, PageHeader } from '~/ui/primitives/card'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * Liste des organisations et création d'un client.
@@ -162,12 +162,12 @@ function AdminOrganizationsPage() {
                     </>
                   ),
                 },
-                { key: 'plan', header: t('admin.plan'), cell: (org) => <Stamp>{org.planCode}</Stamp> },
+                { key: 'plan', header: t('admin.plan'), cell: (org) => <Badge>{org.planCode}</Badge> },
                 {
                   key: 'status',
                   header: t('admin.status'),
                   cell: (org) => (
-                    <Stamp tone={org.status === 'active' ? 'calm' : 'warn'}>{org.status}</Stamp>
+                    <Badge variant={org.status === 'active' ? 'calm' : 'warn'}>{org.status}</Badge>
                   ),
                 },
                 {
@@ -241,7 +241,7 @@ function AdminOrganizationsPage() {
               />
 
               <div>
-                <Button type="submit" variant="primary" disabled={creating} className="w-full">
+                <Button type="submit" variant="default" disabled={creating} className="w-full">
                   {creating ? t('auth.working') : t('admin.create')}
                 </Button>
                 {done ? (

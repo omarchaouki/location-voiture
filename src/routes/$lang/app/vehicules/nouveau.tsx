@@ -6,8 +6,8 @@ import { normalizePlateInput } from '~/core/plate'
 import { FUELS, GEARBOXES, VEHICLE_CATEGORIES } from '~/core/schemas/vehicle'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { createVehicle } from '~/server/vehicles'
+import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { choiceField, textField } from '~/ui/forms/form-data'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
 
 /**
  * Ajout d'un véhicule.
@@ -113,8 +113,7 @@ function NewVehiclePage() {
           <Link
             to="/$lang/app/vehicules"
             params={{ lang: locale }}
-            className={buttonClasses('ghost')}
-            style={BUTTON_STYLE}
+            className={buttonVariants({ variant: 'ghost' })}
           >
             <span>{t('vehicle.list.backToList')}</span>
           </Link>
@@ -164,7 +163,7 @@ function NewVehiclePage() {
         ) : null}
 
         <div className="sm:col-span-2">
-          <Button type="submit" variant="primary" disabled={busy}>
+          <Button type="submit" variant="default" disabled={busy}>
             {busy ? t('auth.working') : t('vehicle.form.submit')}
           </Button>
         </div>

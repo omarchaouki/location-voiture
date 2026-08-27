@@ -6,8 +6,8 @@ import { formatDate, formatMoney, formatNumber } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { loadBilling, refreshUsage } from '~/server/billing'
 import type { UsageLine } from '~/server/reads/billing'
-import { Button } from '~/ui/primitives/button'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Button } from '~/ui/shadcn/button'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { BillingSkeleton } from '~/ui/skeletons'
 
 /**
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/$lang/app/abonnement')({
   component: BillingPage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   trialing: 'accent',
   active: 'calm',
   past_due: 'warn',
@@ -106,9 +106,9 @@ function BillingPage() {
           <span className="font-medium">{billing.planCode}</span>
         </Line>
         <Line label={t('billing.status')}>
-          <Stamp tone={STATUS_TONES[billing.status] ?? 'neutral'}>
+          <Badge variant={STATUS_TONES[billing.status] ?? 'neutral'}>
             {t(STATUS_KEYS[billing.status] ?? 'billing.statusActive')}
-          </Stamp>
+          </Badge>
         </Line>
         {billing.trialEndsOn ? (
           <Line label={t('billing.trialEnds')}>
@@ -163,9 +163,9 @@ function BillingPage() {
                 <span className="numeric ms-auto">
                   {formatMoney(invoice.totalCents, locale, invoice.currency)}
                 </span>
-                <Stamp tone={invoice.status === 'paid' ? 'calm' : 'neutral'}>
+                <Badge variant={invoice.status === 'paid' ? 'calm' : 'neutral'}>
                   {t(INVOICE_KEYS[invoice.status] ?? 'billing.invoiceSent')}
-                </Stamp>
+                </Badge>
               </li>
             ))}
           </ul>
@@ -207,7 +207,7 @@ function UsageRow({ line, locale }: { line: UsageLine; locale: Locale }) {
               limit: formatNumber(line.limit, locale),
             })}
       </span>
-      {line.room ? null : <Stamp tone="warn">{t('billing.full')}</Stamp>}
+      {line.room ? null : <Badge variant="warn">{t('billing.full')}</Badge>}
     </li>
   )
 }

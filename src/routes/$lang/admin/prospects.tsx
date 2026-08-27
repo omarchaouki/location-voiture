@@ -5,12 +5,12 @@ import { formatMoroccanPhone } from '~/core/phone'
 import { formatDateTime } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { listLeads, markLeadContacted } from '~/server/leads'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AdminLeadsSkeleton } from '~/ui/skeletons'
 import { DataTable } from '~/ui/primitives/table'
-import { Button } from '~/ui/primitives/button'
 import { Card, CardBody, CardHeader, PageHeader } from '~/ui/primitives/card'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * PROSPECTS — les demandes de démonstration venues du site.
@@ -108,9 +108,9 @@ function AdminLeadsPage() {
                 key: 'status',
                 header: t('admin.status'),
                 cell: (lead) => (
-                  <Stamp tone={lead.status === 'new' ? 'accent' : 'calm'}>
+                  <Badge variant={lead.status === 'new' ? 'accent' : 'calm'}>
                     {t(`admin.leadStatus.${lead.status}`)}
-                  </Stamp>
+                  </Badge>
                 ),
               },
               {

@@ -11,10 +11,10 @@ import {
   snoozeAlert,
   type AlertView,
 } from '~/server/alerts'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AlertListSkeleton } from '~/ui/skeletons'
-import { Button } from '~/ui/primitives/button'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 
 /**
  * Centre de notifications.
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/$lang/app/alertes')({
   component: AlertsPage,
 })
 
-const SEVERITY_TONES: Record<string, StampTone> = {
+const SEVERITY_TONES: Record<string, BadgeVariant> = {
   blocking: 'danger',
   critical: 'danger',
   high: 'warn',
@@ -120,9 +120,9 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
         SEVERITY_BORDER[alert.severity] ?? 'border-s-rule'
       }`}
     >
-      <Stamp tone={SEVERITY_TONES[alert.severity] ?? 'neutral'}>
+      <Badge variant={SEVERITY_TONES[alert.severity] ?? 'neutral'}>
         {t(`alerts.severity.${alert.severity}`)}
-      </Stamp>
+      </Badge>
 
       <span className="font-medium">{t(`alerts.type.${alert.alertType}`)}</span>
       {subject ? <span className="text-sm text-muted">{subject}</span> : null}
@@ -131,7 +131,7 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
         <span className="numeric text-xs text-muted">{formatDate(alert.dueOn, locale)}</span>
       ) : null}
 
-      {alert.state === 'acknowledged' ? <Stamp tone="calm">{t('alerts.acknowledged')}</Stamp> : null}
+      {alert.state === 'acknowledged' ? <Badge variant="calm">{t('alerts.acknowledged')}</Badge> : null}
       {alert.state === 'snoozed' && alert.snoozedUntilAt ? (
         <span className="numeric text-xs text-muted">
           {t('alerts.snoozedUntil')} {formatDate(alert.snoozedUntilAt.slice(0, 10), locale)}
@@ -156,7 +156,7 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
           {t('alerts.snoozeDays', { count: 7 })}
         </Button>
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => void act(() => acknowledgeAlert({ data: { id: alert.id } }))}
           disabled={busy || alert.state === 'acknowledged'}
         >

@@ -12,10 +12,10 @@ import {
   returnContract,
   startContract,
 } from '~/server/contracts'
+import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { Field, FormError, Select } from '~/ui/forms/fields'
 import { choiceField, textField } from '~/ui/forms/form-data'
-import { BUTTON_STYLE, Button, buttonClasses } from '~/ui/primitives/button'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { VehicleFileSkeleton } from '~/ui/skeletons'
 
 /**
@@ -31,7 +31,7 @@ export const Route = createFileRoute('/$lang/app/contrats/$contractId')({
   component: ContractPage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   reservation: 'neutral',
   active: 'accent',
   returned: 'calm',
@@ -79,15 +79,14 @@ function ContractPage() {
     <div className="max-w-3xl">
       <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-rule pb-3">
         <span className="numeric font-display text-2xl">{contract.reference}</span>
-        <Stamp tone={STATUS_TONES[contract.status] ?? 'neutral'}>
+        <Badge variant={STATUS_TONES[contract.status] ?? 'neutral'}>
           {t(`contract.statuses.${contract.status}`)}
-        </Stamp>
+        </Badge>
         <span className="ms-auto">
           <Link
             to="/$lang/app/contrats"
             params={{ lang: locale }}
-            className={buttonClasses('ghost')}
-            style={BUTTON_STYLE}
+            className={buttonVariants({ variant: 'ghost' })}
           >
             <span>{t('contract.back')}</span>
           </Link>
@@ -165,7 +164,7 @@ function ContractPage() {
           <Field name="startKm" label={t('contract.startKm')} type="number" required />
           <Field name="startFuelEighths" label={t('contract.fuel')} type="number" required defaultValue="8" />
           <div className="sm:col-span-2">
-            <Button type="submit" variant="primary" disabled={busy}>
+            <Button type="submit" variant="default" disabled={busy}>
               {busy ? t('auth.working') : t('contract.startAction')}
             </Button>
           </div>
@@ -199,7 +198,7 @@ function ContractPage() {
             {t('contract.returnDeposit')}
           </label>
           <div className="sm:col-span-2">
-            <Button type="submit" variant="primary" disabled={busy}>
+            <Button type="submit" variant="default" disabled={busy}>
               {busy ? t('auth.working') : t('contract.returnAction')}
             </Button>
           </div>
@@ -259,7 +258,7 @@ function ContractPage() {
           <span className="min-w-60 flex-1">
             <Field name="reason" label={t('contract.cancelReason')} numeric={false} required />
           </span>
-          <Button type="submit" variant="danger" disabled={busy}>
+          <Button type="submit" variant="destructive" disabled={busy}>
             {t('contract.cancelAction')}
           </Button>
         </form>

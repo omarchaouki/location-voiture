@@ -7,11 +7,11 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { Route as AppRoute } from '~/routes/$lang/app'
 import { fetchAgencyOverview } from '~/server/dashboard'
 import type { AgencyOverview } from '~/server/reads/overview'
+import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AgencyDashboardSkeleton } from '~/ui/skeletons'
-import { Button, buttonClasses } from '~/ui/primitives/button'
 import { Card, CardBody, CardHeader, PageHeader, StatGroup } from '~/ui/primitives/card'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * TABLEAU DE BORD DE L'AGENCE.
@@ -61,15 +61,15 @@ function DashboardPage() {
         description={t('home.dashboardBody')}
         meta={
           <>
-            <Stamp>{viewer.organization.role}</Stamp>
-            {viewer.organization.isDemo ? <Stamp tone="accent">{t('app.demo')}</Stamp> : null}
+            <Badge>{viewer.organization.role}</Badge>
+            {viewer.organization.isDemo ? <Badge variant="accent">{t('app.demo')}</Badge> : null}
           </>
         }
         action={
           <Link
             to="/$lang/app/contrats/nouveau"
             params={{ lang: locale }}
-            className={buttonClasses('primary')}
+            className={buttonVariants()}
           >
             {t('contract.add')}
           </Link>
@@ -170,9 +170,9 @@ function NextDeadlines({ overview, locale }: { overview: AgencyOverview; locale:
                 La sévérité est portée par un CACHET nommé, jamais par la seule
                 couleur : un daltonien doit lire la même urgence que les autres.
               */}
-              <Stamp tone={alert.severity === 'critical' ? 'danger' : 'warn'}>
+              <Badge variant={alert.severity === 'critical' ? 'danger' : 'warn'}>
                 {t(`alerts.severity.${alert.severity}`)}
-              </Stamp>
+              </Badge>
               <span className="numeric text-xs text-muted">
                 {alert.dueOn ? formatDate(alert.dueOn, locale) : '—'}
               </span>

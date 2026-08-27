@@ -5,11 +5,11 @@ import { formatDate, formatMoney, formatNumber } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { fetchPlatformMetrics } from '~/server/admin'
 import type { PlanBreakdown, PlatformMetrics } from '~/db/repositories/platform'
+import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AdminDashboardSkeleton } from '~/ui/skeletons'
-import { buttonClasses } from '~/ui/primitives/button'
 import { Card, CardBody, CardHeader, PageHeader, StatGroup } from '~/ui/primitives/card'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 
 /**
  * TABLEAU DE BORD DE PLATEFORME.
@@ -53,7 +53,7 @@ function AdminDashboardPage() {
                 <Link
                   to="/$lang/admin/organisations"
                   params={{ lang: locale }}
-                  className={buttonClasses('primary')}
+                  className={buttonVariants()}
                 >
                   {t('admin.newOrganization')}
                 </Link>
@@ -74,7 +74,7 @@ function AdminDashboardPage() {
           <Link
             to="/$lang/admin/organisations"
             params={{ lang: locale }}
-            className={buttonClasses('primary')}
+            className={buttonVariants()}
           >
             {t('admin.newOrganization')}
           </Link>
@@ -188,8 +188,8 @@ function RecentOrganizations({
                 {org.slug} · {formatDate(org.createdAt, locale)}
               </p>
             </div>
-            {org.isDemo ? <Stamp tone="accent">{t('app.demo')}</Stamp> : null}
-            <Stamp>{org.planCode}</Stamp>
+            {org.isDemo ? <Badge variant="accent">{t('app.demo')}</Badge> : null}
+            <Badge>{org.planCode}</Badge>
             {/*
               Zéro voiture n'est pas une statistique, c'est un signal : l'agence a été
               créée et n'a jamais été remplie. C'est le seul appel à l'action de la

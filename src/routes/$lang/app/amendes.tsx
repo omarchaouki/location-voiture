@@ -7,11 +7,11 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { listContracts } from '~/server/contracts'
 import { attachFineToContract, createFine, listFines, settleFine, type FineView } from '~/server/fleet'
 import { listVehicles } from '~/server/vehicles'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { Field, FormError, Picker } from '~/ui/forms/fields'
 import { textField } from '~/ui/forms/form-data'
-import { Button } from '~/ui/primitives/button'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { AlertListSkeleton } from '~/ui/skeletons'
 
 /**
@@ -31,7 +31,7 @@ export const Route = createFileRoute('/$lang/app/amendes')({
   component: FinesPage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   open: 'warn',
   paid: 'calm',
   contested: 'neutral',
@@ -125,7 +125,7 @@ function FinesPage() {
         ) : null}
 
         <div className="sm:col-span-3">
-          <Button type="submit" variant="primary" disabled={busy}>
+          <Button type="submit" variant="default" disabled={busy}>
             {busy ? t('auth.working') : t('fine.submit')}
           </Button>
         </div>
@@ -191,12 +191,12 @@ function FineRow({
             <span className="numeric text-xs text-muted">{fine.contractReference}</span>
           </span>
         ) : (
-          <Stamp tone="warn">{t('fine.unattached')}</Stamp>
+          <Badge variant="warn">{t('fine.unattached')}</Badge>
         )}
 
-        <Stamp tone={STATUS_TONES[fine.status] ?? 'neutral'}>
+        <Badge variant={STATUS_TONES[fine.status] ?? 'neutral'}>
           {t(`fine.statuses.${fine.status}`)}
-        </Stamp>
+        </Badge>
 
         {fine.contractId === null && contracts.length > 0 ? (
           /*
@@ -233,7 +233,7 @@ function FineRow({
 
         {fine.contractId !== null && fine.status !== 'rebilled' ? (
           <Button
-            variant="secondary"
+            variant="outline"
             disabled={busy}
             onClick={() =>
               void act(() =>

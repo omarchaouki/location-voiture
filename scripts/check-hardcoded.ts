@@ -61,7 +61,7 @@ const PHYSICAL_CSS_PROP = /\b(?:margin|padding|border)-(?:left|right)\s*:/g
  * jetons et qu'on les expose a Tailwind.
  */
 const SHADOW = /\bshadow-(?!none\b|card\b|control\b)[a-z0-9[\]()/-]+|box-shadow\s*:/g
-const SHADOW_ALLOWED = ['src/styles/tokens.css', 'src/styles/app.css', 'src/ui/overlay/']
+const SHADOW_ALLOWED = ['src/styles/tokens.css', 'src/styles/app.css']
 
 /** Chaîne visible codée en dur dans un composant. */
 /**

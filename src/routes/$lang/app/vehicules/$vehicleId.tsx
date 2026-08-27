@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { formatDate, formatDateTime, formatKilometers, formatMoney } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { getVehicleFile, type VehicleFile } from '~/server/vehicles'
+import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import {
   InsuranceShieldIcon,
@@ -12,9 +13,8 @@ import {
   RoadTaxStickerIcon,
 } from '~/ui/icons'
 import { LogbookRail } from '~/ui/logbook/logbook-rail'
-import { BUTTON_STYLE, buttonClasses } from '~/ui/primitives/button'
 import { Plate } from '~/ui/primitives/plate'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { VehicleFileSkeleton } from '~/ui/skeletons'
 import { DocumentForm } from '~/ui/vehicles/document-form'
 
@@ -31,7 +31,7 @@ export const Route = createFileRoute('/$lang/app/vehicules/$vehicleId')({
   component: VehicleFilePage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   available: 'calm',
   rented: 'accent',
   maintenance: 'warn',
@@ -68,14 +68,13 @@ function VehicleFilePage() {
           <span className="text-xs text-muted">{t(`vehicle.gearbox.${vehicle.gearbox}`)}</span>
         ) : null}
         <span className="ms-auto flex items-center gap-4">
-          <Stamp tone={STATUS_TONES[vehicle.status] ?? 'neutral'}>
+          <Badge variant={STATUS_TONES[vehicle.status] ?? 'neutral'}>
             {t(STATUS_KEYS[vehicle.status] ?? 'vehicle.status.available')}
-          </Stamp>
+          </Badge>
           <Link
             to="/$lang/app/vehicules"
             params={{ lang: locale }}
-            className={buttonClasses('ghost')}
-            style={BUTTON_STYLE}
+            className={buttonVariants({ variant: 'ghost' })}
           >
             <span>{t('vehicle.list.backToList')}</span>
           </Link>

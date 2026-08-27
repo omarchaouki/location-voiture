@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { formatDate, formatMoney } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { listContracts } from '~/server/contracts'
+import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { ChevronEndIcon } from '~/ui/icons'
-import { BUTTON_STYLE, buttonClasses } from '~/ui/primitives/button'
-import { Stamp, type StampTone } from '~/ui/primitives/stamp'
+import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { AlertListSkeleton } from '~/ui/skeletons'
 
 /**
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/$lang/app/contrats/')({
   component: ContractsPage,
 })
 
-const STATUS_TONES: Record<string, StampTone> = {
+const STATUS_TONES: Record<string, BadgeVariant> = {
   reservation: 'neutral',
   active: 'accent',
   returned: 'calm',
@@ -45,8 +45,7 @@ function ContractsPage() {
           <Link
             to="/$lang/app/contrats/nouveau"
             params={{ lang: locale }}
-            className={buttonClasses('primary')}
-            style={BUTTON_STYLE}
+            className={buttonVariants()}
           >
             <span>{t('contract.add')}</span>
           </Link>
@@ -81,9 +80,9 @@ function ContractsPage() {
                   <span className="numeric text-xs">
                     {formatMoney(contract.totalCents, locale, 'MAD', { withDecimals: false })}
                   </span>
-                  <Stamp tone={STATUS_TONES[contract.status] ?? 'neutral'}>
+                  <Badge variant={STATUS_TONES[contract.status] ?? 'neutral'}>
                     {t(`contract.statuses.${contract.status}`)}
-                  </Stamp>
+                  </Badge>
                   <ChevronEndIcon size={16} className="text-muted" />
                 </span>
               </Link>

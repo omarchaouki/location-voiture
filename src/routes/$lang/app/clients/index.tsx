@@ -5,9 +5,9 @@ import { civilDaysBetween } from '~/core/dates'
 import { businessCivilDate, formatDate } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import { listCustomers } from '~/server/customers'
+import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
-import { BUTTON_STYLE, buttonClasses } from '~/ui/primitives/button'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 import { AlertListSkeleton } from '~/ui/skeletons'
 
 /**
@@ -40,8 +40,7 @@ function CustomersPage() {
           <Link
             to="/$lang/app/clients/nouveau"
             params={{ lang: locale }}
-            className={buttonClasses('primary')}
-            style={BUTTON_STYLE}
+            className={buttonVariants()}
           >
             <span>{t('customer.add')}</span>
           </Link>
@@ -78,12 +77,12 @@ function CustomersPage() {
 
                 <span className="ms-auto flex flex-wrap items-center gap-3">
                   {customer.isBlacklisted ? (
-                    <Stamp tone="danger">{t('customer.blacklisted')}</Stamp>
+                    <Badge variant="danger">{t('customer.blacklisted')}</Badge>
                   ) : null}
                   {customer.licenceExpiresOn === null ? (
-                    <Stamp tone="warn">{t('customer.licenceMissing')}</Stamp>
+                    <Badge variant="warn">{t('customer.licenceMissing')}</Badge>
                   ) : expired ? (
-                    <Stamp tone="danger">{t('customer.licenceExpired')}</Stamp>
+                    <Badge variant="danger">{t('customer.licenceExpired')}</Badge>
                   ) : (
                     <span className="numeric text-xs text-muted">
                       {formatDate(customer.licenceExpiresOn, locale)}

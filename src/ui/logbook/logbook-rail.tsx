@@ -16,7 +16,7 @@ import {
   RoadTaxStickerIcon,
   ServiceGearIcon,
 } from '~/ui/icons'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 import type { IconProps } from '~/ui/icons'
 
 /**
@@ -144,7 +144,7 @@ export function LogbookRail({
 
                 <span className="ms-auto flex items-center gap-2">
                   {isOverdue ? (
-                    <Stamp tone="danger">{t('deadline.expired')}</Stamp>
+                    <Badge variant="danger">{t('deadline.expired')}</Badge>
                   ) : (
                     <span
                       className={`text-xs ${isDone ? 'text-muted' : days <= 7 ? 'text-warn' : 'text-muted'}`}

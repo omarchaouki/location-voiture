@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { addCivilDays } from '~/core/dates'
 import { businessCivilDate, formatMoney, formatKilometers } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
+import { Button } from '~/ui/shadcn/button'
 import { EmptyState, ErrorState } from '~/ui/feedback/states'
 import { ICON_REGISTRY } from '~/ui/icons/registry'
 import { LogbookRail, type LogbookEntry } from '~/ui/logbook/logbook-rail'
@@ -16,9 +17,8 @@ import { AccountMenu } from '~/ui/account/account-menu'
 import { MapView } from '~/ui/map/map-view'
 import { APP_DESTINATIONS } from '~/ui/nav/destinations'
 import { NavStrip, SideRail } from '~/ui/nav/shell'
-import { Button } from '~/ui/primitives/button'
 import { Plate } from '~/ui/primitives/plate'
-import { Stamp } from '~/ui/primitives/stamp'
+import { Badge } from '~/ui/shadcn/badge'
 import {
   AdminOrganizationsSkeleton,
   AlertListSkeleton,
@@ -108,7 +108,7 @@ function DesignPage() {
             {formatKilometers(91340, locale)} km · {formatMoney(28000, locale)}
           </span>
           <span className="ms-auto">
-            <Stamp tone="accent">{t('vehicle.status.rented')}</Stamp>
+            <Badge variant="accent">{t('vehicle.status.rented')}</Badge>
           </span>
         </div>
         <LogbookRail className="mt-6" entries={entries} today={today} />
@@ -168,25 +168,25 @@ function DesignPage() {
       <Section title={t('design.states')}>
         <div className="space-y-6">
           <div className="flex flex-wrap gap-3">
-            <Button variant="primary">{t('action.add')}</Button>
-            <Button variant="secondary">{t('action.export')}</Button>
+            <Button variant="default">{t('action.add')}</Button>
+            <Button variant="outline">{t('action.export')}</Button>
             <Button variant="ghost">{t('action.filter')}</Button>
-            <Button variant="danger">{t('action.cancel')}</Button>
-            <Button variant="secondary" disabled>
+            <Button variant="destructive">{t('action.cancel')}</Button>
+            <Button variant="outline" disabled>
               {t('action.save')}
             </Button>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Stamp>{t('vehicle.status.available')}</Stamp>
-            <Stamp tone="accent">{t('vehicle.status.rented')}</Stamp>
-            <Stamp tone="warn">{t('vehicle.status.maintenance')}</Stamp>
-            <Stamp tone="danger">{t('deadline.expired')}</Stamp>
-            <Stamp tone="calm">{t('deadline.done')}</Stamp>
+            <Badge>{t('vehicle.status.available')}</Badge>
+            <Badge variant="accent">{t('vehicle.status.rented')}</Badge>
+            <Badge variant="warn">{t('vehicle.status.maintenance')}</Badge>
+            <Badge variant="danger">{t('deadline.expired')}</Badge>
+            <Badge variant="calm">{t('deadline.done')}</Badge>
           </div>
           <EmptyState
             title={t('state.empty')}
             body={t('design.intro')}
-            action={<Button variant="primary">{t('action.add')}</Button>}
+            action={<Button variant="default">{t('action.add')}</Button>}
           />
           <ErrorState error={new Error('demo: quota exceeded')} />
         </div>

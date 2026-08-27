@@ -46,9 +46,13 @@ parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien d
   (`fr`, `ar`, `en`) sont remplies en même temps. `tests/unit/i18n-parity.test.ts` échoue sinon.
 - **Aucune propriété physique** : `ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`, jamais
   `ml-`, `pr-`, `left-`, `text-left`.
-- **Aucune ombre** écrite à la main : `shadow-card` sur les cartes, `--overlay-shadow` dans
-  `src/ui/overlay/`, et rien d'autre. La structure est portée par les filets (`--rule`).
-- **Aucune bibliothèque d'icônes** : le jeu est maison, dans `src/ui/icons/`.
+- **Aucune ombre** écrite à la main. Trois jetons, et trois seulement : `shadow-control`
+  sur les boutons et les champs, `shadow-card` sur les cartes, `--overlay-shadow` sur la couche
+  flottante (`src/ui/shadcn/`). La structure reste portée par les filets (`--rule`).
+- **UN seul jeu d'icônes tiers** : `lucide-react`, pour l'interface (chevrons, croix, coches).
+  Heroicons et react-icons sont refusés — deux jeux, ce sont deux graisses de trait dans la même
+  barre. Les objets du MÉTIER restent dessinés à la main dans `src/ui/icons/` : voiture, clé,
+  bidon d'huile, plaque.
 - **Aucun `Intl` direct** : tout passe par `src/i18n/format.ts` (locale `ar-MA`, jamais `ar`).
 - Couleurs uniquement par jeton de rôle (`--ink`, `--rule`, `--stamp`…), jamais littérales.
 

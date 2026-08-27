@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 
 import { DOCUMENT_TYPES, type DocumentType } from '~/core/schemas/document'
 import { addInspection, addInsurance, recordRoadTax, setRegistration } from '~/server/documents'
+import { Button } from '~/ui/shadcn/button'
 import { textField } from '~/ui/forms/form-data'
-import { Button } from '~/ui/primitives/button'
 
 /**
  * Ajout d'un document au carnet.
@@ -174,7 +174,7 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
       ) : null}
 
       <div className="mt-5">
-        <Button type="submit" variant="primary" disabled={busy}>
+        <Button type="submit" variant="default" disabled={busy}>
           {busy ? t('auth.working') : t('vehicle.file.save')}
         </Button>
       </div>
