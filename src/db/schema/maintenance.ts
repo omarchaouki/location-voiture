@@ -1,8 +1,8 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, pgTable, text } from 'drizzle-orm/pg-core'
 
 import { bool, cents, civilDate, orgColumns, timestamp } from './_shared'
 
-export const maintenanceSchedules = sqliteTable(
+export const maintenanceSchedules = pgTable(
   'maintenance_schedules',
   {
     ...orgColumns,
@@ -25,7 +25,7 @@ export const maintenanceSchedules = sqliteTable(
   ],
 )
 
-export const maintenanceRecords = sqliteTable(
+export const maintenanceRecords = pgTable(
   'maintenance_records',
   {
     ...orgColumns,
@@ -46,7 +46,7 @@ export const maintenanceRecords = sqliteTable(
   (table) => [index('maintenance_records_vehicle_idx').on(table.orgId, table.vehicleId)],
 )
 
-export const incidents = sqliteTable(
+export const incidents = pgTable(
   'incidents',
   {
     ...orgColumns,
@@ -78,7 +78,7 @@ export const incidents = sqliteTable(
  * EXACTEMENT un contrat candidat ; sinon l'amende reste non rattachée avec une invite.
  * Deviner ici, c'est refacturer une amende au mauvais client.
  */
-export const fines = sqliteTable(
+export const fines = pgTable(
   'fines',
   {
     ...orgColumns,

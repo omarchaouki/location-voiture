@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDown, LayoutDashboard, LogOut, Receipt, Settings } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut, Receipt, Settings, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { signOut } from '~/auth/client'
@@ -83,6 +83,16 @@ export function AccountMenu({ viewer, locale }: { viewer: ViewerState; locale: L
         <DropdownMenuGroup>
           {organization ? (
             <>
+              {/* MON COMPTE d'abord : c'est le seul de ces écrans qui parle de la
+                  PERSONNE. Les réglages et l'abonnement appartiennent à l'agence. */}
+              <DropdownMenuItem
+                onSelect={() => {
+                  void navigate({ to: '/$lang/app/compte', params: { lang: locale } })
+                }}
+              >
+                <UserRound className="text-muted-foreground" aria-hidden="true" />
+                <span>{t('account.title')}</span>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => {
                   void navigate({ to: '/$lang/app/reglages', params: { lang: locale } })

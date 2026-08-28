@@ -1,4 +1,4 @@
-import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { doublePrecision, index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { bool, civilDate, orgColumns, timestamp } from './_shared'
 
@@ -18,7 +18,7 @@ import { bool, civilDate, orgColumns, timestamp } from './_shared'
  * chaque calcul de distance sans rien protéger.
  */
 
-export const gpsDevices = sqliteTable(
+export const gpsDevices = pgTable(
   'gps_devices',
   {
     ...orgColumns,
@@ -38,16 +38,16 @@ export const gpsDevices = sqliteTable(
   ],
 )
 
-export const gpsPositions = sqliteTable(
+export const gpsPositions = pgTable(
   'gps_positions',
   {
     ...orgColumns,
     deviceId: text('device_id').notNull(),
     recordedAt: timestamp('recorded_at').notNull(),
-    lat: real('lat').notNull(),
-    lng: real('lng').notNull(),
-    speedKmh: real('speed_kmh'),
-    heading: real('heading'),
+    lat: doublePrecision('lat').notNull(),
+    lng: doublePrecision('lng').notNull(),
+    speedKmh: doublePrecision('speed_kmh'),
+    heading: doublePrecision('heading'),
     ignition: bool('ignition'),
     odometerKm: integer('odometer_km'),
     rawJson: text('raw_json'),
@@ -81,7 +81,7 @@ export const gpsPositions = sqliteTable(
  * `(org_id, vehicle_id, on_day)` est UNIQUE : le calcul est donc rejouable, comme
  * tout le reste de l'ingestion.
  */
-export const vehicleDailyKm = sqliteTable(
+export const vehicleDailyKm = pgTable(
   'vehicle_daily_km',
   {
     ...orgColumns,
@@ -98,7 +98,7 @@ export const vehicleDailyKm = sqliteTable(
   ],
 )
 
-export const geofences = sqliteTable(
+export const geofences = pgTable(
   'geofences',
   {
     ...orgColumns,
@@ -115,7 +115,7 @@ export const geofences = sqliteTable(
   (table) => [index('geofences_org_idx').on(table.orgId, table.isActive)],
 )
 
-export const geofenceEvents = sqliteTable(
+export const geofenceEvents = pgTable(
   'geofence_events',
   {
     ...orgColumns,

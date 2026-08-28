@@ -64,9 +64,15 @@ function CustomersPage() {
                 className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-3"
                 style={{ minHeight: 'var(--row-height-dense)' }}
               >
-                <span className="ledger-margin w-28 sm:w-40 shrink-0 pe-4 font-medium">
+                {/* Le NOM est le lien : c'est ce qu'on vise pour ouvrir une fiche,
+                    et une colonne d'actions en bout de ligne se perd sur téléphone. */}
+                <Link
+                  to="/$lang/app/clients/$customerId"
+                  params={{ lang: locale, customerId: customer.id }}
+                  className="ledger-margin w-28 shrink-0 pe-4 font-medium text-primary underline-offset-4 hover:underline sm:w-40"
+                >
                   {customer.label}
-                </span>
+                </Link>
                 <span className="text-xs text-muted-foreground">{t(`customer.kinds.${customer.kind}`)}</span>
                 {customer.phone ? (
                   <span className="numeric text-xs text-muted-foreground">{customer.phone}</span>

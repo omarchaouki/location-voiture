@@ -1,8 +1,8 @@
-import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, pgTable, text } from 'drizzle-orm/pg-core'
 
 import { bool, civilDate, orgColumns, timestamp } from './_shared'
 
-export const customers = sqliteTable(
+export const customers = pgTable(
   'customers',
   {
     ...orgColumns,
@@ -43,7 +43,7 @@ export const customers = sqliteTable(
   ],
 )
 
-export const customerDocuments = sqliteTable(
+export const customerDocuments = pgTable(
   'customer_documents',
   {
     ...orgColumns,

@@ -48,6 +48,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="min-h-dvh bg-background text-foreground antialiased">
+        {/*
+          SANS JAVASCRIPT, RIEN N'EST CACHÉ.
+
+          Les blocs de la vitrine sont rendus en `data-reveal="pending"`, donc à
+          `opacity: 0`, et c'est l'observateur d'intersection qui les révèle. Poser cet
+          état seulement après hydratation éviterait le problème mais ferait CLIGNOTER
+          la page : le texte s'affiche, disparaît, revient.
+
+          On le pose donc dès le serveur, et on annule la règle ici quand aucun script
+          ne s'exécute. Une vitrine dont le texte reste invisible parce qu'un script a
+          échoué ne vend rien — et c'est le mode dégradé le moins cher qui existe.
+        */}
+        <noscript>
+          <style>{'[data-reveal]{opacity:1 !important;transform:none !important}'}</style>
+        </noscript>
+
         <I18nProvider locale={locale}>
           <TopProgress />
           {children}

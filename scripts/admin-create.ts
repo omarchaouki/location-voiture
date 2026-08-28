@@ -16,7 +16,7 @@ import { Writable } from 'node:stream'
 
 import { createPlatformOwner } from '~/auth/bootstrap'
 import { createAuth } from '~/auth/server'
-import { createDb, resolveDatabaseFile } from '~/db/client'
+import { closeDb, createDb, resolveDatabaseUrl } from '~/db/client'
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(`--${name}`)
@@ -58,18 +58,22 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  const file = resolveDatabaseFile()
-  const db = createDb(file)
+  const url = resolveDatabaseUrl()
+  const db = createDb(url)
   const auth = createAuth(db)
 
   const { userId } = await createPlatformOwner(db, auth, { email, password, name })
 
   console.log('')
-  console.log(`Compte de plateforme créé sur ${file}`)
+  // L'HÔTE, jamais l'URL : une chaîne de connexion porte le mot de passe de la base,
+  // et un journal de terminal se recopie dans un ticket sans qu'on y pense.
+  console.log(`Compte de plateforme créé sur ${new URL(url).host}`)
   console.log(`  identifiant : ${userId}`)
   console.log(`  adresse     : ${email}`)
   console.log('')
   console.log("Connecte-toi sur /fr/connexion, puis va sur /fr/admin.")
+
+  await closeDb(db)
 }
 
 main().catch((error: unknown) => {

@@ -1,4 +1,4 @@
-import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, pgTable, text } from 'drizzle-orm/pg-core'
 
 import { cents, civilDate, orgColumns } from './_shared'
 
@@ -10,7 +10,7 @@ import { cents, civilDate, orgColumns } from './_shared'
  * la période est donc toujours explicite à l'écran (docs/DOMAIN.md §4.7).
  */
 
-export const expenses = sqliteTable(
+export const expenses = pgTable(
   'expenses',
   {
     ...orgColumns,
@@ -33,7 +33,7 @@ export const expenses = sqliteTable(
   ],
 )
 
-export const revenues = sqliteTable(
+export const revenues = pgTable(
   'revenues',
   {
     ...orgColumns,

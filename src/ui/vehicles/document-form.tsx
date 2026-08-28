@@ -3,23 +3,67 @@ import { useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { DOCUMENT_TYPES, type DocumentType } from '~/core/schemas/document'
-import { addInspection, addInsurance, recordRoadTax, setRegistration } from '~/server/documents'
+import {
+  addInspection,
+  addInsurance,
+  recordRoadTax,
+  setRegistration,
+  updateInspection,
+  updateInsurance,
+  updateRegistration,
+  updateRoadTax,
+} from '~/server/documents'
 import { Button } from '~/ui/shadcn/button'
+import { Field, FormError } from '~/ui/forms/fields'
 import { textField } from '~/ui/forms/form-data'
 
 /**
- * Ajout d'un document au carnet.
+ * Saisie d'un document du carnet — ajout ET correction.
  *
  * Un seul formulaire, dont les champs changent selon le type : un loueur ajoute une
  * pièce, il ne choisit pas un écran. Les libellés collent aux documents réels —
  * « centre », « numéro de certificat », « vignette <année> ».
+ *
+ * **Le même composant sert à corriger** depuis le 27/08/2026, et c'est délibérément
+ * le même. Un second formulaire d'édition aurait dupliqué quatorze champs, leurs
+ * bornes et leurs conversions de centimes ; il aurait divergé au premier changement,
+ * et c'est toujours le chemin de CORRECTION qui reste en arrière — celui qu'on
+ * regarde le moins. En mode correction, le sélecteur de type disparaît : on ne
+ * transforme pas une assurance en vignette.
  */
-export function DocumentForm({ vehicleId }: { vehicleId: string }) {
+
+/** Ce qu'il faut pour pré-remplir une correction. Les valeurs sont déjà en chaînes. */
+export interface EditingDocument {
+  type: DocumentType
+  id: string
+  values: Partial<Record<string, string>>
+}
+
+/** Centimes → champ en dirhams. `String()` donne la forme la plus courte exacte. */
+export function centsToInput(value: number | null): string {
+  return value === null ? '' : String(value / 100)
+}
+
+export function DocumentForm({
+  vehicleId,
+  editing,
+  onDone,
+  onCancel,
+}: {
+  vehicleId: string
+  /** Présent = correction d'une pièce existante. Absent = ajout. */
+  editing?: EditingDocument
+  onDone?: () => void
+  onCancel?: () => void
+}) {
   const { t } = useTranslation()
   const router = useRouter()
-  const [type, setType] = useState<DocumentType>('insurance')
+  const [chosen, setChosen] = useState<DocumentType>('insurance')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const type = editing?.type ?? chosen
+  const initial = editing?.values ?? {}
 
   function optionalCents(form: FormData, name: string): number | undefined {
     const raw = textField(form, name).replace(',', '.')
@@ -37,51 +81,54 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
 
     try {
       if (type === 'insurance') {
-        await addInsurance({
-          data: {
-            vehicleId,
-            company: textField(form, 'company'),
-            policyNumber: textField(form, 'policyNumber') || undefined,
-            startsOn: textField(form, 'startsOn') || undefined,
-            expiresOn: textField(form, 'expiresOn'),
-            premiumCents: optionalCents(form, 'premium'),
-          },
-        })
+        const values = {
+          company: textField(form, 'company'),
+          policyNumber: textField(form, 'policyNumber') || undefined,
+          startsOn: textField(form, 'startsOn') || undefined,
+          expiresOn: textField(form, 'expiresOn'),
+          premiumCents: optionalCents(form, 'premium'),
+        }
+        await (editing
+          ? updateInsurance({ data: { id: editing.id, ...values } })
+          : addInsurance({ data: { vehicleId, ...values } }))
       } else if (type === 'inspection') {
-        await addInspection({
-          data: {
-            vehicleId,
-            centerName: textField(form, 'centerName') || undefined,
-            certificateNumber: textField(form, 'certificateNumber') || undefined,
-            performedOn: textField(form, 'performedOn'),
-            expiresOn: textField(form, 'expiresOn') || undefined,
-            result: 'pass',
-            costCents: optionalCents(form, 'cost'),
-          },
-        })
+        const values = {
+          centerName: textField(form, 'centerName') || undefined,
+          certificateNumber: textField(form, 'certificateNumber') || undefined,
+          performedOn: textField(form, 'performedOn'),
+          expiresOn: textField(form, 'expiresOn') || undefined,
+          result: 'pass' as const,
+          costCents: optionalCents(form, 'cost'),
+        }
+        await (editing
+          ? updateInspection({ data: { id: editing.id, ...values } })
+          : addInspection({ data: { vehicleId, ...values } }))
       } else if (type === 'roadTax') {
-        await recordRoadTax({
-          data: {
-            vehicleId,
-            year: Number(textField(form, 'year')),
-            paidAt: textField(form, 'paidAt') || undefined,
-            amountCents: optionalCents(form, 'amount'),
-            receiptNumber: textField(form, 'receiptNumber') || undefined,
-          },
-        })
+        const values = {
+          year: Number(textField(form, 'year')),
+          paidAt: textField(form, 'paidAt') || undefined,
+          amountCents: optionalCents(form, 'amount'),
+          receiptNumber: textField(form, 'receiptNumber') || undefined,
+        }
+        await (editing
+          ? updateRoadTax({ data: { id: editing.id, ...values } })
+          : recordRoadTax({ data: { vehicleId, ...values } }))
       } else {
-        await setRegistration({
-          data: {
-            vehicleId,
-            registrationNumber: textField(form, 'registrationNumber') || undefined,
-            firstRegisteredOn: textField(form, 'firstRegisteredOn') || undefined,
-            isWw: false,
-          },
-        })
+        const values = {
+          registrationNumber: textField(form, 'registrationNumber') || undefined,
+          firstRegisteredOn: textField(form, 'firstRegisteredOn') || undefined,
+          isWw: false,
+        }
+        await (editing
+          ? updateRegistration({ data: { id: editing.id, ...values } })
+          : setRegistration({ data: { vehicleId, ...values } }))
       }
 
-      target.reset()
+      // On ne vide QUE le formulaire d'ajout : effacer une correction réussie
+      // remplacerait les valeurs corrigées par du vide sous les yeux de l'utilisateur.
+      if (!editing) target.reset()
       await router.invalidate()
+      onDone?.()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     } finally {
@@ -92,48 +139,118 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
   const currentYear = new Date().getFullYear()
 
   return (
-    <form method="post" onSubmit={(event) => void submit(event)} className="border-t border-border pt-6">
-      <fieldset className="flex flex-wrap items-center gap-0 border border-border">
-        <legend className="sr-only">{t('vehicle.file.documentType')}</legend>
-        {DOCUMENT_TYPES.map((option) => (
-          <label
-            key={option}
-            style={{ minHeight: 'var(--tap-target)' }}
-            className={`flex cursor-pointer items-center px-3 text-2xs tracking-wide uppercase ${
-              type === option ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <input
-              type="radio"
-              name="documentType"
-              className="sr-only"
-              checked={type === option}
-              onChange={() => setType(option)}
-            />
-            {t(labelKeyOf(option))}
-          </label>
-        ))}
-      </fieldset>
+    <form
+      method="post"
+      onSubmit={(event) => void submit(event)}
+      className={editing ? '' : 'border-t border-border pt-6'}
+    >
+      {/*
+        Sélecteur segmenté : quatre types de pièce, tous visibles d'un coup. Un
+        `<select>` les cacherait, et le formulaire change ENTIÈREMENT selon le choix —
+        c'est une navigation, pas un champ. Absent en correction : le type est acquis.
+      */}
+      {editing ? null : (
+        <fieldset className="inline-flex flex-wrap overflow-hidden rounded-lg border border-input">
+          <legend className="sr-only">{t('vehicle.file.documentType')}</legend>
+          {DOCUMENT_TYPES.map((option) => (
+            <label
+              key={option}
+              style={{ minHeight: 'var(--tap-target)' }}
+              className={`flex cursor-pointer items-center border-s border-border px-4 text-xs font-medium transition-colors first:border-s-0 ${
+                type === option
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
+            >
+              <input
+                type="radio"
+                name="documentType"
+                className="sr-only"
+                checked={type === option}
+                onChange={() => setChosen(option)}
+              />
+              {t(labelKeyOf(option))}
+            </label>
+          ))}
+        </fieldset>
+      )}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className={`grid gap-4 sm:grid-cols-2 ${editing ? '' : 'mt-5'}`}>
         {type === 'insurance' ? (
           <>
-            <Field name="company" label={t('vehicle.file.company')} required />
-            <Field name="policyNumber" label={t('vehicle.file.policyNumber')} />
-            <Field name="startsOn" label={t('vehicle.file.startsOn')} type="date" />
-            <Field name="expiresOn" label={t('vehicle.file.expiresOnField')} type="date" required />
-            <Field name="premium" label={t('vehicle.file.premium')} type="number" />
+            <Field
+              name="company"
+              label={t('vehicle.file.company')}
+              numeric={false}
+              required
+              defaultValue={initial['company'] ?? ''}
+            />
+            <Field
+              name="policyNumber"
+              label={t('vehicle.file.policyNumber')}
+              defaultValue={initial['policyNumber'] ?? ''}
+            />
+            <Field
+              name="startsOn"
+              label={t('vehicle.file.startsOn')}
+              type="date"
+              defaultValue={initial['startsOn'] ?? ''}
+            />
+            <Field
+              name="expiresOn"
+              label={t('vehicle.file.expiresOnField')}
+              type="date"
+              required
+              defaultValue={initial['expiresOn'] ?? ''}
+            />
+            <Field
+              name="premium"
+              label={t('vehicle.file.premium')}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              defaultValue={initial['premium'] ?? ''}
+            />
           </>
         ) : null}
 
         {type === 'inspection' ? (
           <>
-            <Field name="centerName" label={t('vehicle.file.center')} />
-            <Field name="certificateNumber" label={t('vehicle.file.certificate')} />
-            <Field name="performedOn" label={t('vehicle.file.performedOn')} type="date" required />
+            <Field
+              name="centerName"
+              label={t('vehicle.file.center')}
+              numeric={false}
+              defaultValue={initial['centerName'] ?? ''}
+            />
+            <Field
+              name="certificateNumber"
+              label={t('vehicle.file.certificate')}
+              defaultValue={initial['certificateNumber'] ?? ''}
+            />
+            <Field
+              name="performedOn"
+              label={t('vehicle.file.performedOn')}
+              type="date"
+              required
+              defaultValue={initial['performedOn'] ?? ''}
+            />
             {/* Laissée vide, l'échéance est calculée à 12 mois côté serveur (É4). */}
-            <Field name="expiresOn" label={t('vehicle.file.expiresOnField')} type="date" />
-            <Field name="cost" label={t('vehicle.file.amount')} type="number" />
+            <Field
+              name="expiresOn"
+              label={t('vehicle.file.expiresOnField')}
+              type="date"
+              defaultValue={initial['expiresOn'] ?? ''}
+            />
+            <Field
+              name="cost"
+              label={t('vehicle.file.amount')}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              defaultValue={initial['cost'] ?? ''}
+            />
           </>
         ) : null}
 
@@ -143,22 +260,47 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
               name="year"
               label={t('vehicle.file.year')}
               type="number"
+              inputMode="numeric"
+              min={2000}
+              max={2100}
               required
-              defaultValue={String(currentYear)}
+              defaultValue={initial['year'] ?? String(currentYear)}
             />
-            <Field name="paidAt" label={t('vehicle.file.paidAt')} type="date" />
-            <Field name="amount" label={t('vehicle.file.amount')} type="number" />
-            <Field name="receiptNumber" label={t('vehicle.file.certificate')} />
+            <Field
+              name="paidAt"
+              label={t('vehicle.file.paidAt')}
+              type="date"
+              defaultValue={initial['paidAt'] ?? ''}
+            />
+            <Field
+              name="amount"
+              label={t('vehicle.file.amount')}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              defaultValue={initial['amount'] ?? ''}
+            />
+            <Field
+              name="receiptNumber"
+              label={t('vehicle.file.certificate')}
+              defaultValue={initial['receiptNumber'] ?? ''}
+            />
           </>
         ) : null}
 
         {type === 'registration' ? (
           <>
-            <Field name="registrationNumber" label={t('vehicle.file.registrationNumber')} />
+            <Field
+              name="registrationNumber"
+              label={t('vehicle.file.registrationNumber')}
+              defaultValue={initial['registrationNumber'] ?? ''}
+            />
             <Field
               name="firstRegisteredOn"
               label={t('vehicle.file.firstRegisteredOn')}
               type="date"
+              defaultValue={initial['firstRegisteredOn'] ?? ''}
             />
             <p className="text-xs text-muted-foreground sm:col-span-2">
               {t('vehicle.file.registrationNoExpiry')}
@@ -168,15 +310,20 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
       </div>
 
       {error ? (
-        <p role="alert" className="mt-4 border-s-2 border-destructive ps-3 text-sm text-destructive">
-          {error}
-        </p>
+        <div className="mt-4">
+          <FormError>{error}</FormError>
+        </div>
       ) : null}
 
-      <div className="mt-5">
+      <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button type="submit" variant="default" disabled={busy}>
-          {busy ? t('auth.working') : t('vehicle.file.save')}
+          {busy ? t('auth.working') : editing ? t('vehicle.file.saveChanges') : t('vehicle.file.save')}
         </Button>
+        {editing && onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {t('vehicle.file.cancel')}
+          </Button>
+        ) : null}
       </div>
     </form>
   )
@@ -184,32 +331,4 @@ export function DocumentForm({ vehicleId }: { vehicleId: string }) {
 
 function labelKeyOf(type: DocumentType): string {
   return type === 'registration' ? 'entity.registration' : `deadline.${type}`
-}
-
-function Field({
-  name,
-  label,
-  type = 'text',
-  required,
-  defaultValue,
-}: {
-  name: string
-  label: string
-  type?: string
-  required?: boolean
-  defaultValue?: string
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        defaultValue={defaultValue}
-        className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
-        style={{ minHeight: 'var(--tap-target)' }}
-      />
-    </label>
-  )
 }

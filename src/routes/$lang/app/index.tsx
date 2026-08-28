@@ -2,15 +2,16 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { authClient } from '~/auth/client'
-import { formatDate, formatNumber } from '~/i18n/format'
+import { formatDate, formatMoney, formatNumber, formatTime } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { Route as AppRoute } from '~/routes/$lang/app'
 import { fetchAgencyOverview } from '~/server/dashboard'
-import type { AgencyOverview } from '~/server/reads/overview'
+import type { AgencyOverview, ExpectedReturn } from '~/server/reads/overview'
 import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { AgencyDashboardSkeleton } from '~/ui/skeletons'
-import { Card, CardBody, CardHeader, PageHeader, StatGroup } from '~/ui/primitives/card'
+import { Card, CardBody, CardHeader, PageHeader, SectionTitle, StatGroup } from '~/ui/primitives/card'
+import { Plate } from '~/ui/primitives/plate'
 import { Badge } from '~/ui/shadcn/badge'
 
 /**
@@ -78,7 +79,12 @@ function DashboardPage() {
 
       <Tiles overview={overview} locale={locale} />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="mt-8">
+        <SectionTitle>{t('home.returnsTitle')}</SectionTitle>
+        <ExpectedReturns overview={overview} locale={locale} />
+      </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <NextDeadlines overview={overview} locale={locale} />
         <FleetBreakdown overview={overview} locale={locale} />
       </div>
@@ -89,6 +95,18 @@ function DashboardPage() {
 function Tiles({ overview, locale }: { overview: AgencyOverview; locale: Locale }) {
   const { t } = useTranslation()
 
+  /*
+   * HUIT mesures, et pas quatre.
+   *
+   * Les quatre premières répondaient au matin ; il manquait tout ce qui se décide dans
+   * la journée — le taux d'occupation, l'argent rentré, les permis qui vont bloquer
+   * une signature, les contrats non soldés. Un tableau de bord qui n'affiche que
+   * l'urgence oblige à ouvrir quatre écrans pour se faire une idée de la semaine.
+   *
+   * La COULEUR reste réservée à ce qui appelle un geste, et seulement quand ce n'est
+   * pas zéro : une mesure rouge qui affiche « 0 » depuis trois mois apprend à ne plus
+   * voir le rouge.
+   */
   return (
     <StatGroup
       items={[
@@ -99,16 +117,17 @@ function Tiles({ overview, locale }: { overview: AgencyOverview; locale: Locale 
           hint: t('home.tileOutHint', { available: overview.fleet.available }),
         },
         {
+          key: 'utilisation',
+          label: t('home.tileUtilisation'),
+          value: `${formatNumber(overview.utilisation, locale)} %`,
+          hint: t('home.tileUtilisationHint', { total: overview.fleet.total }),
+        },
+        {
           key: 'dueToday',
           label: t('home.tileDueToday'),
           value: formatNumber(overview.contracts.dueToday, locale),
           hint: t('home.tileDueTodayHint', { upcoming: overview.contracts.upcoming }),
         },
-        /*
-          Le retard et les échéances critiques sont les DEUX seules mesures autorisées
-          à se colorer, et seulement quand elles ne valent pas zéro. Une mesure rouge
-          qui affiche « 0 » depuis trois mois apprend à ne plus voir le rouge.
-        */
         {
           key: 'late',
           label: t('home.tileLate'),
@@ -128,8 +147,100 @@ function Tiles({ overview, locale }: { overview: AgencyOverview; locale: Locale 
           value: formatNumber(overview.alerts.critical, locale),
           hint: t('home.tileCriticalHint', { warning: overview.alerts.warning }),
         },
+        {
+          key: 'licence',
+          label: t('home.tileLicence'),
+          tone: overview.customers.licenceExpiring > 0 ? ('warn' as const) : ('neutral' as const),
+          value: formatNumber(overview.customers.licenceExpiring, locale),
+          hint: t('home.tileLicenceHint', { total: overview.customers.total }),
+        },
+        {
+          key: 'unpaid',
+          label: t('home.tileUnpaid'),
+          tone: overview.contracts.unpaid > 0 ? ('warn' as const) : ('calm' as const),
+          value: formatNumber(overview.contracts.unpaid, locale),
+          hint: t('home.tileUnpaidHint'),
+        },
+        {
+          key: 'collected',
+          label: t('home.tileCollected'),
+          value: formatMoney(overview.money.collectedThisMonthCents, locale, overview.money.currency, {
+            withDecimals: false,
+          }),
+          hint: t('home.tileCollectedHint'),
+        },
       ]}
     />
+  )
+}
+
+/**
+ * CE QUI RENTRE — aujourd'hui, demain, après-demain.
+ *
+ * La demande est venue telle quelle du comptoir : « je veux voir les voitures qui vont
+ * entrer demain et après-demain ». C'est la question du SOIR, celle qui permet de
+ * promettre une réservation sans se tromper — le compteur « retours aujourd'hui »
+ * répondait au matin et s'arrêtait là.
+ *
+ * Trois colonnes plutôt qu'un filtre à trois positions : la comparaison est le sujet.
+ * On veut voir d'un coup d'œil que demain est chargé et après-demain vide, ce qu'un
+ * onglet à la fois interdit. Sous 1024 px les colonnes s'empilent, dans le même ordre.
+ */
+function ExpectedReturns({ overview, locale }: { overview: AgencyOverview; locale: Locale }) {
+  const { t } = useTranslation()
+
+  const days = [
+    { key: 'today', label: t('home.today'), lines: overview.returns.today },
+    { key: 'tomorrow', label: t('home.tomorrow'), lines: overview.returns.tomorrow },
+    { key: 'dayAfter', label: t('home.dayAfter'), lines: overview.returns.dayAfter },
+  ] as const
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      {days.map((day) => (
+        <Card key={day.key} className="self-start">
+          <CardHeader
+            title={day.label}
+            hint={t('home.returnsCount', { count: day.lines.length })}
+          />
+          {day.lines.length === 0 ? (
+            <CardBody>
+              <p className="text-sm text-muted-foreground">{t('home.noReturns')}</p>
+            </CardBody>
+          ) : (
+            <ul>
+              {day.lines.map((line) => (
+                <ReturnRow key={line.contractId} line={line} locale={locale} />
+              ))}
+            </ul>
+          )}
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function ReturnRow({ line, locale }: { line: ExpectedReturn; locale: Locale }) {
+  const { t } = useTranslation()
+
+  return (
+    <li className="border-b border-border last:border-b-0">
+      <Link
+        to="/$lang/app/contrats/$contractId"
+        params={{ lang: locale, contractId: line.contractId }}
+        className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-accent"
+        style={{ minHeight: 'var(--tap-target)' }}
+      >
+        {/* La plaque est l'identifiant du métier : elle passe en premier, isolée en bidi. */}
+        <Plate value={line.plate} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm">{line.vehicleLabel}</span>
+          <span className="block truncate text-xs text-muted-foreground">{line.customerLabel}</span>
+        </span>
+        <span className="numeric text-sm">{formatTime(line.endAt, locale)}</span>
+        {line.late ? <Badge variant="danger">{t('contract.statuses.late')}</Badge> : null}
+      </Link>
+    </li>
   )
 }
 
@@ -199,7 +310,7 @@ function FleetBreakdown({ overview, locale }: { overview: AgencyOverview; locale
     { key: 'available', value: fleet.available },
     { key: 'rented', value: fleet.rented },
     { key: 'maintenance', value: fleet.maintenance },
-    { key: 'outOfService', value: fleet.outOfService },
+    { key: 'out_of_service', value: fleet.outOfService },
   ] as const
 
   return (

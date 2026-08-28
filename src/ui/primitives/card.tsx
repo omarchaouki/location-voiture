@@ -11,6 +11,12 @@ import type { ReactNode } from 'react'
  *     `UPPERCASE tracking-wide` au-dessus d'un grand chiffre est la signature la plus
  *     reconnaissable des tableaux de bord produits à la chaîne. Une console écrit le
  *     libellé en minuscules, dans la même voix que le reste.
+ *
+ *     Ils ont en revanche GROSSI le 28/08/2026, sur un reproche direct du propriétaire
+ *     du produit : « c'est écrit tout petit ». Le libellé passe de 12 à 14 px et le
+ *     chiffre de 20 à 30. La sobriété d'une console ne justifie pas de faire plisser
+ *     les yeux — un chiffre de tableau de bord se lit debout, à un mètre de l'écran,
+ *     et souvent par quelqu'un qui a passé la cinquantaine.
  *  2. **Les tuiles ne flottent plus séparément.** Elles vivent dans UNE carte,
  *     séparées par des filets. Quatre cartes détachées portant chacune un nombre
  *     donnent une page de vignettes ; un groupe donne une barre de mesures, qui est
@@ -105,12 +111,17 @@ export interface Tile {
 export function StatGroup({ items }: { items: readonly Tile[] }) {
   return (
     <Card as="div">
+      {/*
+        Deux colonnes au pouce, quatre au clavier. Les filets se calculent par rapport
+        au RANG dans la grille, et le rang change avec le point de rupture — c'est la
+        raison pour laquelle les tuiles sont passées en tableau plutôt qu'en enfants.
+      */}
       <div className="grid grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (
           <div
             key={item.key}
             className={[
-              'px-4 py-3',
+              'px-4 py-4',
               // Filet vertical : partout sauf en début de rangée.
               index % 2 !== 0 ? 'border-s border-border' : '',
               'lg:border-s lg:border-border',
@@ -122,17 +133,17 @@ export function StatGroup({ items }: { items: readonly Tile[] }) {
               .filter(Boolean)
               .join(' ')}
           >
-            <p className="text-xs text-muted-foreground">{item.label}</p>
+            <p className="text-sm text-muted-foreground">{item.label}</p>
             {/*
               Le chiffre porte `.numeric` : les mesures d'une même rangée s'alignent au
               chiffre près, et le total ne saute pas quand il passe de 9 à 10.
             */}
             <p
-              className={`numeric mt-1 text-xl font-semibold ${TILE_VALUE_TONE[item.tone ?? 'neutral']}`}
+              className={`numeric mt-1 text-3xl font-semibold tracking-tight ${TILE_VALUE_TONE[item.tone ?? 'neutral']}`}
             >
               {item.value}
             </p>
-            {item.hint ? <p className="mt-0.5 text-xs text-muted-foreground">{item.hint}</p> : null}
+            {item.hint ? <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p> : null}
           </div>
         ))}
       </div>

@@ -1,7 +1,6 @@
-import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { aliveOnly, bool, civilDate, orgColumns, timestamp } from './_shared'
-import { integer } from 'drizzle-orm/sqlite-core'
 
 /**
  * ALERTES — le cœur du produit.
@@ -15,7 +14,7 @@ import { integer } from 'drizzle-orm/sqlite-core'
  * y compris l'année suivante après renouvellement de la police. La démo tournerait,
  * la deuxième année de production serait silencieuse.
  */
-export const alerts = sqliteTable(
+export const alerts = pgTable(
   'alerts',
   {
     ...orgColumns,
@@ -61,7 +60,37 @@ export const alerts = sqliteTable(
   ],
 )
 
-export const notifications = sqliteTable(
+/**
+ * ÉTAT « LU » DE LA CLOCHE — par UTILISATEUR, et c'est tout l'intérêt de la table.
+ *
+ * `alerts.state` porte déjà « traité » (`acknowledged`), et il serait tentant de s'en
+ * servir pour la pastille rouge. Ce serait un contresens, et un contresens dangereux :
+ * « traité » est un acte MÉTIER — « j'ai payé la vignette » — partagé par toute
+ * l'organisation, alors que « lu » est un fait personnel qui ne dit rien de
+ * l'échéance. Confondre les deux, c'est offrir un bouton « tout marquer comme lu » qui
+ * déclare en un clic que huit échéances sont réglées. C'est exactement ce que le
+ * centre de notifications refuse depuis l'origine : « faire disparaître un problème en
+ * cliquant ».
+ *
+ * Une ligne par (alerte, utilisateur). L'absence de ligne vaut « non lu » : rien à
+ * écrire au moment où l'alerte naît, et une alerte rouverte par le moteur redevient
+ * non lue toute seule si sa lecture a été effacée.
+ */
+export const alertReads = pgTable(
+  'alert_reads',
+  {
+    ...orgColumns,
+    alertId: text('alert_id').notNull(),
+    userId: text('user_id').notNull(),
+    readAt: timestamp('read_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('alert_reads_unique').on(table.orgId, table.alertId, table.userId).where(aliveOnly),
+    index('alert_reads_user_idx').on(table.orgId, table.userId),
+  ],
+)
+
+export const notifications = pgTable(
   'notifications',
   {
     ...orgColumns,
@@ -88,7 +117,7 @@ export const notifications = sqliteTable(
   ],
 )
 
-export const alertSettings = sqliteTable(
+export const alertSettings = pgTable(
   'alert_settings',
   {
     ...orgColumns,

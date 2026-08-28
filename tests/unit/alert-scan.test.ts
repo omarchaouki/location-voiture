@@ -23,8 +23,8 @@ const BRAVO = tenant('org-bravo')
 
 let db: Db
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
 })
 
 async function vehicleWithInsurance(expiresOn: string) {

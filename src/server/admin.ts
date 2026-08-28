@@ -3,12 +3,19 @@ import { getRequest, getRequestIP, setResponseHeader } from '@tanstack/react-sta
 import { and, count, desc, eq, gt, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 
-import { requirePlatformOwner } from '~/auth/context'
+import { requirePlatformOwner, requireSession } from '~/auth/context'
+import { ForbiddenError } from '~/auth/guards'
+import { PLATFORM_OWNER } from '~/auth/permissions'
 import { getAuth } from '~/auth/server'
 import { getDb } from '~/db/client'
 import { invitations, members, organizations, users } from '~/db/schema/auth'
 import { impersonationSessions } from '~/db/schema/platform'
 import { platformMetrics, type PlatformMetrics } from '~/db/repositories/platform'
+import {
+  decidePlanChange,
+  pendingPlanChanges,
+  type PendingPlanChange,
+} from '~/db/repositories/plan-changes'
 import { audit } from './audit'
 import { cookieHeaderFrom } from './cookies'
 
@@ -376,6 +383,184 @@ export const stopImpersonation = createServerFn({ method: 'POST' }).handler(asyn
 
   return { ok: true }
 })
+
+/**
+ * ÉLÉVATION DE L'IMPERSONATION — le second geste, celui qui manquait.
+ *
+ * `startImpersonation` pose `writeEnabled: false` et son commentaire annonce depuis
+ * l'origine que « l'élévation est un second geste, explicite ». Ce geste n'existait
+ * pas : la colonne était écrite une fois à faux et plus jamais relue en écriture, donc
+ * un administrateur entré chez un client ne pouvait RIEN corriger — il devait
+ * demander au client de le faire lui-même. C'est la fonction qui manquait, pas la
+ * politique : la politique était déjà écrite et déjà lue par `requireTenant`.
+ *
+ * **Le contrôle d'accès ne peut pas passer par `requirePlatformOwner`**, et c'est tout
+ * le sujet. Cette fonction est appelée DEPUIS une session en impersonation, que ce
+ * garde refuse par construction — à raison : il protège les autres actes de plateforme
+ * contre une élévation de privilèges. Ici on vérifie donc autre chose, et plus :
+ *
+ *  1. la session courante EST une session d'impersonation ;
+ *  2. il existe une autorisation OUVERTE pour cette session précise ;
+ *  3. l'administrateur derrière la session est bien celui qui l'a ouverte ;
+ *  4. il est TOUJOURS propriétaire de plateforme — un rôle retiré pendant les trente
+ *    minutes doit refermer la porte ;
+ *  5. l'autorisation n'a pas expiré.
+ *
+ * Aucune de ces cinq n'est facultative, et une session ordinaire n'en passe aucune :
+ * il n'y a pas de chemin par lequel un client s'accorde l'écriture à lui-même.
+ */
+async function requireOpenImpersonation(headers: Headers) {
+  const session = await requireSession(headers)
+  if (session.impersonatedBy === null) throw new ForbiddenError('not impersonating')
+
+  const db = getDb()
+  const rows = await db
+    .select({
+      sessionId: impersonationSessions.sessionId,
+      adminUserId: impersonationSessions.adminUserId,
+      orgId: impersonationSessions.orgId,
+      writeEnabled: impersonationSessions.writeEnabled,
+      expiresAt: impersonationSessions.expiresAt,
+    })
+    .from(impersonationSessions)
+    .where(
+      and(
+        eq(impersonationSessions.sessionId, session.sessionId),
+        isNull(impersonationSessions.endedAt),
+      ),
+    )
+    .limit(1)
+
+  const grant = rows[0]
+  if (!grant) throw new ForbiddenError('no open impersonation grant')
+  if (grant.adminUserId !== session.impersonatedBy) throw new ForbiddenError('grant mismatch')
+  if (new Date(grant.expiresAt).getTime() <= Date.now()) {
+    throw new ForbiddenError('impersonation expired')
+  }
+
+  const admin = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, grant.adminUserId))
+    .limit(1)
+  if (admin[0]?.role !== PLATFORM_OWNER) throw new ForbiddenError('not platform owner')
+
+  return { session, grant }
+}
+
+export const SetImpersonationWriteInput = z.object({
+  enabled: z.boolean(),
+  /**
+   * La RAISON, obligatoire pour élever, libre pour redescendre.
+   *
+   * Elle n'est pas décorative : elle part au journal d'audit, et c'est la seule trace
+   * qui répondra un jour à « pourquoi cette ligne a-t-elle été modifiée le 14 ». Une
+   * élévation sans motif écrit est une élévation qu'on ne saura pas justifier.
+   */
+  reason: z.string().trim().max(200).optional(),
+})
+
+/**
+ * Active ou coupe l'écriture pour la session d'impersonation en cours.
+ *
+ * Le retour est l'état RÉEL après écriture, pas celui qui a été demandé : l'écran s'y
+ * aligne au lieu de supposer que l'appel a fait ce qu'il annonçait.
+ */
+export const setImpersonationWrite = createServerFn({ method: 'POST' })
+  .validator(SetImpersonationWriteInput)
+  .handler(async ({ data }): Promise<{ writeEnabled: boolean }> => {
+    const { headers } = getRequest()
+    const { session, grant } = await requireOpenImpersonation(headers)
+
+    // Élever sans dire pourquoi n'est pas permis. Redescendre l'est toujours : on ne
+    // met jamais d'obstacle sur le chemin qui REND des droits.
+    if (data.enabled && !data.reason) throw new Error('reason required to enable writing')
+
+    const db = getDb()
+    await db
+      .update(impersonationSessions)
+      .set({
+        writeEnabled: data.enabled,
+        writeEnabledAt: data.enabled ? new Date().toISOString() : null,
+        ...(data.reason ? { reason: data.reason } : {}),
+      })
+      .where(eq(impersonationSessions.sessionId, grant.sessionId))
+
+    await audit({
+      orgId: grant.orgId,
+      actorUserId: grant.adminUserId,
+      actingAsOrgId: grant.orgId,
+      impersonated: true,
+      action: data.enabled ? 'impersonation.write.enable' : 'impersonation.write.disable',
+      entityType: 'user',
+      entityId: session.userId,
+      before: { writeEnabled: grant.writeEnabled },
+      after: { writeEnabled: data.enabled, reason: data.reason ?? null },
+      request: { ip: getRequestIP() ?? null, userAgent: headers.get('user-agent') },
+    })
+
+    return { writeEnabled: data.enabled }
+  })
+
+/* ------------------------------------------- changement d'offre : la décision */
+
+/** Les demandes en attente, toutes agences confondues. */
+export const listPlanChangeRequests = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<PendingPlanChange[]> => {
+    const { headers } = getRequest()
+    await requirePlatformOwner(headers)
+    return pendingPlanChanges(getDb())
+  },
+)
+
+export const DecidePlanChangeInput = z.object({
+  id: z.string().min(1),
+  approve: z.boolean(),
+  note: z.string().trim().max(500).optional(),
+})
+
+/**
+ * ACCEPTER OU REFUSER un changement d'offre.
+ *
+ * C'est le SEUL chemin qui écrit `organizations.plan_code` après la création d'une
+ * agence, et c'est voulu : tout changement d'offre laisse donc derrière lui une
+ * demande, son motif, son auteur et la date de la décision. Un back-office qui
+ * modifierait l'offre directement perdrait la moitié de cette trace.
+ *
+ * Rend `{ decided: false }` si la demande n'est plus en attente : deux administrateurs
+ * qui tranchent la même demande, le second ne doit pas la re-trancher ni écraser la
+ * décision du premier.
+ */
+export const decidePlanChangeRequest = createServerFn({ method: 'POST' })
+  .validator(DecidePlanChangeInput)
+  .handler(async ({ data }) => {
+    const { headers } = getRequest()
+    const session = await requirePlatformOwner(headers)
+
+    const decided = await decidePlanChange(getDb(), {
+      requestId: data.id,
+      adminUserId: session.userId,
+      approve: data.approve,
+      note: data.note ?? null,
+    })
+    if (!decided) return { decided: false as const }
+
+    await audit({
+      orgId: decided.orgId,
+      actorUserId: session.userId,
+      action: data.approve ? 'plan.change.approve' : 'plan.change.refuse',
+      entityType: 'organization',
+      entityId: decided.orgId,
+      before: { planCode: decided.currentPlanCode },
+      after: {
+        planCode: data.approve ? decided.requestedPlanCode : decided.currentPlanCode,
+        note: data.note ?? null,
+      },
+      request: { ip: getRequestIP() ?? null, userAgent: headers.get('user-agent') },
+    })
+
+    return { decided: true as const }
+  })
 
 export type AdminUserSummary = { id: string; name: string; email: string }
 

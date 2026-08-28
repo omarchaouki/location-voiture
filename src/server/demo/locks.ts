@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 
-import { getDb, type Db } from '~/db/client'
+import type { Db } from '~/db/client'
 import { forOrg } from '~/db/repositories/base'
 import { notifications } from '~/db/schema/alerts'
 import { organizations } from '~/db/schema/auth'
@@ -112,11 +112,3 @@ export async function notifyForOrganization(
   }
 }
 
-/** Variante pour les appelants qui n'ont pas la connexion sous la main. */
-export async function notifyForOrganizationWithDefaultDb(
-  orgId: string,
-  message: NotificationMessage,
-  channel = 'email',
-): Promise<{ state: 'sent' | 'skipped_demo' | 'failed' }> {
-  return notifyForOrganization(getDb(), orgId, message, channel)
-}

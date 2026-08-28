@@ -13,10 +13,12 @@ import {
   type ContractStatus,
   type SignatureBlock,
 } from '~/core/rental'
+import { settleReturn } from '~/core/settlement'
 import {
   CancelContractInput,
   ContractIdInput,
   CreateContractInput,
+  UpdateContractInput,
   RecordPaymentInput,
   ReturnContractInput,
   StartContractInput,
@@ -260,6 +262,118 @@ export const createContract = createServerFn({ method: 'POST' })
     return { id: created.id, reference }
   })
 
+/**
+ * CORRECTION D'UN CONTRAT — et ce que l'état autorise.
+ *
+ * Le manque était réel : un tarif négocié après coup, une remise oubliée, un retour
+ * repoussé de deux jours n'avaient aucun chemin. La seule issue était d'annuler et de
+ * ressaisir, ce qui casse la numérotation continue et perd les paiements déjà reçus.
+ *
+ * TROIS RÈGLES, et elles viennent du métier, pas du modèle :
+ *
+ *  1. **Un contrat CLOS ou ANNULÉ ne se corrige plus.** Il a produit une facture et
+ *     des écritures ; le rouvrir en douce désaccorderait la comptabilité de la réalité.
+ *  2. **Une fois le véhicule PARTI, la date de début ne bouge plus.** Elle est un
+ *     fait constaté au comptoir, pas une intention. Ce qui reste modifiable, c'est la
+ *     date de FIN — prolonger une location est le cas courant, et c'est même la
+ *     première raison d'ouvrir cet écran.
+ *  3. **Les montants sont RECALCULÉS**, jamais reçus du navigateur. `priceRental` est
+ *     la seule autorité sur le nombre de jours facturés, la TVA et le total : accepter
+ *     un total envoyé par le client, c'est accepter n'importe quel total.
+ */
+export class ContractNotEditableError extends Error {
+  constructor(readonly status: string) {
+    super(`contract not editable in status ${status}`)
+    this.name = 'ContractNotEditableError'
+  }
+}
+
+export const updateContract = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(UpdateContractInput)
+  .handler(async ({ data, context }) => {
+    const db = getDb()
+    const tenant = context.tenant
+    const repository = contractRepository(db, tenant)
+
+    const before = await repository.findById(data.id)
+    // Contrat d'une autre organisation : introuvable, jamais « interdit ».
+    if (!before) throw notFound()
+    /*
+     * `returned`, et non `closed` — qui n'a JAMAIS été un statut de contrat.
+     *
+     * Les statuts sont `reservation | active | returned | late | cancelled`
+     * (`ContractStatus`). La comparaison à `'closed'` n'a donc jamais été vraie, et un
+     * contrat RENDU restait modifiable : rouvrir l'écran de correction sur une
+     * location soldée recalculait les jours et le total sur les dates PRÉVUES,
+     * effaçant le décompte de retour — jours de retard, carburant, dommages — tout en
+     * laissant la retenue sur caution et sa ligne d'encaissement derrière. Le contrat
+     * se contredisait alors lui-même, et personne n'avait de raison de rouvrir la
+     * fiche pour s'en apercevoir.
+     *
+     * Le même test existait à l'identique dans la fiche contrat, avec la même faute.
+     */
+    if (before.status === 'returned' || before.status === 'cancelled') {
+      throw new ContractNotEditableError(before.status)
+    }
+
+    const started = before.actualStartAt !== null
+    const plannedStartAt = started
+      ? before.plannedStartAt
+      : (data.plannedStartAt ?? before.plannedStartAt)
+    const plannedEndAt = data.plannedEndAt ?? before.plannedEndAt
+
+    if (plannedEndAt <= plannedStartAt) throw new Error('contract.endBeforeStart')
+
+    const dailyCents = data.dailyCents ?? before.dailyCents
+    const discountCents = data.discountCents ?? before.discountCents
+    const extrasCents = data.extrasCents ?? before.extrasCents
+
+    const pricing = priceRental({
+      startAt: plannedStartAt,
+      endAt: plannedEndAt,
+      dailyCents,
+      discountCents,
+      extrasCents,
+    })
+
+    const updated = await repository.update(data.id, {
+      plannedStartAt,
+      plannedEndAt,
+      dailyCents,
+      discountCents,
+      extrasCents,
+      daysBilled: pricing.daysBilled,
+      subtotalCents: pricing.subtotalCents,
+      vatCents: pricing.vatCents,
+      totalCents: pricing.totalCents,
+      depositCents: data.depositCents ?? before.depositCents,
+    })
+    if (!updated) throw notFound()
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'contract.update',
+      entityType: 'contract',
+      entityId: data.id,
+      before: {
+        plannedEndAt: before.plannedEndAt,
+        dailyCents: before.dailyCents,
+        totalCents: before.totalCents,
+      },
+      after: {
+        plannedEndAt,
+        dailyCents,
+        totalCents: pricing.totalCents,
+      },
+      request: { ip: getRequestIP() ?? null },
+    })
+
+    return { id: data.id, totalCents: pricing.totalCents }
+  })
+
 /** Départ du véhicule : le contrat devient actif et la voiture passe en « loué ». */
 export const startContract = createServerFn({ method: 'POST' })
   .middleware([writableTenantMiddleware])
@@ -314,6 +428,27 @@ export class OdometerInconsistentError extends Error {
   }
 }
 
+/**
+ * LE RETOUR — et le DÉCOMPTE qui va avec.
+ *
+ * Le geste écrit six choses d'un coup, et c'est volontaire : elles ne peuvent pas être
+ * vraies séparément. Une voiture rendue sans que les jours de retard soient facturés,
+ * ou une caution retenue sans que le solde bouge, laisse un contrat qui se contredit
+ * lui-même — et personne ne va rouvrir la fiche pour réconcilier à la main.
+ *
+ *  1. le contrat passe à `returned`, le compteur et la jauge sont constatés ;
+ *  2. les JOURS sont recalculés sur le retour réel (`settleReturn`) ;
+ *  3. carburant et dommages entrent dans les extras, TVA recalculée avec ;
+ *  4. la caution est imputée sur ce qui reste dû, et pas au-delà ;
+ *  5. la part retenue devient une LIGNE D'ENCAISSEMENT — voir plus bas, c'est la
+ *     partie qui manquait le plus ;
+ *  6. la voiture redevient disponible avec son kilométrage à jour.
+ *
+ * **Le décompte est calculé ICI, jamais reçu.** L'écran envoie des constats de
+ * comptoir — un compteur, une jauge, des frais — et le serveur en tire les totaux. Un
+ * client de l'API qui pourrait poster un `totalCents` choisirait le prix de sa
+ * location.
+ */
 export const returnContract = createServerFn({ method: 'POST' })
   .middleware([writableTenantMiddleware])
   .validator(ReturnContractInput)
@@ -332,14 +467,101 @@ export const returnContract = createServerFn({ method: 'POST' })
     }
 
     const now = new Date().toISOString()
+
+    /*
+     * Ce qui a DÉJÀ été versé. C'est toute la différence entre « le client doit
+     * 2 400 » et « le client a déjà versé 2 000 » — donc entre retenir la caution
+     * entière et n'en retenir presque rien.
+     */
+    const previousPayments = (await repository.payments.list()).filter(
+      (payment) => payment.contractId === contract.id,
+    )
+    const paidCents = previousPayments.reduce((total, payment) => total + payment.amountCents, 0)
+
+    const settlement = settleReturn(
+      {
+        // Départ RÉEL si connu : on ne facture pas au client les heures pendant
+        // lesquelles la voiture l'attendait au comptoir.
+        startAt: contract.actualStartAt ?? contract.plannedStartAt,
+        plannedEndAt: contract.plannedEndAt,
+        actualEndAt: now,
+        dailyCents: contract.dailyCents,
+        daysAlreadyBilled: contract.daysBilled,
+        discountCents: contract.discountCents,
+        baseExtrasCents: contract.extrasCents,
+        fuelChargeCents: data.fuelChargeCents ?? 0,
+        damageChargeCents: data.damageChargeCents ?? 0,
+        depositCents: contract.depositCents,
+        paidCents,
+        startFuelEighths: contract.startFuelEighths,
+        endFuelEighths: data.endFuelEighths,
+        startKm: contract.startKm,
+        endKm: data.endKm,
+      },
+      data.depositWithheldCents,
+    )
+
+    /*
+     * LA CAUTION RETENUE EST UN ENCAISSEMENT, et doit apparaître comme tel.
+     *
+     * Sans cette ligne, le contrat restait « il reste 500 à payer » alors que les 500
+     * avaient été pris sur la caution : le solde de la fiche mentait, la facture
+     * derrière aussi, et le gérant relançait un client qui ne devait plus rien.
+     *
+     * `method: 'deposit'` n'est PAS dans `PAYMENT_METHODS` — et c'est délibéré. Cette
+     * liste est celle du menu « encaisser » : on ne paie pas *avec* une caution au
+     * comptoir, c'est le retour qui l'impute. La colonne est du texte libre, la valeur
+     * est donc écrite ici sans toucher au menu.
+     */
+    if (settlement.depositWithheldCents > 0) {
+      await repository.payments.insert({
+        contractId: contract.id,
+        amountCents: settlement.depositWithheldCents,
+        currency: contract.currency,
+        method: 'deposit',
+        receivedAt: now,
+        note: null,
+      })
+    }
+
+    const collectedCents = paidCents + settlement.depositWithheldCents
+
+    /*
+     * La caution est-elle SOLDÉE ?
+     *
+     * Deux questions distinctes, et les confondre était le défaut de la version
+     * précédente — on pouvait cocher « caution rendue » en retenant 500 dirhams.
+     *
+     *  - s'il ne reste RIEN à rendre, l'affaire est close d'office ;
+     *  - s'il reste quelque chose, seul l'agent sait si l'argent est effectivement
+     *    reparti. Un chèque se déchire au comptoir, une empreinte de carte se libère
+     *    parfois le lendemain.
+     *
+     * Tant que la date reste vide, la règle `deposit.pending` réveille l'agence 48 h
+     * après le retour. C'est exactement ce qu'on veut : une caution oubliée dans un
+     * tiroir est un litige qui arrive.
+     */
+    const depositSettled = settlement.depositDueBackCents === 0 || data.returnDeposit
+
     await repository.update(data.id, {
       status: 'returned',
       actualEndAt: now,
       endKm: data.endKm,
       endFuelEighths: data.endFuelEighths,
-      depositWithheldCents: data.depositWithheldCents ?? 0,
+
+      // Le décompte devient le contrat : jours, extras et TVA recalculés.
+      daysBilled: settlement.daysBilled,
+      extrasCents: settlement.extrasCents,
+      subtotalCents: settlement.subtotalCents,
+      vatCents: settlement.vatCents,
+      totalCents: settlement.totalCents,
+
+      depositWithheldCents: settlement.depositWithheldCents,
       // Invariant 6 : la restitution ne peut pas précéder le retour.
-      depositReturnedAt: data.returnDeposit ? now : null,
+      depositReturnedAt: depositSettled ? now : null,
+
+      paymentStatus:
+        collectedCents >= settlement.totalCents ? 'paid' : collectedCents > 0 ? 'partial' : 'unpaid',
     })
 
     await vehicleRepository(db, tenant).update(contract.vehicleId, {
@@ -355,15 +577,32 @@ export const returnContract = createServerFn({ method: 'POST' })
       action: 'contract.return',
       entityType: 'contract',
       entityId: data.id,
+      /*
+       * Le décompte ENTIER part au journal, pas seulement le montant retenu.
+       *
+       * C'est la pièce qu'on ressortira le jour où un client conteste une retenue six
+       * mois plus tard : combien de jours de retard, quel carburant manquait, ce qui
+       * avait déjà été payé. Le montant seul ne se défend pas.
+       */
       after: {
         endKm: data.endKm,
-        depositWithheldCents: data.depositWithheldCents ?? 0,
-        depositReturned: data.returnDeposit,
+        endFuelEighths: data.endFuelEighths,
+        lateDays: settlement.lateDays,
+        fuelShortfallEighths: settlement.fuelShortfallEighths,
+        fuelChargeCents: settlement.fuelChargeCents,
+        damageChargeCents: settlement.damageChargeCents,
+        totalCents: settlement.totalCents,
+        paidBeforeCents: paidCents,
+        depositCents: settlement.depositCents,
+        depositWithheldCents: settlement.depositWithheldCents,
+        depositReturned: depositSettled,
+        remainingToCollectCents: settlement.remainingToCollectCents,
       },
       request: { ip: getRequestIP() ?? null },
     })
 
-    return { ok: true }
+    // Le décompte remonte à l'écran : c'est lui qu'on tourne vers le client.
+    return { ok: true, settlement }
   })
 
 export const cancelContract = createServerFn({ method: 'POST' })

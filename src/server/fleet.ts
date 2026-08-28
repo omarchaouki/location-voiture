@@ -12,8 +12,10 @@ import {
   CreateFineInput,
   CreateIncidentInput,
   CreateScheduleInput,
+  FineIdInput,
   RecordMaintenanceInput,
   SettleFineInput,
+  UpdateFineInput,
 } from '~/core/schemas/fleet'
 import { getDb } from '~/db/client'
 import { forOrg } from '~/db/repositories/base'
@@ -221,6 +223,15 @@ export interface FineView {
   customerLabel: string | null
   paidBy: string | null
   dueOn: string | null
+  /*
+   * Les trois champs suivants ne s'affichent PAS dans la liste : ils sont là pour que
+   * le formulaire de correction démarre rempli. Un formulaire d'édition alimenté par
+   * une vue partielle renvoie du vide dans les champs qu'il ne connaît pas, et les
+   * efface en base à la première correction d'un champ voisin.
+   */
+  kind: string | null
+  referenceNumber: string | null
+  receivedOn: string | null
 }
 
 export const listFines = createServerFn({ method: 'GET' })
@@ -262,6 +273,9 @@ export const listFines = createServerFn({ method: 'GET' })
           customerLabel: contract ? (customerLabel.get(contract.customerId) ?? null) : null,
           paidBy: row.paidBy,
           dueOn: row.dueOn,
+          kind: row.kind,
+          referenceNumber: row.referenceNumber,
+          receivedOn: row.receivedOn,
         }
       })
       .sort((a, b) => b.offenceAt.localeCompare(a.offenceAt))
@@ -381,6 +395,83 @@ export const settleFine = createServerFn({ method: 'POST' })
       entityType: 'fine',
       entityId: data.id,
       after: { status: data.status, paidBy: data.paidBy ?? null },
+      request: { ip: getRequestIP() ?? null },
+    })
+
+    return { ok: true }
+  })
+
+
+/**
+ * CORRECTION D'UNE CONTRAVENTION.
+ *
+ * Un PV arrive par courrier, souvent mal photocopié : le montant se lit de travers,
+ * la date se tape à l'envers, la référence saute un chiffre. Jusqu'ici il n'y avait
+ * aucun chemin de correction — il fallait ressaisir, donc créer un DOUBLON, et le
+ * doublon se refacture deux fois au client.
+ */
+export const updateFine = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(UpdateFineInput)
+  .handler(async ({ data, context }) => {
+    const tenant = context.tenant
+    const { id, ...values } = data
+    const repository = forOrg<FineRow>(getDb(), tenant, fines)
+
+    const before = await repository.findById(id)
+    // Contravention d'une autre organisation : introuvable, jamais « interdit ».
+    if (!before) throw notFound()
+
+    const updated = await repository.update(id, values)
+    if (!updated) throw notFound()
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'fine.update',
+      entityType: 'fine',
+      entityId: id,
+      before: { amountCents: before.amountCents, offenceAt: before.offenceAt },
+      after: { amountCents: values.amountCents, offenceAt: values.offenceAt },
+      request: { ip: getRequestIP() ?? null },
+    })
+
+    return { id }
+  })
+
+/**
+ * Retrait d'une contravention.
+ *
+ * DOUX, comme partout : un PV saisi deux fois se retire, mais il reste en base. Une
+ * contravention effacée pour de bon, c'est une ligne de refacturation qu'on ne peut
+ * plus justifier au client six mois plus tard.
+ *
+ * Une amende déjà REFACTURÉE ne se retire pas : le paiement du client existe, et le
+ * faire disparaître laisserait une recette sans cause.
+ */
+export const deleteFine = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(FineIdInput)
+  .handler(async ({ data, context }) => {
+    const tenant = context.tenant
+    const repository = forOrg<FineRow>(getDb(), tenant, fines)
+
+    const before = await repository.findById(data.id)
+    if (!before) throw notFound()
+    if (before.status === 'rebilled') throw new Error('fine.rebilledCannotDelete')
+
+    const removed = await repository.softDelete(data.id)
+    if (!removed) throw notFound()
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'fine.delete',
+      entityType: 'fine',
+      entityId: data.id,
+      before: { amountCents: before.amountCents, status: before.status },
       request: { ip: getRequestIP() ?? null },
     })
 

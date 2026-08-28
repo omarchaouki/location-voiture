@@ -5,11 +5,20 @@ import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatMoney } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import { listContracts } from '~/server/contracts'
-import { attachFineToContract, createFine, listFines, settleFine, type FineView } from '~/server/fleet'
+import {
+  attachFineToContract,
+  createFine,
+  deleteFine,
+  listFines,
+  settleFine,
+  updateFine,
+  type FineView,
+} from '~/server/fleet'
 import { listVehicles } from '~/server/vehicles'
 import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
 import { Field, FormError, Picker } from '~/ui/forms/fields'
+import { toLocalInput } from '~/ui/forms/datetime'
 import { textField } from '~/ui/forms/form-data'
 import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { AlertListSkeleton } from '~/ui/skeletons'
@@ -114,7 +123,15 @@ function FinesPage() {
           required
           hint={t('fine.offenceHint')}
         />
-        <Field name="amount" label={t('fine.amount')} type="number" required />
+        <Field
+          name="amount"
+          label={t('fine.amount')}
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="0.01"
+          required
+        />
         <Field name="location" label={t('fine.location')} numeric={false} />
         <Field name="referenceNumber" label={t('fine.reference')} />
         <Field name="dueOn" label={t('fine.dueOn')} type="date" />
@@ -151,6 +168,104 @@ function FinesPage() {
   )
 }
 
+/**
+ * CORRECTION D'UNE CONTRAVENTION, dépliée sous sa ligne.
+ *
+ * Un PV arrive par courrier, souvent mal photocopié : le montant se lit de travers, la
+ * date se tape à l'envers. Sans correction possible, la seule issue était de ressaisir
+ * — donc de créer un doublon, qui se refacture deux fois au client.
+ *
+ * Le formulaire s'ouvre SOUS la ligne concernée et non dans une boîte : on corrige en
+ * regardant la ligne qu'on corrige.
+ */
+function EditFineForm({
+  fine,
+  busy,
+  onCancel,
+  onSaved,
+}: {
+  fine: FineView
+  busy: boolean
+  onCancel: () => void
+  onSaved: (action: () => Promise<unknown>) => void
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <form
+      method="post"
+      className="mt-3 grid w-full gap-4 rounded-lg border border-ring bg-card p-4 sm:grid-cols-3"
+      onSubmit={(event) => {
+        event.preventDefault()
+        const form = new FormData(event.currentTarget)
+        const raw = textField(form, 'amount').replace(',', '.')
+        const amountCents = Math.round(Number(raw) * 100)
+        if (!Number.isFinite(amountCents) || amountCents <= 0) return
+
+        onSaved(() =>
+          updateFine({
+            data: {
+              id: fine.id,
+              offenceAt: new Date(textField(form, 'offenceAt')).toISOString(),
+              amountCents,
+              location: textField(form, 'location') || undefined,
+              kind: textField(form, 'kind') || undefined,
+              referenceNumber: textField(form, 'referenceNumber') || undefined,
+              receivedOn: textField(form, 'receivedOn') || undefined,
+              dueOn: textField(form, 'dueOn') || undefined,
+            },
+          }),
+        )
+      }}
+    >
+      <Field
+        name="offenceAt"
+        label={t('fine.offenceAt')}
+        type="datetime-local"
+        required
+        defaultValue={toLocalInput(fine.offenceAt)}
+      />
+      <Field
+        name="amount"
+        label={t('fine.amount')}
+        type="number"
+        inputMode="decimal"
+        min={0}
+        step="0.01"
+        required
+        defaultValue={String(fine.amountCents / 100)}
+      />
+      <Field
+        name="location"
+        label={t('fine.location')}
+        numeric={false}
+        defaultValue={fine.location ?? ''}
+      />
+      <Field
+        name="referenceNumber"
+        label={t('fine.reference')}
+        defaultValue={fine.referenceNumber ?? ''}
+      />
+      <Field
+        name="receivedOn"
+        label={t('fine.receivedOn')}
+        type="date"
+        defaultValue={fine.receivedOn ?? ''}
+      />
+      <Field name="dueOn" label={t('fine.dueOn')} type="date" defaultValue={fine.dueOn ?? ''} />
+
+      <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
+        <Button type="submit" disabled={busy}>
+          {busy ? t('auth.working') : t('fine.saveChanges')}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t('action.cancel')}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 function FineRow({
   fine,
   locale,
@@ -163,11 +278,15 @@ function FineRow({
   const { t } = useTranslation()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   async function act(action: () => Promise<unknown>) {
     setBusy(true)
     try {
       await action()
+      setEditing(false)
+      setConfirming(false)
       await router.invalidate()
     } finally {
       setBusy(false)
@@ -231,6 +350,54 @@ function FineRow({
           </Button>
         ) : null}
 
+        {/*
+          Corriger et retirer sont en TEXTE, pas en boutons : la ligne porte déjà deux
+          actions métier (encaisser, refacturer), et quatre boutons de même poids ne se
+          hiérarchisent plus. Ce qui touche à la SAISIE est secondaire par rapport à ce
+          qui touche à l'argent.
+        */}
+        {confirming ? (
+          <>
+            <span className="text-2xs text-destructive">{t('fine.confirmDelete')}</span>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void act(() => deleteFine({ data: { id: fine.id } }))}
+              className="text-2xs font-medium text-destructive underline underline-offset-4 disabled:opacity-45"
+            >
+              {t('action.delete')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="text-2xs text-muted-foreground underline underline-offset-4"
+            >
+              {t('action.cancel')}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setEditing((value) => !value)}
+              className="text-2xs text-primary underline underline-offset-4"
+            >
+              {t('action.edit')}
+            </button>
+            {/* Une amende REFACTURÉE ne se retire pas : le paiement du client existe,
+                et le faire disparaître laisserait une recette sans cause. */}
+            {fine.status === 'rebilled' ? null : (
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                className="text-2xs text-muted-foreground underline underline-offset-4 hover:text-destructive"
+              >
+                {t('action.delete')}
+              </button>
+            )}
+          </>
+        )}
+
         {fine.contractId !== null && fine.status !== 'rebilled' ? (
           <Button
             variant="outline"
@@ -245,6 +412,17 @@ function FineRow({
           </Button>
         ) : null}
       </span>
+
+      {/* Le formulaire s'ouvre SOUS la ligne, en pleine largeur : on corrige en
+          regardant la ligne qu'on corrige. */}
+      {editing ? (
+        <EditFineForm
+          fine={fine}
+          busy={busy}
+          onCancel={() => setEditing(false)}
+          onSaved={(action) => void act(action)}
+        />
+      ) : null}
     </li>
   )
 }

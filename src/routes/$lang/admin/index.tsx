@@ -1,11 +1,17 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { PlanBreakdown, PlatformMetrics } from '~/db/repositories/platform'
+import type { PendingPlanChange } from '~/db/repositories/plan-changes'
 import { formatDate, formatMoney, formatNumber } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
-import { fetchPlatformMetrics } from '~/server/admin'
+import {
+  decidePlanChangeRequest,
+  fetchPlatformMetrics,
+  listPlanChangeRequests,
+} from '~/server/admin'
 import { EmptyState } from '~/ui/feedback/states'
 import { AdminDashboardSkeleton } from '~/ui/skeletons'
 import { Badge } from '~/ui/shadcn/badge'
@@ -35,14 +41,17 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '~/ui/shadc
  * sans qu'on recalcule ses voisines.
  */
 export const Route = createFileRoute('/$lang/admin/')({
-  loader: async () => ({ metrics: await fetchPlatformMetrics() }),
+  loader: async () => ({
+    metrics: await fetchPlatformMetrics(),
+    planRequests: await listPlanChangeRequests(),
+  }),
   pendingComponent: AdminDashboardSkeleton,
   component: AdminDashboardPage,
 })
 
 function AdminDashboardPage() {
   const { t } = useTranslation()
-  const { metrics } = Route.useLoaderData()
+  const { metrics, planRequests } = Route.useLoaderData()
   const { lang } = Route.useParams()
   const locale: Locale = isLocale(lang) ? lang : DEFAULT_LOCALE
 
@@ -73,6 +82,15 @@ function AdminDashboardPage() {
     <div className="grid gap-6">
       <Header locale={locale} />
       <Tiles metrics={metrics} locale={locale} />
+
+      {/*
+        LES DEMANDES EN ATTENTE, en tête et pas au fond.
+
+        C'est la seule chose de cet écran qui attend une DÉCISION humaine ; tout le
+        reste est de la mesure. Une demande de changement d'offre laissée trois
+        semaines dans un onglet secondaire, c'est un client qui rappelle.
+      */}
+      <PlanChangeRequests requests={planRequests} locale={locale} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <RecentOrganizations metrics={metrics} locale={locale} />
@@ -332,6 +350,99 @@ function Revenue({ metrics, locale }: { metrics: PlatformMetrics; locale: Locale
             ))}
           </dl>
         )}
+      </CardContent>
+    </Card>
+  )
+}
+
+
+/**
+ * Les demandes de changement d'offre, et leur décision.
+ *
+ * Approuver écrit `organizations.plan_code` — c'est le SEUL chemin qui le fait après
+ * la création d'une agence, et c'est ce qui garantit qu'un changement d'offre laisse
+ * toujours derrière lui une demande, un motif, un auteur et une date.
+ *
+ * Le panneau DISPARAÎT quand il n'y a rien à décider : un bloc « aucune demande »
+ * permanent occupe la place de ce qui compte et apprend à ne plus regarder.
+ */
+function PlanChangeRequests({
+  requests,
+  locale,
+}: {
+  requests: readonly PendingPlanChange[]
+  locale: Locale
+}) {
+  const { t } = useTranslation()
+  const router = useRouter()
+  const [busy, setBusy] = useState<string | null>(null)
+
+  if (requests.length === 0) return null
+
+  async function decide(id: string, approve: boolean) {
+    setBusy(id)
+    try {
+      await decidePlanChangeRequest({ data: { id, approve } })
+      await router.invalidate()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <Card className="min-w-0 py-0">
+      <CardHeader className="border-b border-border py-4">
+        <CardTitle>{t('admin.planRequests')}</CardTitle>
+        <CardAction>
+          <Badge variant="warn">{t('admin.planRequestsCount', { count: requests.length })}</Badge>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0 py-0">
+        <ul>
+          {requests.map((request) => (
+            <li
+              key={request.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-5 py-4 last:border-b-0"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{request.organizationName}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {t('admin.planRequestFromTo', {
+                    from: t(`plan.${request.currentPlanCode}`),
+                    to: t(`plan.${request.requestedPlanCode}`),
+                  })}
+                </span>
+                {/* Le MOTIF est ce qu'on lit en premier : c'est lui qui permet de
+                    trancher sans rappeler le client. */}
+                {request.reason ? (
+                  <span className="mt-1 block max-w-prose text-sm">{request.reason}</span>
+                ) : null}
+              </span>
+
+              <span className="numeric text-xs text-muted-foreground">
+                {formatDate(request.requestedAt.slice(0, 10), locale)}
+              </span>
+
+              <span className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  disabled={busy !== null}
+                  onClick={() => void decide(request.id, true)}
+                >
+                  {busy === request.id ? t('auth.working') : t('admin.planRequestApprove')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={busy !== null}
+                  onClick={() => void decide(request.id, false)}
+                >
+                  {t('admin.planRequestRefuse')}
+                </Button>
+              </span>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   )

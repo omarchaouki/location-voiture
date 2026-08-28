@@ -31,8 +31,8 @@ const NOW = new Date('2026-08-24T12:00:00.000Z')
 
 let db: Db
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
   plateCounter = 0
 })
 

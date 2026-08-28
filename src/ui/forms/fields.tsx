@@ -1,79 +1,91 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import {
+  Field as FieldBlock,
+  Input,
+  Select as SelectControl,
+  Textarea,
+} from '~/ui/shadcn/field'
 
 import { Combobox } from './combobox'
 
 /**
- * Champs de formulaire.
+ * Champs de formulaire — la couche que les ÉCRANS utilisent.
  *
- * Volontairement nus : bordure au filet, pas d'ombre, hauteur de cible tactile de
- * 44 px, et un vrai `<label>` qui enveloppe le champ — pas un `aria-label` posé
- * par-dessus. Un registre se remplit au stylo, pas dans une carte flottante.
+ * Elle ne dessine plus rien : tout le dessin est dans `src/ui/shadcn/field.tsx`, et ce
+ * fichier ne fait que l'habiller de ce dont un formulaire de ce produit a besoin —
+ * un `name`, une étiquette, une aide, des chiffres tabulaires par défaut, et des
+ * options d'énumération traduites.
+ *
+ * Jusqu'au 27/08/2026 elle portait sa PROPRE copie de la classe de contrôle
+ * (`INPUT_CLASS`), et les deux avaient divergé : arrondi `sm` ici, `md` là, une ombre
+ * d'un côté seulement. C'est le genre d'écart qu'on ne voit pas écran par écran, et
+ * qui saute aux yeux quand on les met côte à côte.
+ *
+ * L'étiquette et le contrôle sont désormais reliés par `id`/`htmlFor` plutôt que par
+ * l'imbrication : c'est ce que demande le `<label>` de Radix, et cela permet de poser
+ * l'aide et l'erreur SOUS le champ sans les faire entrer dans la zone cliquable.
  */
 
-const INPUT_CLASS =
-  'mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base transition-colors focus:border-primary'
+type NativeInputProps = Omit<React.ComponentProps<'input'>, 'className' | 'id'>
 
 export function Field({
-  name,
   label,
   hint,
-  type = 'text',
-  required,
-  defaultValue,
+  error,
   numeric = true,
-  pattern,
-  autoComplete,
   className,
-}: {
-  name: string
+  ...input
+}: NativeInputProps & {
   label: string
   hint?: string
-  type?: string
-  required?: boolean
-  defaultValue?: string
+  /** Message sous le champ. Colore aussi la bordure via `aria-invalid`. */
+  error?: string
   /** Chiffres tabulaires par défaut : plaques, montants, dates s'alignent. */
   numeric?: boolean
-  /**
-   * Contrainte de forme. Le tiret doit y être ÉCHAPPÉ (`[a-z0-9\-]+`) : les attributs
-   * `pattern` sont compilés avec le drapeau `v`, où un tiret nu en fin de classe est
-   * une erreur de syntaxe qui fait échouer `requestSubmit()` sur tout le formulaire.
-   */
-  pattern?: string
-  autoComplete?: string
+  /** Classe du BLOC (`sm:col-span-2`…), jamais du contrôle. */
   className?: string
 }) {
+  const id = useId()
+
   return (
-    <label className={`block ${className ?? ''}`.trim()}>
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        defaultValue={defaultValue}
-        pattern={pattern}
-        autoComplete={autoComplete}
-        className={`${numeric ? 'numeric ' : ''}${INPUT_CLASS}`}
-        style={{ minHeight: 'var(--tap-target)' }}
+    <FieldBlock
+      label={label}
+      htmlFor={id}
+      {...(hint === undefined ? {} : { hint })}
+      {...(error === undefined ? {} : { error })}
+      {...(input.required === undefined ? {} : { required: input.required })}
+      {...(className === undefined ? {} : { className })}
+    >
+      <Input
+        id={id}
+        className={numeric ? 'numeric' : undefined}
+        {...(error ? { 'aria-invalid': true } : {})}
+        {...input}
       />
-      {hint ? <span className="mt-1 block text-2xs text-muted-foreground">{hint}</span> : null}
-    </label>
+    </FieldBlock>
   )
 }
 
 export function TextArea({
   name,
   label,
+  hint,
   rows = 3,
-}: {
-  name: string
+  className = 'sm:col-span-2',
+  ...textarea
+}: Omit<React.ComponentProps<'textarea'>, 'className' | 'id'> & {
   label: string
-  rows?: number
+  hint?: string
+  className?: string
 }) {
+  const id = useId()
+
   return (
-    <label className="block sm:col-span-2">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <textarea name={name} rows={rows} className={INPUT_CLASS} />
-    </label>
+    <FieldBlock label={label} htmlFor={id} className={className} {...(hint === undefined ? {} : { hint })}>
+      <Textarea id={id} name={name} rows={rows} {...textarea} />
+    </FieldBlock>
   )
 }
 
@@ -82,33 +94,35 @@ export function Select({
   label,
   options,
   prefix,
-  defaultValue,
-}: {
-  name: string
+  hint,
+  className,
+  ...select
+}: Omit<React.ComponentProps<'select'>, 'className' | 'id' | 'children'> & {
   label: string
   options: readonly string[]
   /** Préfixe de clé i18n : les valeurs d'énumération se traduisent aussi. */
   prefix: string
-  defaultValue?: string
+  hint?: string
+  className?: string
 }) {
   const { t } = useTranslation()
+  const id = useId()
 
   return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <select
-        name={name}
-        defaultValue={defaultValue}
-        className={INPUT_CLASS}
-        style={{ minHeight: 'var(--tap-target)' }}
-      >
+    <FieldBlock
+      label={label}
+      htmlFor={id}
+      {...(hint === undefined ? {} : { hint })}
+      {...(className === undefined ? {} : { className })}
+    >
+      <SelectControl id={id} name={name} {...select}>
         {options.map((option) => (
           <option key={option} value={option}>
             {t(`${prefix}.${option}`)}
           </option>
         ))}
-      </select>
-    </label>
+      </SelectControl>
+    </FieldBlock>
   )
 }
 
@@ -159,9 +173,20 @@ export function Picker({
   )
 }
 
+/**
+ * Le refus du formulaire, en tête de la zone d'action.
+ *
+ * C'était un filet vertical et du texte rouge. C'est maintenant un bloc teinté : sur un
+ * formulaire dense en bleu et blanc, un simple trait de couleur se perd dans la grille
+ * des champs, alors qu'une surface se repère sans qu'on la cherche. La couleur ne porte
+ * toujours rien seule — le texte dit ce qui ne va pas, et `role="alert"` l'annonce.
+ */
 export function FormError({ children }: { children: React.ReactNode }) {
   return (
-    <p role="alert" className="border-s-2 border-destructive ps-3 text-sm text-destructive sm:col-span-2">
+    <p
+      role="alert"
+      className="rounded-md border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive sm:col-span-2"
+    >
       {children}
     </p>
   )

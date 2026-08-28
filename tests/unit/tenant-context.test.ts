@@ -29,8 +29,8 @@ import type { SignedInUser } from '../helpers/auth'
 let db: Db
 let auth: Auth
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
   auth = createTestAuth(db)
   captureNotifications()
 })

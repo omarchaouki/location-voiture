@@ -30,8 +30,8 @@ function payload(overrides: Record<string, unknown> = {}) {
 
 let db: Db
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
   setNotifier({ id: 'muet', send: () => Promise.resolve() })
 })
 

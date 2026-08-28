@@ -101,7 +101,10 @@ export default tseslint.config(
   },
 
   {
-    files: ['scripts/**/*.ts', 'tests/**/*.ts'],
+    // Les points d'entrée en ligne de commande écrivent sur la sortie standard : c'est
+    // leur interface. `server.mjs` en fait partie — sa ligne de démarrage est ce que
+    // `journalctl -u flotta` affiche en premier quand on cherche pourquoi rien ne répond.
+    files: ['scripts/**/*.ts', 'tests/**/*.ts', 'server.mjs'],
     rules: { 'no-console': 'off' },
   },
 

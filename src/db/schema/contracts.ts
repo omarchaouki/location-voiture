@@ -1,8 +1,8 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { aliveOnly, cents, orgColumns, timestamp } from './_shared'
 
-export const contracts = sqliteTable(
+export const contracts = pgTable(
   'contracts',
   {
     ...orgColumns,
@@ -70,7 +70,7 @@ export const contracts = sqliteTable(
   ],
 )
 
-export const contractPayments = sqliteTable(
+export const contractPayments = pgTable(
   'contract_payments',
   {
     ...orgColumns,
@@ -86,7 +86,7 @@ export const contractPayments = sqliteTable(
 )
 
 /** État des lieux, au départ et au retour. */
-export const conditionReports = sqliteTable(
+export const conditionReports = pgTable(
   'condition_reports',
   {
     ...orgColumns,
@@ -110,7 +110,7 @@ export const conditionReports = sqliteTable(
   ],
 )
 
-export const conditionPhotos = sqliteTable(
+export const conditionPhotos = pgTable(
   'condition_photos',
   {
     ...orgColumns,

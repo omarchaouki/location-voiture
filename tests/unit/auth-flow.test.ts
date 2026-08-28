@@ -20,8 +20,8 @@ let db: Db
 let auth: Auth
 let sent: NotificationMessage[]
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
   auth = createTestAuth(db)
   sent = captureNotifications()
 })

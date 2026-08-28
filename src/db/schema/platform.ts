@@ -1,4 +1,4 @@
-import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { bool, civilDate, orgColumns, platformColumns } from './_shared'
 
@@ -11,7 +11,7 @@ import { bool, civilDate, orgColumns, platformColumns } from './_shared'
  */
 
 /** Agence. Une organisation en a de 1 à 5 dans le cas visé. */
-export const branches = sqliteTable(
+export const branches = pgTable(
   'branches',
   {
     ...orgColumns,
@@ -32,7 +32,7 @@ export const branches = sqliteTable(
  * impersonation. `orgId` est nullable parce qu'un acte de plateforme (création
  * d'organisation, changement de plan depuis /admin) n'appartient à aucun client.
  */
-export const auditLog = sqliteTable(
+export const auditLog = pgTable(
   'audit_log',
   {
     ...platformColumns,
@@ -57,7 +57,7 @@ export const auditLog = sqliteTable(
 )
 
 /** Demandes de démo venues du site vitrine. */
-export const leads = sqliteTable(
+export const leads = pgTable(
   'leads',
   {
     ...platformColumns,
@@ -80,7 +80,7 @@ export const leads = sqliteTable(
 )
 
 /** Interrupteurs de fonctionnalité, globaux ou par organisation. */
-export const featureFlags = sqliteTable(
+export const featureFlags = pgTable(
   'feature_flags',
   {
     ...platformColumns,
@@ -102,7 +102,7 @@ export const featureFlags = sqliteTable(
  * l'écriture est interdite par défaut et demande une élévation explicite.
  * C'est cette table qui la porte, et c'est elle que lit `TenantContext.canWrite`.
  */
-export const impersonationSessions = sqliteTable(
+export const impersonationSessions = pgTable(
   'impersonation_sessions',
   {
     ...platformColumns,

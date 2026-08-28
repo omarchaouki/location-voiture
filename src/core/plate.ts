@@ -71,11 +71,48 @@ function toLatinDigits(input: string): string {
  * Analyse une saisie libre. Renvoie `null` si la forme n'est pas reconnue —
  * jamais une plaque à moitié devinée.
  */
+/**
+ * Plaque tapée D'UN SEUL TENANT, sans séparateur : `12345أ6`, `12345A6`, `WW123456`.
+ *
+ * C'est la saisie la plus naturelle qui soit — c'est ainsi que la plaque est peinte
+ * sur le véhicule — et elle était REFUSÉE jusqu'au 27/08/2026, avec le message
+ * « plaque invalide » et rien pour comprendre ce qui manquait. Le découpage se faisait
+ * uniquement sur les séparateurs, et une saisie sans séparateur donnait un seul bloc,
+ * donc `parts.length !== 3`, donc un refus.
+ *
+ * Le découpage positionnel n'est PAS ambigu : la lettre de série sépare deux groupes
+ * de chiffres, et une plaque provisoire commence par sa lettre. `\d{1,6}` est gourmand,
+ * l'expression revient donc en arrière jusqu'à trouver la seule coupure valable —
+ * `1234CH12` donne bien `1234` + `CH` + `12`.
+ *
+ * Aucun risque de confusion avec la lettre `و` (translittérée `W`) : une plaque
+ * standard commence toujours par des CHIFFRES, une provisoire toujours par `W`.
+ */
+const GLUED_TEMPORARY = /^(WW|W)(\d{1,8})$/
+const GLUED_STANDARD = /^(\d{1,6})([A-Z]{1,2}|[؀-ۿ])(\d{1,2})$/
+
+function splitGlued(cleaned: string): string[] | null {
+  const temporary = GLUED_TEMPORARY.exec(cleaned)
+  if (temporary?.[1] && temporary[2]) return [temporary[1], temporary[2]]
+
+  const standard = GLUED_STANDARD.exec(cleaned)
+  if (standard?.[1] && standard[2] && standard[3]) {
+    return [standard[1], standard[2], standard[3]]
+  }
+  return null
+}
+
 export function parsePlate(input: string): Plate | null {
   const cleaned = toLatinDigits(input).trim().replace(SEPARATORS, ' ').toUpperCase()
   if (cleaned.length === 0) return null
 
-  const parts = cleaned.split(' ').filter(Boolean)
+  let parts = cleaned.split(' ').filter(Boolean)
+
+  // Un seul bloc : la personne a tapé sans séparateur. On découpe à la forme.
+  if (parts.length === 1) {
+    const glued = splitGlued(parts[0] ?? '')
+    if (glued) parts = glued
+  }
 
   // Plaque provisoire : WW 1234 56 ou WW 123456
   const first = parts[0]

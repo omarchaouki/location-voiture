@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next'
 
 import { formatDate, formatMoney, formatNumber } from '~/i18n/format'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
-import { loadBilling, refreshUsage } from '~/server/billing'
+import { Route as AppRoute } from '~/routes/$lang/app'
+import { loadBilling, loadPlanChangeRequest, refreshUsage } from '~/server/billing'
+import { listPublicPlans } from '~/server/pricing'
+import { PlanChangeCard } from '~/ui/billing/plan-change'
 import type { UsageLine } from '~/server/reads/billing'
 import { Button } from '~/ui/shadcn/button'
 import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
@@ -23,7 +26,14 @@ import { BillingSkeleton } from '~/ui/skeletons'
  * tard.
  */
 export const Route = createFileRoute('/$lang/app/abonnement')({
-  loader: async () => ({ billing: await loadBilling() }),
+  loader: async () => ({
+    billing: await loadBilling(),
+    // Les offres sont LUES EN BASE, jamais écrites dans la page : c'est la même règle
+    // que sur la vitrine, et pour la même raison — un catalogue codé en dur finit par
+    // contredire celui de la facture.
+    plans: await listPublicPlans(),
+    pendingRequest: await loadPlanChangeRequest(),
+  }),
   pendingComponent: BillingSkeleton,
   component: BillingPage,
 })
@@ -60,7 +70,9 @@ const COUNTER_KEYS: Record<string, string> = {
 
 function BillingPage() {
   const { t } = useTranslation()
-  const { billing } = Route.useLoaderData()
+  const { billing, plans, pendingRequest } = Route.useLoaderData()
+  // Le rôle vient de la coquille : seul un `owner` engage l'agence financièrement.
+  const { viewer } = AppRoute.useLoaderData()
   const { lang } = Route.useParams()
   const locale: Locale = isLocale(lang) ? lang : DEFAULT_LOCALE
   const router = useRouter()
@@ -130,6 +142,16 @@ function BillingPage() {
       {billing.cancelAtPeriodEnd ? (
         <p className="mt-4 text-xs text-muted-foreground">{t('billing.cancelAtPeriodEnd')}</p>
       ) : null}
+
+      <div className="mt-10">
+        <PlanChangeCard
+          currentPlanCode={billing.planCode}
+          plans={plans.map((plan) => plan.code)}
+          pending={pendingRequest}
+          canRequest={viewer.organization?.role === 'owner'}
+          locale={locale}
+        />
+      </div>
 
       <section className="mt-10">
         <h2 className="border-b border-border pb-2 text-base">{t('billing.usageTitle')}</h2>

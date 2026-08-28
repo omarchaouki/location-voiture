@@ -6,6 +6,7 @@ import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '~/i18n/locales'
 import { loadSettings, updateSettings } from '~/server/settings'
 import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { cn } from '~/ui/shadcn/utils'
+import { Field, Select } from '~/ui/forms/fields'
 import { choiceField, textField } from '~/ui/forms/form-data'
 import { LanguageSwitcher } from '~/ui/i18n/language-switcher'
 import { Badge } from '~/ui/shadcn/badge'
@@ -84,6 +85,7 @@ function SettingsPage() {
       <form method="post" className="mt-4 grid gap-5 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
         <Field
           name="name"
+          numeric={false}
           label={t('settings.name')}
           defaultValue={settings.name}
           disabled={!settings.canEdit}
@@ -91,6 +93,7 @@ function SettingsPage() {
         />
         <Field
           name="city"
+          numeric={false}
           label={t('settings.city')}
           defaultValue={settings.city ?? ''}
           disabled={!settings.canEdit}
@@ -104,40 +107,26 @@ function SettingsPage() {
         />
         <Field
           name="contactEmail"
+          numeric={false}
           label={t('settings.contactEmail')}
           defaultValue={settings.contactEmail ?? ''}
           disabled={!settings.canEdit}
           type="email"
         />
 
-        <label className="block">
-          <span className="text-xs text-muted-foreground">{t('settings.defaultLocale')}</span>
-          <select
-            name="localeDefault"
-            defaultValue={settings.localeDefault}
-            disabled={!settings.canEdit}
-            className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base disabled:opacity-50"
-            style={{ minHeight: 'var(--tap-target)' }}
-          >
-            {LOCALES.map((value) => (
-              <option key={value} value={value}>
-                {t(`language.${value}`)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          name="localeDefault"
+          label={t('settings.defaultLocale')}
+          options={LOCALES}
+          prefix="language"
+          defaultValue={settings.localeDefault}
+          disabled={!settings.canEdit}
+        />
 
-        <label className="block">
-          <span className="text-xs text-muted-foreground">{t('settings.timezone')}</span>
-          {/* Le fuseau n'est pas modifiable : tout le métier est calculé à
-              Africa/Casablanca, y compris son passage à UTC+0 pendant le Ramadan. */}
-          <input
-            value={settings.timezone}
-            readOnly
-            className="numeric mt-1 block w-full rounded-sm border border-border bg-muted px-3 py-2 text-base text-muted-foreground"
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
+        {/* Le fuseau n'est pas modifiable : tout le métier est calculé à
+            Africa/Casablanca, y compris son passage à UTC+0 pendant le Ramadan.
+            `readOnly` porte le grisé — le champ n'a plus à se le peindre lui-même. */}
+        <Field label={t('settings.timezone')} value={settings.timezone} readOnly />
 
         {settings.canEdit ? (
           <div className="flex items-center gap-4 sm:col-span-2">
@@ -177,37 +166,6 @@ function SettingsPage() {
         <LanguageSwitcher current={locale} />
       </div>
     </div>
-  )
-}
-
-function Field({
-  name,
-  label,
-  defaultValue,
-  disabled,
-  required,
-  type = 'text',
-}: {
-  name: string
-  label: string
-  defaultValue: string
-  disabled: boolean
-  required?: boolean
-  type?: string
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        disabled={disabled}
-        required={required}
-        className="mt-1 block w-full rounded-sm border border-input bg-card px-3 py-2 text-base disabled:opacity-50"
-        style={{ minHeight: 'var(--tap-target)' }}
-      />
-    </label>
   )
 }
 

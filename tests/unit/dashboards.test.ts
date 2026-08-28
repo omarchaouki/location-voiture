@@ -59,7 +59,7 @@ async function contrat(
 }
 
 beforeEach(async () => {
-  db = createTestDb()
+  db = await createTestDb()
   await ensurePlans(db)
   await organisation('org-atlas')
   await organisation('org-rivage', { planCode: 'starter', status: 'past_due' })

@@ -61,3 +61,38 @@ export const SetRegistrationInput = z.object({
 
 export const DOCUMENT_TYPES = ['insurance', 'inspection', 'roadTax', 'registration'] as const
 export type DocumentType = (typeof DOCUMENT_TYPES)[number]
+
+/* --------------------------------------------------- correction et retrait */
+
+/**
+ * Modifier une pièce déjà saisie.
+ *
+ * Les entrées de correction sont dérivées des entrées de création par `omit` + `id`,
+ * jamais recopiées. Une règle de validation ajoutée à la saisie — un plafond de
+ * montant, un format de numéro — s'applique alors automatiquement à la correction.
+ * Deux schémas jumeaux entretenus à la main finissent toujours par diverger, et c'est
+ * la CORRECTION qui reste en arrière, c'est-à-dire le chemin le moins surveillé.
+ *
+ * Le `vehicleId` disparaît volontairement : corriger une assurance ne doit pas
+ * permettre de la déplacer sur une autre voiture. Pour cela, on supprime et on
+ * ressaisit — un geste, une intention.
+ */
+const documentId = z.string().min(1)
+
+export const UpdateInsuranceInput = AddInsuranceInput.omit({ vehicleId: true }).extend({
+  id: documentId,
+})
+export const UpdateInspectionInput = AddInspectionInput.omit({ vehicleId: true }).extend({
+  id: documentId,
+})
+export const UpdateRoadTaxInput = RecordRoadTaxInput.omit({ vehicleId: true }).extend({
+  id: documentId,
+})
+export const UpdateRegistrationInput = SetRegistrationInput.omit({ vehicleId: true }).extend({
+  id: documentId,
+})
+
+export const DeleteDocumentInput = z.object({
+  type: z.enum(DOCUMENT_TYPES),
+  id: documentId,
+})

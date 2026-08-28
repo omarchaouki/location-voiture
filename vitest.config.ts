@@ -21,5 +21,13 @@ export default defineConfig({
      * c'est du bruit que l'équipe apprend à ignorer.
      */
     testTimeout: 20_000,
+    /*
+     * Les `beforeEach` montent une base Postgres en mémoire (tests/helpers/db.ts). Sur un
+     * cache froid — machine neuve, ou migration qui vient d'être générée — le tout premier
+     * démarrage de PGlite coûte une dizaine de secondes, une seule fois. Les 10 s par
+     * défaut de Vitest tombaient pile dessus, et le message parlait de « hook timed out »
+     * sans jamais nommer la base.
+     */
+    hookTimeout: 60_000,
   },
 })

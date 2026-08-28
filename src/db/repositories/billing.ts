@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, isNull } from 'drizzle-orm'
 
 import { nextInvoiceNumber } from '~/core/billing'
 import type { Db } from '../client'
@@ -42,6 +42,28 @@ export class InvoiceNumberingError extends Error {
 /** Au-delà, c'est que quelque chose d'autre ne va pas : on lève au lieu de boucler. */
 const MAX_NUMBERING_ATTEMPTS = 5
 
+/**
+ * Conflit d'unicité — reconnu par son CODE, jamais par son texte.
+ *
+ * La version précédente cherchait « unique » dans `String(error)`. Elle marchait sur
+ * SQLite, dont le message est `UNIQUE constraint failed: …`. Postgres n'a pas le même
+ * message, et surtout Drizzle enveloppe l'erreur du pilote : le message extérieur est
+ * « Failed query: update "invoices" … », où le mot « unique » n'apparaît nulle part.
+ * Résultat, la boucle de réessai ne se déclenchait plus et la deuxième facture d'une
+ * série échouait — une obligation de facturation cassée par une comparaison de chaînes.
+ *
+ * `23505` est le SQLSTATE normalisé de la violation d'unicité. Il ne dépend ni de la
+ * langue du serveur, ni de la version, ni de l'emballage de l'ORM. On remonte la chaîne
+ * des `cause` parce que c'est là que Drizzle range l'erreur du pilote.
+ */
+function isUniqueViolation(error: unknown): boolean {
+  for (let current = error; current != null; current = (current as { cause?: unknown }).cause) {
+    if (typeof current !== 'object') break
+    if ((current as { code?: unknown }).code === '23505') return true
+  }
+  return false
+}
+
 export function invoiceRepository(db: Db, ctx: TenantContext) {
   const base = forOrg<InvoiceRow>(db, ctx, invoices)
 
@@ -63,7 +85,20 @@ export function invoiceRepository(db: Db, ctx: TenantContext) {
         tx
           .select({ number: invoices.number })
           .from(invoices)
-          .where(eq(invoices.orgId, ctx.orgId))
+          /*
+           * `is not null` n'est PAS une précaution décorative.
+           *
+           * Une facture en brouillon n'a pas encore de numéro. Postgres trie les NULL en
+           * PREMIER dans un `order by … desc` (`NULLS FIRST` y est le défaut), là où
+           * SQLite les met en dernier : le premier brouillon venu prenait la tête, le
+           * « dernier numéro » était lu comme nul, et la série repartait à 000001 à
+           * chaque émission. La boucle de réessai tournait alors cinq fois sur le même
+           * numéro avant d'abandonner. Découvert à la bascule Postgres du 28/08/2026.
+           *
+           * Filtrer dit d'ailleurs mieux l'intention que `nulls last` : ce qu'on cherche,
+           * c'est le dernier numéro CONSOMMÉ, et un brouillon n'en consomme aucun.
+           */
+          .where(and(eq(invoices.orgId, ctx.orgId), isNotNull(invoices.number)))
           .orderBy(desc(invoices.number))
           .limit(1),
       )
@@ -96,9 +131,8 @@ export function invoiceRepository(db: Db, ctx: TenantContext) {
           if (!updated) throw new Error('invoice not found')
           return updated
         } catch (error) {
-          const message = String(error)
           // Seul le conflit d'unicité justifie de réessayer. Tout le reste remonte.
-          if (!message.includes('UNIQUE') && !message.includes('unique')) throw error
+          if (!isUniqueViolation(error)) throw error
         }
       }
 

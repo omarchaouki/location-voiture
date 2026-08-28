@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { FLEET_SIZES } from '~/core/schemas/lead'
-import { formatMoney, formatNumber } from '~/i18n/format'
+import { DEFAULT_BILLING_PERIOD, type BillingPeriod } from '~/core/billing'
+import type { FleetSize } from '~/core/schemas/lead'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
-import { submitLead } from '~/server/leads'
-import { listPublicPlans, type PublicPlan } from '~/server/pricing'
+import { listPublicPlans } from '~/server/pricing'
 import {
   AlertIcon,
   BranchIcon,
@@ -17,34 +16,33 @@ import {
   InvoiceIcon,
   type IconProps,
 } from '~/ui/icons'
-import { CityCombobox } from '~/ui/forms/city-combobox'
-import { choiceField, textField } from '~/ui/forms/form-data'
-import { useHydrated } from '~/ui/forms/use-hydrated'
-import { Alert } from '~/ui/shadcn/alert'
 import { Badge } from '~/ui/shadcn/badge'
 import { Button } from '~/ui/shadcn/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/ui/shadcn/card'
-import { Field, Input, Select, Textarea } from '~/ui/shadcn/field'
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '~/ui/shadcn/table'
+import { AppShowcase } from '~/ui/site/app-showcase'
+import { PlanQuiz } from '~/ui/site/plan-quiz'
+import { PricingSection } from '~/ui/site/pricing'
+import { Reveal } from '~/ui/site/reveal'
+import { SignupForm } from '~/ui/site/signup-form'
 
 /**
  * SITE VITRINE.
  *
  * Trois principes tenus ici, et le troisième est le seul qui compte vraiment :
  *
- *  1. **Les tarifs sont LUS EN BASE**, jamais écrits dans la page. Un prix codé dans
- *     le JSX finit toujours par contredire celui de la facture.
- *  2. **Rien n'est promis qui n'existe pas.** Chaque promesse de cette page
- *     correspond à un écran livré.
+ *  1. **Les tarifs sont LUS EN BASE**, jamais écrits dans la page — la remise annuelle
+ *     comprise, qui est CALCULÉE (`monthsFreeOnYearly`). Un prix codé dans le JSX finit
+ *     toujours par contredire celui de la facture.
+ *  2. **Rien n'est promis qui n'existe pas.** Chaque promesse de cette page correspond
+ *     à un écran livré.
  *  3. **Le formulaire demande deux champs obligatoires**, un nom et un numéro. Chaque
- *     champ obligatoire de plus coûte des prospects, et un premier contact n'a pas
- *     besoin de connaître la taille de la flotte.
+ *     champ obligatoire de plus coûte des prospects.
  *
- * **Refonte shadcn/ui du 26/08/2026.** Ce qui a changé tient en une phrase : les
- * sections ne sont plus séparées par des filets nus, elles sont posées sur des
- * surfaces qui se lisent d'un coup d'œil. Ce qui n'a PAS changé : l'échelle
- * typographique, les jetons de couleur, les propriétés logiques, et le fait que
- * chaque icône de métier reste dessinée à la main.
+ * **Refonte « conversion » du 28/08/2026.** L'ordre des sections est celui d'une
+ * objection levée après l'autre, et il n'est pas décoratif : on montre le produit
+ * (`AppShowcase`) AVANT de l'expliquer, parce qu'une capture répond en une seconde à
+ * « à quoi ça ressemble » — la question que le visiteur se pose pendant qu'il lit la
+ * liste des fonctionnalités. Le prix vient après la preuve, jamais avant.
  */
 export const Route = createFileRoute('/$lang/')({
   loader: async () => ({ plans: await listPublicPlans() }),
@@ -56,13 +54,43 @@ function HomePage() {
   const locale: Locale = isLocale(lang) ? lang : DEFAULT_LOCALE
   const { plans } = Route.useLoaderData()
 
+  /*
+   * La taille de flotte vit ICI, au-dessus des deux sections qui s'en servent.
+   *
+   * Le questionnaire la demande en première question ; le formulaire la redemandait
+   * une seconde fois, deux écrans plus bas. Redemander à quelqu'un ce qu'il vient de
+   * répondre est la façon la plus sûre de le perdre au dernier champ — la réponse
+   * descend donc du questionnaire vers le formulaire.
+   */
+  const [fleetSize, setFleetSize] = useState<FleetSize>('1-5')
+
+  /*
+   * LE RYTHME DE PAIEMENT vit ici pour la même raison : la grille tarifaire et le
+   * résultat du questionnaire doivent annoncer le MÊME prix. Deux états séparés
+   * auraient fini par diverger — on bascule en mensuel dans la grille, le
+   * questionnaire continue de conseiller au tarif annuel, et l'écart se découvre au
+   * moment de la facture.
+   *
+   * La valeur par défaut vient du domaine, pas d'un littéral : l'annuel d'abord.
+   */
+  const [period, setPeriod] = useState<BillingPeriod>(DEFAULT_BILLING_PERIOD)
+
   return (
-    <div className="-my-8">
+    /*
+     * `pb-action-bar` réserve la hauteur de la barre d'action du téléphone. Sans elle,
+     * la barre recouvre la fin de la page — c'est-à-dire le bouton d'envoi du
+     * formulaire, exactement ce qu'on cherche à faire atteindre.
+     */
+    <div className="-my-8 pb-action-bar">
       <Hero locale={locale} />
+      <AppShowcase locale={locale} />
       <Capabilities />
       <MadeForMorocco />
-      <Pricing plans={plans} locale={locale} />
-      <DemoForm locale={locale} />
+      <PricingSection plans={plans} locale={locale} period={period} onPeriod={setPeriod} />
+      <PlanQuiz plans={plans} locale={locale} period={period} onFleetSize={setFleetSize} />
+      <SignupForm locale={locale} fleetSize={fleetSize} onFleetSize={setFleetSize} />
+
+      <MobileCallToAction />
     </div>
   )
 }
@@ -73,6 +101,11 @@ function HomePage() {
  * Volontairement SOBRE. Une ligne de contexte en petit, un titre, une phrase, et UNE
  * action principale — la connexion vit dans l'en-tête, pas ici, et n'a donc pas à se
  * disputer l'attention avec la demande de démonstration (`primary-action`).
+ *
+ * L'entrée est ÉCHELONNÉE : le cachet, puis le titre, puis la phrase, puis les
+ * boutons, à quarante millisecondes d'écart. Ce n'est pas un effet — c'est l'ordre
+ * dans lequel on veut que ce soit lu, rendu visible. Tout arriver en même temps ne
+ * hiérarchise rien.
  */
 function Hero({ locale }: { locale: Locale }) {
   const { t } = useTranslation()
@@ -80,32 +113,90 @@ function Hero({ locale }: { locale: Locale }) {
   return (
     <section className="border-b border-border py-14 sm:py-20">
       <div className="max-w-3xl">
-        <Badge variant="secondary">{t('site.badge')}</Badge>
+        <Reveal index={0}>
+          <Badge variant="secondary">{t('site.badge')}</Badge>
+        </Reveal>
 
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
-          {t('site.heroTitle')}
-        </h1>
-        <p className="mt-4 max-w-2xl text-base text-muted-foreground">{t('site.heroBody')}</p>
+        <Reveal index={1}>
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
+            {t('site.heroTitle')}
+          </h1>
+        </Reveal>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
-          <Button asChild size="lg">
-            <a href="#demo">
-              <span>{t('site.requestDemo')}</span>
-              {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
-              <ArrowRight className="icon-directional" aria-hidden="true" />
-            </a>
-          </Button>
-          <Button asChild variant="ghost" size="lg">
-            <Link to="/$lang/connexion" params={{ lang: locale }}>
-              {t('auth.signIn')}
-            </Link>
-          </Button>
-        </div>
+        <Reveal index={2}>
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground">{t('site.heroBody')}</p>
+        </Reveal>
 
-        <p className="mt-5 text-xs text-muted-foreground">{t('site.heroNote')}</p>
+        <Reveal index={3}>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
+            <Button asChild size="lg">
+              <a href="#demo">
+                <span>{t('site.requestDemo')}</span>
+                {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
+                <ArrowRight className="icon-directional" aria-hidden="true" />
+              </a>
+            </Button>
+            <Button asChild variant="ghost" size="lg">
+              <Link to="/$lang/connexion" params={{ lang: locale }}>
+                {t('auth.signIn')}
+              </Link>
+            </Button>
+          </div>
+        </Reveal>
+
+        {/*
+          LES TROIS RÉASSURANCES, juste sous le bouton.
+          C'est l'endroit où se pose la dernière hésitation avant le clic : ce qu'on
+          engage, ce que ça coûte, et si on peut partir. Trois lignes courtes y
+          répondent mieux qu'un paragraphe qui ne sera pas lu.
+        */}
+        <Reveal index={4}>
+          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+            {(['noCard', 'setup', 'cancel'] as const).map((point) => (
+              <li key={point} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Check className="size-3.5 shrink-0 text-success" aria-hidden="true" />
+                <span>{t(`site.trust.${point}`)}</span>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        <Reveal index={5}>
+          <p className="mt-5 text-xs text-muted-foreground">{t('site.heroNote')}</p>
+        </Reveal>
       </div>
     </section>
+  )
+}
+
+/**
+ * BARRE D'ACTION DU TÉLÉPHONE.
+ *
+ * Elle n'existe que sous 640 px, et pour une raison mesurable : la page fait six
+ * écrans de haut sur un téléphone. Le bouton de l'accroche sort du champ dès le
+ * deuxième, et il n'y en a plus aucun avant le formulaire. Remonter pour agir est
+ * exactement ce qu'on ne fait pas — on ferme.
+ *
+ * Elle est masquée À L'IMPRESSION par `data-print`, jamais par `print:hidden` : ces
+ * utilitaires n'ont aucune spécificité de plus que le `flex` qu'ils doivent battre, et
+ * qui l'emporte dépend de l'ordre des variantes Tailwind.
+ */
+function MobileCallToAction() {
+  const { t } = useTranslation()
+
+  return (
+    <div
+      data-print="hide"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 px-4 pt-2 backdrop-blur sm:hidden"
+    >
+      <Button asChild size="lg" className="w-full">
+        <a href="#demo">
+          <span>{t('site.requestDemo')}</span>
+          <ArrowRight className="icon-directional" aria-hidden="true" />
+        </a>
+      </Button>
+    </div>
   )
 }
 
@@ -133,30 +224,32 @@ function Capabilities() {
   const { t } = useTranslation()
 
   return (
-    <section className="border-b border-border py-14 sm:py-16">
+    <Reveal as="section" className="border-b border-border py-14 sm:py-16">
       <h2 className="text-lg font-semibold tracking-tight">{t('site.capabilitiesTitle')}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.capabilitiesBody')}</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {CAPABILITIES.map((capability) => (
-          <Card key={capability.key} className="gap-3">
-            <CardHeader>
-              <span className="flex size-9 items-center justify-center rounded-md bg-accent text-primary">
-                <capability.icon size={19} />
-              </span>
-              <CardTitle className="mt-3 text-base">
-                {t(`site.capability.${capability.key}.title`)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-sm">
-                {t(`site.capability.${capability.key}.body`)}
-              </CardDescription>
-            </CardContent>
-          </Card>
+        {CAPABILITIES.map((capability, index) => (
+          <Reveal key={capability.key} index={index}>
+            <Card className="h-full gap-3">
+              <CardHeader>
+                <span className="flex size-9 items-center justify-center rounded-md bg-accent text-primary">
+                  <capability.icon size={19} />
+                </span>
+                <CardTitle className="mt-3 text-base">
+                  {t(`site.capability.${capability.key}.title`)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-sm">
+                  {t(`site.capability.${capability.key}.body`)}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </Reveal>
         ))}
       </div>
-    </section>
+    </Reveal>
   )
 }
 
@@ -177,213 +270,18 @@ function MadeForMorocco() {
   const points = ['plates', 'arabic', 'time', 'money'] as const
 
   return (
-    <section className="border-b border-border py-14 sm:py-16">
+    <Reveal as="section" className="border-b border-border py-14 sm:py-16">
       <h2 className="text-lg font-semibold tracking-tight">{t('site.localTitle')}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.localBody')}</p>
 
       <ul className="mt-8 grid gap-x-12 gap-y-2 sm:grid-cols-2">
-        {points.map((point) => (
-          <li key={point} className="border-t border-border py-5">
+        {points.map((point, index) => (
+          <Reveal as="li" key={point} index={index} className="border-t border-border py-5">
             <h3 className="text-sm font-semibold">{t(`site.local.${point}.title`)}</h3>
             <p className="mt-1.5 text-sm text-muted-foreground">{t(`site.local.${point}.body`)}</p>
-          </li>
+          </Reveal>
         ))}
       </ul>
-    </section>
-  )
-}
-
-/**
- * Les offres, lues en base.
- *
- * Un TABLEAU de comparaison, pas quatre cartes de prix. Quatre cartes côte à côte
- * obligent à faire l'aller-retour des yeux pour comparer une limite d'une offre à
- * l'autre ; une ligne par offre et une colonne par limite permettent de lire
- * « voitures » en travers. Le tableau défile dans sa boîte sous 768 px — jamais la
- * page.
- */
-function Pricing({ plans, locale }: { plans: readonly PublicPlan[]; locale: Locale }) {
-  const { t } = useTranslation()
-
-  return (
-    <section className="border-b border-border py-14 sm:py-16">
-      <h2 className="text-lg font-semibold tracking-tight">{t('site.pricingTitle')}</h2>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t('site.pricingBody')}</p>
-
-      <Card className="mt-8 py-0">
-        <Table>
-          <TableCaption className="sr-only">{t('site.pricingTitle')}</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('billing.plan')}</TableHead>
-              <TableHead className="text-end">{t('billing.perMonth')}</TableHead>
-              <TableHead className="text-end">{t('site.limitVehicles')}</TableHead>
-              <TableHead className="text-end">{t('site.limitUsers')}</TableHead>
-              <TableHead className="text-end">{t('site.limitBranches')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {plans.map((plan) => (
-              <TableRow key={plan.code}>
-                <TableCell>
-                  <span className="font-medium">{t(plan.nameKey)}</span>
-                  {plan.trialDays > 0 ? (
-                    <span className="block text-xs text-muted-foreground">
-                      {t('site.trialDays', { days: plan.trialDays })}
-                    </span>
-                  ) : null}
-                </TableCell>
-                <TableCell className="numeric text-end font-medium">
-                  {formatMoney(plan.monthlyCents, locale, plan.currency, { withDecimals: false })}
-                </TableCell>
-                <TableCell className="numeric text-end">
-                  <Limit value={plan.maxVehicles} locale={locale} />
-                </TableCell>
-                <TableCell className="numeric text-end">
-                  <Limit value={plan.maxUsers} locale={locale} />
-                </TableCell>
-                <TableCell className="numeric text-end text-muted-foreground">
-                  <Limit value={plan.maxBranches} locale={locale} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-
-      <p className="mt-3 text-xs text-muted-foreground">{t('site.pricingNote')}</p>
-    </section>
-  )
-}
-
-/** `null` veut dire illimité, et le DIT — une case vide se lit « zéro ». */
-function Limit({ value, locale }: { value: number | null; locale: Locale }) {
-  const { t } = useTranslation()
-  return <>{value === null ? t('site.unlimited') : formatNumber(value, locale)}</>
-}
-
-/**
- * Le formulaire.
- *
- * Deux champs obligatoires. Le leurre `website` est masqué aux humains ET aux
- * lecteurs d'écran (`aria-hidden` + `tabIndex={-1}`) : un robot le remplit, un
- * utilisateur ne le rencontre jamais. C'est la protection anti-robot la moins chère,
- * et la seule qui n'impose rien — un CAPTCHA ferait fuir exactement le public visé.
- *
- * `method="post"` alors que React intercepte : c'est le comportement du jour où le
- * JavaScript ne s'exécute pas. En GET, le navigateur mettrait le nom et le numéro
- * dans l'URL, donc dans l'historique et dans les journaux (docs/DECISIONS.md §13.7).
- */
-function DemoForm({ locale }: { locale: Locale }) {
-  const { t } = useTranslation()
-  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
-  const hydrated = useHydrated()
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const target = event.currentTarget
-    setState('sending')
-
-    try {
-      await submitLead({
-        data: {
-          name: textField(form, 'name'),
-          phone: textField(form, 'phone'),
-          company: textField(form, 'company'),
-          email: textField(form, 'email'),
-          city: textField(form, 'city'),
-          fleetSize: choiceField(form, 'fleetSize', FLEET_SIZES, '1-5'),
-          message: textField(form, 'message'),
-          locale,
-          website: textField(form, 'website'),
-        },
-      })
-      target.reset()
-      setState('done')
-    } catch {
-      setState('error')
-    }
-  }
-
-  return (
-    <section id="demo" className="py-14 sm:py-20">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_28rem]">
-        <div className="lg:self-center">
-          <h2 className="text-xl font-semibold tracking-tight">{t('site.demoTitle')}</h2>
-          <p className="mt-3 max-w-xl text-sm text-muted-foreground">{t('site.demoBody')}</p>
-          <p className="mt-4 max-w-xl text-xs text-muted-foreground">{t('site.demoPrivacy')}</p>
-        </div>
-
-        <Card>
-          <CardContent>
-            <form method="post" onSubmit={(event) => void submit(event)} className="grid gap-4">
-              <Field label={t('site.fieldName')} htmlFor="lead-name">
-                <Input id="lead-name" name="name" required autoComplete="name" />
-              </Field>
-
-              <Field
-                label={t('site.fieldPhone')}
-                htmlFor="lead-phone"
-                hint={t('site.fieldPhoneHint')}
-              >
-                <Input id="lead-phone" name="phone" type="tel" required autoComplete="tel" />
-              </Field>
-
-              <Field label={t('site.fieldCompany')} htmlFor="lead-company">
-                <Input id="lead-company" name="company" autoComplete="organization" />
-              </Field>
-
-              <CityCombobox name="city" label={t('site.fieldCity')} />
-
-              <Field label={t('site.fieldFleetSize')} htmlFor="lead-fleet">
-                <Select id="lead-fleet" name="fleetSize" defaultValue="1-5">
-                  {FLEET_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-
-              <Field label={t('site.fieldEmail')} htmlFor="lead-email">
-                <Input id="lead-email" name="email" type="email" autoComplete="email" />
-              </Field>
-
-              <Field label={t('site.fieldMessage')} htmlFor="lead-message">
-                <Textarea id="lead-message" name="message" rows={3} />
-              </Field>
-
-              {/* Leurre. Invisible aux humains ET aux lecteurs d'écran. */}
-              <div aria-hidden="true" className="hidden">
-                <label>
-                  Website
-                  <input name="website" type="text" tabIndex={-1} autoComplete="off" />
-                </label>
-              </div>
-
-              {/* Le bouton attend l'hydratation : avant elle, valider enverrait un
-                  POST natif qui recharge la page sans rien enregistrer.
-                  Voir src/ui/forms/use-hydrated.ts. */}
-              <Button type="submit" className="w-full" disabled={!hydrated || state === 'sending'}>
-                {state === 'sending' ? t('auth.working') : t('site.send')}
-              </Button>
-
-              {/* `status` et non `alert` : une confirmation s'annonce sans interrompre. */}
-              {state === 'done' ? (
-                <Alert role="status" variant="success">
-                  {t('site.sent')}
-                </Alert>
-              ) : null}
-              {state === 'error' ? (
-                <Alert role="alert" variant="destructive">
-                  {t('site.sendFailed')}
-                </Alert>
-              ) : null}
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+    </Reveal>
   )
 }

@@ -1,0 +1,59 @@
+# Service Flotta — à déposer en /etc/systemd/system/flotta.service
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now flotta
+#   sudo journalctl -u flotta -f
+[Unit]
+Description=Flotta — SaaS de gestion pour loueurs de voitures
+Documentation=https://github.com/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=flotta
+Group=flotta
+WorkingDirectory=/opt/flotta
+
+# Les secrets vivent ICI, pas dans l'unité : `systemctl cat` et `systemd-analyze` sont
+# lisibles par tout le monde, alors que ce fichier est en 0600 root:flotta.
+EnvironmentFile=/etc/flotta/flotta.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# On n'écoute QUE sur la boucle locale : nginx est le seul à parler au processus. Sans
+# cette ligne, le port 3000 serait joignable depuis Internet et court-circuiterait le TLS.
+Environment=HOST=127.0.0.1
+
+ExecStart=/usr/bin/node server.mjs
+
+Restart=always
+RestartSec=3
+# Une rafale de redémarrages sur une erreur de configuration ne doit pas boucler
+# indéfiniment : au-delà, le service reste en échec et se voit.
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# 1 Go de RAM : Node prendrait volontiers tout ce qu'il trouve et ferait tomber nginx
+# avec lui. On plafonne le tas, et systemd tue le service — proprement — s'il déborde.
+Environment=NODE_OPTIONS=--max-old-space-size=512
+MemoryMax=700M
+
+# --- Cloisonnement système. Tout ce qui n'est pas nécessaire est retiré. ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/flotta/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=flotta
+
+[Install]
+WantedBy=multi-user.target

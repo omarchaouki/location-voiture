@@ -17,7 +17,7 @@
 
 import { eq } from 'drizzle-orm'
 
-import { createDb, resolveDatabaseFile } from '~/db/client'
+import { closeDb, createDb, resolveDatabaseUrl } from '~/db/client'
 import { organizations } from '~/db/schema/auth'
 import { DEMO_SLUGS, resetAllDemoOrganizations } from '~/server/demo/reset'
 import { businessCivilDate } from '~/i18n/format'
@@ -27,8 +27,7 @@ const NAMES: Record<string, string> = {
   'demo-sahara': 'Sahara Location (démonstration)',
 }
 
-const file = resolveDatabaseFile()
-const db = createDb(file)
+const db = createDb(resolveDatabaseUrl())
 
 for (const slug of DEMO_SLUGS) {
   const existing = await db
@@ -62,3 +61,6 @@ console.log(
   `${result.organizations} espace(s) de démonstration peuplé(s) au ${today} — ` +
     `${result.tablesCleared} tables vidées avant écriture.`,
 )
+
+// Sans ça le pool postgres-js garde ses sockets et le script ne rend jamais la main.
+await closeDb(db)

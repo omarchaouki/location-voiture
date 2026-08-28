@@ -37,7 +37,7 @@ async function organisation(id: string, planCode = 'starter'): Promise<void> {
 }
 
 beforeEach(async () => {
-  db = createTestDb()
+  db = await createTestDb()
   await ensurePlans(db)
   await ensurePlanFeatures(db)
   await organisation('org-alpha')

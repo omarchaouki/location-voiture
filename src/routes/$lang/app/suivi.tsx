@@ -23,7 +23,7 @@ import { MapView, type MapMarker, type MapShape } from '~/ui/map/map-view'
 import { Plate } from '~/ui/primitives/plate'
 import { Badge } from '~/ui/shadcn/badge'
 import { MapSkeleton } from '~/ui/skeletons'
-import { Picker } from '~/ui/forms/fields'
+import { Field, Picker } from '~/ui/forms/fields'
 
 /**
  * SUIVI — la carte de la flotte.
@@ -422,28 +422,21 @@ function ZoneComposer({
     <section className="mt-6 border-t border-border pt-4">
       <h3 className="text-sm text-muted-foreground">{t('gps.newZone')}</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-xs text-muted-foreground">{t('gps.zoneName')}</span>
-          <input
-            value={name}
-            onChange={(event) => onName(event.target.value)}
-            className="mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
-        <label className="block">
-          <span className="text-xs text-muted-foreground">{t('gps.zoneRadiusField')}</span>
-          <input
-            type="number"
-            min={50}
-            max={200000}
-            step={50}
-            value={radius}
-            onChange={(event) => onRadius(Number(event.target.value))}
-            className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
-            style={{ minHeight: 'var(--tap-target)' }}
-          />
-        </label>
+        <Field
+          label={t('gps.zoneName')}
+          numeric={false}
+          value={name}
+          onChange={(event) => onName(event.target.value)}
+        />
+        <Field
+          label={t('gps.zoneRadiusField')}
+          type="number"
+          min={50}
+          max={200000}
+          step={50}
+          value={radius}
+          onChange={(event) => onRadius(Number(event.target.value))}
+        />
       </div>
       <p className="mt-2 text-2xs text-muted-foreground">
         {centre
@@ -520,15 +513,11 @@ function DeviceComposer({
                 detail: vehicle.plate,
               }))}
             />
-            <label className="block">
-              <span className="text-xs text-muted-foreground">{t('gps.deviceExternalId')}</span>
-              <input
-                value={externalId}
-                onChange={(event) => setExternalId(event.target.value)}
-                className="numeric mt-1 block w-full border border-input bg-card px-3 py-2 text-base"
-                style={{ minHeight: 'var(--tap-target)' }}
-              />
-            </label>
+            <Field
+              label={t('gps.deviceExternalId')}
+              value={externalId}
+              onChange={(event) => setExternalId(event.target.value)}
+            />
           </div>
           <p className="mt-2 max-w-prose text-2xs text-muted-foreground">{t('gps.deviceHint')}</p>
           <div className="mt-3">

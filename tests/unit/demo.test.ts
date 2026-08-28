@@ -44,7 +44,7 @@ async function organisation(id: string, isDemo: boolean): Promise<void> {
 }
 
 beforeEach(async () => {
-  db = createTestDb()
+  db = await createTestDb()
   await organisation('org-demo', true)
   await organisation('org-vrai', false)
 })

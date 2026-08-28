@@ -19,7 +19,7 @@ import { createTestDb, tenant } from '../helpers/db'
 let db: Db
 
 beforeEach(async () => {
-  db = createTestDb()
+  db = await createTestDb()
   await ensurePlanFeatures(db)
 })
 

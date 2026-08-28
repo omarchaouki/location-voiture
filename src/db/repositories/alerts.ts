@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, ne } from 'drizzle-orm'
 
 import type { Db } from '../client'
-import { alerts } from '../schema/alerts'
+import { alertReads, alerts } from '../schema/alerts'
 import { assertCanWrite, withTenant, type TenantContext } from '../tenant'
 import { forOrg } from './base'
 
@@ -20,9 +20,11 @@ import { forOrg } from './base'
  */
 
 export type AlertRow = typeof alerts.$inferSelect
+export type AlertReadRow = typeof alertReads.$inferSelect
 
 export function alertRepository(db: Db, ctx: TenantContext) {
   const base = forOrg<AlertRow>(db, ctx, alerts)
+  const reads = forOrg<AlertReadRow>(db, ctx, alertReads)
 
   return {
     ...base,
@@ -76,6 +78,56 @@ export function alertRepository(db: Db, ctx: TenantContext) {
      * la cause revient. C'est ce qui empêche de faire disparaître un problème en
      * cliquant.
      */
+    /**
+     * Les alertes que CETTE personne a déjà vues dans sa cloche.
+     *
+     * Rendue en `Set` plutôt qu'en lignes : l'appelant ne pose jamais qu'une question,
+     * « celle-ci est-elle lue », et un `Set` la répond sans que chaque appelant
+     * reconstruise le sien.
+     */
+    async readIdsFor(userId: string): Promise<Set<string>> {
+      const rows = await reads.list(eq(alertReads.userId, userId))
+      return new Set(rows.map((row) => row.alertId))
+    },
+
+    /**
+     * Marque comme lues, pour une personne, les alertes données.
+     *
+     * `onConflictDoNothing` sur `alert_reads_unique` : relire ce qui est déjà lu ne
+     * doit rien écrire, et surtout pas échouer. La cloche appelle cette fonction avec
+     * tout ce qu'elle affiche — c'est à la base de trier, pas à l'écran de savoir.
+     *
+     * `assertCanWrite` est volontairement ABSENT. Une lecture est un fait personnel :
+     * un rôle `viewer`, ou une organisation gelée par un impayé, doivent pouvoir faire
+     * taire leur propre pastille. Le seul cas refusé — l'administrateur qui consulte
+     * sans être élevé — est traité une couche au-dessus, dans la server function, parce
+     * que c'est là qu'il a un sens : il ne s'agit pas d'un droit d'écriture manquant,
+     * mais de ne pas marquer comme lues les notifications de QUELQU'UN D'AUTRE.
+     */
+    async markRead(
+      alertIds: ReadonlyArray<string>,
+      userId: string,
+      now: string,
+    ): Promise<number> {
+      if (alertIds.length === 0) return 0
+
+      return withTenant(db, ctx, async (tx) => {
+        const inserted = await tx
+          .insert(alertReads)
+          .values(
+            alertIds.map((alertId) => ({
+              orgId: ctx.orgId,
+              alertId,
+              userId,
+              readAt: now,
+            })),
+          )
+          .onConflictDoNothing()
+          .returning({ id: alertReads.id })
+        return inserted.length
+      })
+    },
+
     async resolve(ids: ReadonlyArray<string>, now: string): Promise<number> {
       if (ids.length === 0) return 0
       assertCanWrite(ctx)

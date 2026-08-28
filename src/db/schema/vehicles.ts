@@ -1,8 +1,8 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { aliveOnly, cents, civilDate, orgColumns, timestamp } from './_shared'
 
-export const vehicles = sqliteTable(
+export const vehicles = pgTable(
   'vehicles',
   {
     ...orgColumns,
@@ -60,7 +60,7 @@ export const vehicles = sqliteTable(
   ],
 )
 
-export const vehiclePhotos = sqliteTable(
+export const vehiclePhotos = pgTable(
   'vehicle_photos',
   {
     ...orgColumns,

@@ -3,6 +3,8 @@
 
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
 
+import { CONTROL_HEIGHT, controlClass } from '~/ui/shadcn/field'
+
 /**
  * COMBOBOX — un champ qui se remplit en tapant.
  *
@@ -197,11 +199,15 @@ export function Combobox({
 
   return (
     <div className={layout === 'inline' ? 'relative w-56 max-w-full' : 'relative'}>
-      <label className={layout === 'inline' ? 'block' : 'block'}>
+      <label className="block">
         {layout === 'field' ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="mb-1.5 block text-xs font-medium text-foreground select-none">
             {label}
-            {required ? <span aria-hidden="true"> *</span> : null}
+            {required ? (
+              <span aria-hidden="true" className="text-destructive">
+                {' *'}
+              </span>
+            ) : null}
           </span>
         ) : null}
         <input
@@ -233,10 +239,10 @@ export function Combobox({
           onFocus={() => setOpen(true)}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
-          className={`block w-full rounded-md border border-input bg-card transition-colors focus:border-primary ${
-            layout === 'inline' ? 'px-2 py-1 text-sm' : 'mt-1 px-3 py-2 text-base'
-          }`}
-          style={{ minHeight: 'var(--tap-target)' }}
+          // Le dessin vient de la couche des contrôles, pas d'ici : c'est ce qui garde
+          // ce champ indiscernable d'un `<input>` ordinaire dans la même grille.
+          className={controlClass(layout === 'inline' && 'px-2 text-sm')}
+          style={CONTROL_HEIGHT}
         />
       </label>
 
@@ -255,7 +261,7 @@ export function Combobox({
           id={listId}
           role="listbox"
           aria-label={label}
-          className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border bg-card py-1"
+          className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground"
           style={{ boxShadow: 'var(--shadow-overlay)' }}
         >
           {matches.length === 0 ? (
@@ -277,8 +283,8 @@ export function Combobox({
                   choose(option)
                 }}
                 onMouseEnter={() => setActive(index)}
-                className={`cursor-pointer px-3 py-2 text-sm ${
-                  index === active ? 'bg-muted text-foreground' : 'text-foreground'
+                className={`cursor-pointer rounded-md px-2.5 py-2 text-sm ${
+                  index === active ? 'bg-accent text-accent-foreground' : 'text-popover-foreground'
                 }`}
               >
                 {option.label}

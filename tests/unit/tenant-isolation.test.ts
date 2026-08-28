@@ -11,9 +11,10 @@ import { createTestDb, tenant } from '../helpers/db'
 /**
  * LE test du projet.
  *
- * Tant qu'on est sur SQLite, aucun RLS ne protège les données : la seule barrière
- * entre deux clients est la couche repository. Ce fichier existe pour que cette
- * barrière soit prouvée à chaque exécution, pas supposée.
+ * Tant que le RLS n'est pas écrit, la seule barrière entre deux clients est la couche
+ * repository — et elle le restera même après, puisque le `service_role` de Supabase
+ * contourne le RLS par conception. Ce fichier existe pour que cette barrière soit
+ * prouvée à chaque exécution, pas supposée.
  *
  * Il est piloté par un REGISTRE déduit du schéma : toute nouvelle table portant
  * `org_id` entre automatiquement dans la boucle. Ajouter une entité sans son test
@@ -52,8 +53,8 @@ function orgScopedTables(): Array<{ name: string; table: OrgScopedTable }> {
 
 let db: Db
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
 })
 
 describe('registre des tables cloisonnées', () => {
@@ -84,6 +85,31 @@ describe.each(orgScopedTables())('cloisonnement — $name', ({ table }) => {
   const alpha = () => forOrg<Record<string, unknown>>(db, ALPHA, table)
   const bravo = () => forOrg<Record<string, unknown>>(db, BRAVO, table)
 
+  /**
+   * Un échantillon acceptable pour le TYPE de la colonne.
+   *
+   * SQLite acceptait `'v-lat'` dans une colonne numérique — son typage est dynamique.
+   * Postgres refuse, et il a raison : `invalid input syntax for type double precision`.
+   * Le registre étant déduit du schéma, une colonne d'un type non prévu ici ferait
+   * échouer le test de cloisonnement de sa table — c'est le bon sens de l'échec, mais
+   * il vaut mieux couvrir les types que le schéma emploie réellement.
+   */
+  function sampleValue(columnType: string | undefined, key: string): unknown {
+    if (!columnType) return `v-${key}`
+    if (columnType.includes('Boolean')) return false
+    if (
+      columnType.includes('Integer') ||
+      columnType.includes('DoublePrecision') ||
+      columnType.includes('Numeric') ||
+      columnType.includes('Real')
+    ) {
+      return 1
+    }
+    // `PgTimestamp` : les tables Better Auth, seules à en porter, passent des `Date`.
+    if (columnType.includes('Timestamp')) return new Date('2026-08-28T09:00:00.000Z')
+    return `v-${key}`
+  }
+
   /** Valeurs minimales : les colonnes NOT NULL sans défaut, remplies génériquement. */
   function minimalRow(): Record<string, unknown> {
     const columns = (table as unknown as { [key: string]: unknown })
@@ -93,9 +119,7 @@ describe.each(orgScopedTables())('cloisonnement — $name', ({ table }) => {
       const meta = column as { notNull?: boolean; hasDefault?: boolean; columnType?: string; name?: string }
       if (!meta.notNull || meta.hasDefault) continue
       if (key === 'id' || key === 'orgId') continue
-      row[key] = meta.columnType?.includes('Integer') || meta.columnType?.includes('Real')
-        ? 1
-        : `v-${key}`
+      row[key] = sampleValue(meta.columnType, key)
     }
     return row
   }

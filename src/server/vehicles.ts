@@ -88,11 +88,48 @@ export interface VehicleFile {
   /** Date d'aujourd'hui à Casablanca, calculée au serveur (docs/DECISIONS.md É7). */
   today: string
   entries: LogbookEntry[]
+  /**
+   * Les pièces, avec TOUT ce qui se corrige.
+   *
+   * La fiche n'en affichait que trois champs, parce qu'elle n'en affichait que trois.
+   * Depuis que ces pièces se modifient (27/08/2026), le formulaire de correction doit
+   * pouvoir se pré-remplir : un champ absent du modèle de lecture reviendrait VIDE à
+   * l'écran, et serait effacé en base à la première correction d'un champ voisin.
+   * C'est le défaut classique d'un formulaire d'édition alimenté par une vue partielle.
+   */
   documents: {
-    insurance: { id: string; company: string; expiresOn: string } | null
-    inspection: { id: string; centerName: string | null; expiresOn: string } | null
-    roadTax: { id: string; year: number; paidAt: string | null } | null
-    registration: { id: string; registrationNumber: string | null } | null
+    insurance: {
+      id: string
+      company: string
+      policyNumber: string | null
+      startsOn: string | null
+      expiresOn: string
+      premiumCents: number | null
+      coverage: string | null
+    } | null
+    inspection: {
+      id: string
+      centerName: string | null
+      certificateNumber: string | null
+      performedOn: string
+      expiresOn: string
+      result: string
+      costCents: number | null
+    } | null
+    roadTax: {
+      id: string
+      year: number
+      paidAt: string | null
+      amountCents: number | null
+      receiptNumber: string | null
+    } | null
+    registration: {
+      id: string
+      registrationNumber: string | null
+      firstRegisteredOn: string | null
+      mutatedOn: string | null
+      isWw: boolean
+    } | null
   }
 }
 
@@ -218,18 +255,44 @@ export const getVehicleFile = createServerFn({ method: 'GET' })
       entries,
       documents: {
         insurance: insurance
-          ? { id: insurance.id, company: insurance.company, expiresOn: insurance.expiresOn }
+          ? {
+              id: insurance.id,
+              company: insurance.company,
+              policyNumber: insurance.policyNumber,
+              startsOn: insurance.startsOn,
+              expiresOn: insurance.expiresOn,
+              premiumCents: insurance.premiumCents,
+              coverage: insurance.coverage,
+            }
           : null,
         inspection: inspection
           ? {
               id: inspection.id,
               centerName: inspection.centerName,
+              certificateNumber: inspection.certificateNumber,
+              performedOn: inspection.performedOn,
               expiresOn: inspection.expiresOn,
+              result: inspection.result,
+              costCents: inspection.costCents,
             }
           : null,
-        roadTax: roadTax ? { id: roadTax.id, year: roadTax.year, paidAt: roadTax.paidAt } : null,
+        roadTax: roadTax
+          ? {
+              id: roadTax.id,
+              year: roadTax.year,
+              paidAt: roadTax.paidAt,
+              amountCents: roadTax.amountCents,
+              receiptNumber: roadTax.receiptNumber,
+            }
+          : null,
         registration: registration
-          ? { id: registration.id, registrationNumber: registration.registrationNumber }
+          ? {
+              id: registration.id,
+              registrationNumber: registration.registrationNumber,
+              firstRegisteredOn: registration.firstRegisteredOn,
+              mutatedOn: registration.mutatedOn,
+              isWw: registration.isWw,
+            }
           : null,
       },
     }

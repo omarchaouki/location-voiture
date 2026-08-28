@@ -1,4 +1,5 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
+import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { bool, cents, civilDate, orgColumns, platformColumns, timestamp } from './_shared'
 
@@ -9,7 +10,7 @@ import { bool, cents, civilDate, orgColumns, platformColumns, timestamp } from '
  * l'état de consommation. L'autorisation se décide côté serveur via `can(org, clé)`,
  * qui lit `plan_features`. Aucun `if (plan === 'pro')` n'est acceptable dans le code.
  */
-export const plans = sqliteTable(
+export const plans = pgTable(
   'plans',
   {
     ...platformColumns,
@@ -32,7 +33,7 @@ export const plans = sqliteTable(
   (table) => [uniqueIndex('plans_code_unique').on(table.code)],
 )
 
-export const planFeatures = sqliteTable(
+export const planFeatures = pgTable(
   'plan_features',
   {
     ...platformColumns,
@@ -45,7 +46,7 @@ export const planFeatures = sqliteTable(
   (table) => [uniqueIndex('plan_features_unique').on(table.planCode, table.featureKey)],
 )
 
-export const subscriptions = sqliteTable(
+export const subscriptions = pgTable(
   'subscriptions',
   {
     ...orgColumns,
@@ -71,7 +72,7 @@ export const subscriptions = sqliteTable(
  * Factures. `number` est une séquence CONTINUE, sans trou, attribuée en transaction
  * au passage `draft → sent` — c'est une obligation de facturation, pas une préférence.
  */
-export const invoices = sqliteTable(
+export const invoices = pgTable(
   'invoices',
   {
     ...orgColumns,
@@ -103,7 +104,7 @@ export const invoices = sqliteTable(
  * `(provider, event_id)` est UNIQUE : c'est cet index — et non le code applicatif —
  * qui garantit l'idempotence. Les webhooks arrivent en double et dans le désordre.
  */
-export const paymentEvents = sqliteTable(
+export const paymentEvents = pgTable(
   'payment_events',
   {
     ...platformColumns,
@@ -122,7 +123,7 @@ export const paymentEvents = sqliteTable(
 )
 
 /** Consommation courante, recalculée côté serveur. Le front l'affiche, il n'en décide pas. */
-export const usageCounters = sqliteTable(
+export const usageCounters = pgTable(
   'usage_counters',
   {
     ...orgColumns,
@@ -132,4 +133,50 @@ export const usageCounters = sqliteTable(
     computedAt: timestamp('computed_at').notNull(),
   },
   (table) => [uniqueIndex('usage_counters_unique').on(table.orgId, table.counterKey)],
+)
+
+/**
+ * DEMANDES DE CHANGEMENT D'OFFRE.
+ *
+ * Un client ne change pas d'offre tout seul, et ce n'est pas une limitation technique :
+ * l'offre porte un prix, des quotas et une facturation. La laisser changer d'un clic
+ * ferait passer une agence de 5 à 40 voitures sans qu'aucun contrat commercial ne le
+ * couvre — et redescendre à 5 le lendemain avec 38 voitures en base, donc au-dessus du
+ * quota, ce qui bloque tout jusqu'à ce qu'on en supprime 33.
+ *
+ * Le client DEMANDE, la plateforme DÉCIDE. La demande est une ligne, pas un e-mail :
+ * elle a un état, un auteur, une date et une trace de la décision.
+ *
+ * `orgId` en fait une table cloisonnée : l'agence ne voit que ses propres demandes,
+ * par le repository ordinaire. La plateforme les lit toutes depuis
+ * `src/db/repositories/platform.ts`, le seul endroit autorisé à regarder toutes les
+ * organisations à la fois.
+ */
+export const planChangeRequests = pgTable(
+  'plan_change_requests',
+  {
+    ...orgColumns,
+    /** L'offre au moment de la demande. Gardée pour que la décision reste lisible. */
+    currentPlanCode: text('current_plan_code').notNull(),
+    requestedPlanCode: text('requested_plan_code').notNull(),
+    /** Le motif écrit par le client. C'est lui que le commercial lit en premier. */
+    reason: text('reason'),
+    /** pending | approved | refused | withdrawn */
+    status: text('status').notNull().default('pending'),
+    requestedBy: text('requested_by').notNull(),
+    decidedBy: text('decided_by'),
+    decidedAt: timestamp('decided_at'),
+    decisionNote: text('decision_note'),
+  },
+  (table) => [
+    /*
+     * UNE SEULE demande en attente par organisation, garantie par l'index et non par
+     * le code : deux onglets ouverts, deux clics, et le back-office recevrait deux
+     * demandes contradictoires de la même agence.
+     */
+    uniqueIndex('plan_change_pending_unique')
+      .on(table.orgId)
+      .where(sql`status = 'pending' and deleted_at is null`),
+    index('plan_change_status_idx').on(table.status, table.createdAt),
+  ],
 )

@@ -32,7 +32,7 @@ let counter: QueryCounter
 let plateSeed = 0
 
 beforeEach(async () => {
-  db = createTestDb()
+  db = await createTestDb()
   plateSeed = 0
   await ensurePlanFeatures(db)
 })
@@ -72,7 +72,7 @@ async function fleet(size: number): Promise<void> {
 describe('liste des véhicules', () => {
   it('lit la flotte ET ses échéances en deux requêtes, quelle que soit sa taille', async () => {
     await fleet(1)
-    counter = countQueries(db)
+    counter = countQueries()
 
     const small = await readVehicleList(db, ALPHA)
     const forOneVehicle = counter.count
@@ -82,7 +82,7 @@ describe('liste des véhicules', () => {
     // Quarante voitures : c'est une flotte de loueur marocain ordinaire.
     counter.stop()
     await fleet(39)
-    counter = countQueries(db)
+    counter = countQueries()
 
     const large = await readVehicleList(db, ALPHA)
     expect(large).toHaveLength(40)
@@ -124,7 +124,7 @@ describe('liste des véhicules', () => {
       lastSeenAt: '2026-08-24T08:00:00.000Z',
     })
 
-    counter = countQueries(db)
+    counter = countQueries()
     const rows = await readVehicleList(db, ALPHA)
     expect(rows[0]?.nextDeadline?.alertType).toBe('insurance.expiry')
   })
@@ -148,7 +148,7 @@ describe('liste des véhicules', () => {
       lastSeenAt: '2026-08-24T08:00:00.000Z',
     })
 
-    counter = countQueries(db)
+    counter = countQueries()
     const rows = await readVehicleList(db, ALPHA)
     expect(rows[0]?.nextDeadline).toBeNull()
   })
@@ -187,14 +187,14 @@ describe('carte de la flotte', () => {
     }
 
     await equip(1)
-    counter = countQueries(db)
+    counter = countQueries()
     const small = await readFleetSnapshot(db, ALPHA, NOW)
     const forOneVehicle = counter.count
     expect(small.locked).toBe(false)
 
     counter.stop()
     await equip(39)
-    counter = countQueries(db)
+    counter = countQueries()
 
     const large = await readFleetSnapshot(db, ALPHA, NOW)
     expect(large.locked).toBe(false)
@@ -213,7 +213,7 @@ describe('le compteur lui-même', () => {
    */
   it('voit un N+1 quand il y en a un', async () => {
     await fleet(5)
-    counter = countQueries(db)
+    counter = countQueries()
 
     const vehicles = vehicleRepository(db, ALPHA)
     const rows = await vehicles.list()

@@ -1,9 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
+import { getRequestIP } from '@tanstack/react-start/server'
 import { notFound } from '@tanstack/react-router'
 import { z } from 'zod'
 
 import { requireRole } from '~/auth/guards'
 import { getDb } from '~/db/client'
+import { planChangeRepository } from '~/db/repositories/plan-changes'
 import { audit } from './audit'
 import { platformMiddleware, tenantMiddleware, writableTenantMiddleware } from './middleware'
 import type { BillingOverview } from './reads/billing'
@@ -134,4 +136,93 @@ export const refreshSubscriptionStatus = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { applySubscriptionStatus } = await import('./billing-admin')
     return applySubscriptionStatus(getDb(), data.orgId)
+  })
+
+
+/* ------------------------------------------- changement d'offre : la demande */
+
+export const RequestPlanChangeInput = z.object({
+  requestedPlanCode: z.string().trim().min(1).max(40),
+  /** Le motif est OBLIGATOIRE : c'est ce que le commercial lit en premier. */
+  reason: z.string().trim().min(3).max(500),
+})
+
+/**
+ * DEMANDE DE CHANGEMENT D'OFFRE.
+ *
+ * Le client demande, la plateforme décide. Ce n'est pas une limitation technique :
+ * l'offre porte un prix, des quotas et une facturation. La laisser changer d'un clic
+ * ferait passer une agence de 5 à 40 voitures sans contrat commercial — et redescendre
+ * le lendemain avec 38 voitures en base, donc au-dessus du quota, ce qui bloque tout.
+ *
+ * `owner` seulement : c'est un engagement financier, pas un réglage. Un gérant a tous
+ * les droits sur le métier et aucun sur ce que l'agence paie.
+ */
+export const requestPlanChange = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(RequestPlanChangeInput)
+  .handler(async ({ data, context }) => {
+    const tenant = context.tenant
+    requireRole(tenant, 'owner')
+
+    const db = getDb()
+    const repository = planChangeRepository(db, tenant)
+
+    // Une seule demande en attente à la fois. L'index unique le garantit aussi ; on le
+    // vérifie ici pour rendre un message plutôt qu'une violation de contrainte.
+    const existing = await repository.pending()
+    if (existing) throw new Error('billing.requestAlreadyPending')
+    if (data.requestedPlanCode === tenant.planCode) {
+      throw new Error('billing.requestSamePlan')
+    }
+
+    const created = await repository.insert({
+      currentPlanCode: tenant.planCode,
+      requestedPlanCode: data.requestedPlanCode,
+      reason: data.reason,
+      status: 'pending',
+      requestedBy: tenant.userId,
+    })
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'plan.change.request',
+      entityType: 'organization',
+      entityId: tenant.orgId,
+      after: { from: tenant.planCode, to: data.requestedPlanCode, reason: data.reason },
+      request: { ip: getRequestIP() ?? null },
+    })
+
+    return { id: created.id }
+  })
+
+/** La demande en attente de l'agence, pour que l'écran ne la redemande pas. */
+export const loadPlanChangeRequest = createServerFn({ method: 'GET' })
+  .middleware([tenantMiddleware])
+  .handler(async ({ context }) => {
+    const pending = await planChangeRepository(getDb(), context.tenant).pending()
+    if (!pending) return null
+    return {
+      id: pending.id,
+      requestedPlanCode: pending.requestedPlanCode,
+      reason: pending.reason,
+      requestedAt: pending.createdAt,
+    }
+  })
+
+/** Retirer sa demande. Toujours permis : on ne met pas d'obstacle sur un retrait. */
+export const withdrawPlanChange = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(z.object({ id: z.string().min(1) }))
+  .handler(async ({ data, context }) => {
+    const tenant = context.tenant
+    requireRole(tenant, 'owner')
+
+    const updated = await planChangeRepository(getDb(), tenant).update(data.id, {
+      status: 'withdrawn',
+    })
+    if (!updated) throw notFound()
+    return { ok: true }
   })

@@ -202,14 +202,56 @@ séquence mélangée et vérifie l'état final.
 table en écriture seule.**
 
 Actions journalisées obligatoirement : contrats (création, retour, annulation), cautions
-(encaissement, restitution), prix, suppressions, changements de plan, impersonation (début et fin),
+(encaissement, restitution), prix, suppressions, changements de plan, impersonation (début, fin,
+et **passage en écriture** — `impersonation.write.enable` / `.disable`, avec le motif),
 refus inter-organisations, connexions échouées répétées.
+
+Les pièces du carnet véhicule y entrent aussi depuis le 27/08/2026, dans les deux sens :
+`insurance.update`, `inspection.update`, `roadTax.update`, `registration.update`, et
+`<type>.delete`. Une correction porte son AVANT et son APRÈS — sans l'avant, le journal dit qu'une
+échéance a changé sans dire de quoi vers quoi, ce qui ne répond à aucune question réelle. La
+suppression reste DOUCE : le carnet est une pièce d'historique, une assurance retirée par erreur
+doit pouvoir être retrouvée en base.
 
 ### `impersonation_sessions`
 `id`, `org_id`, `admin_user_id`, `target_user_id`, `reason`, `write_enabled` (bool, **défaut 0**),
 `write_enabled_at`, `started_at`, `expires_at` (**+30 min**), `ended_at`, `ip_hash`.
 Verrous additionnels proposés en É-08 : ressaisie du mot de passe avant démarrage, accès interdit
 aux écrans de facturation du client et à tout export pendant la session.
+
+**L'élévation existe depuis le 27/08/2026** (`setImpersonationWrite`, src/server/admin.ts). Elle
+était décrite depuis l'origine — « écriture désactivée par défaut, élévation explicite » — mais
+aucune fonction ne la portait : `write_enabled` s'écrivait une fois à 0 et n'était plus jamais
+touché. Un administrateur entré chez un client pour corriger une ligne ne pouvait que la regarder.
+
+Ce que le geste exige, et qui ne se négocie pas :
+
+- un **motif écrit**, obligatoire pour élever, libre pour redescendre. Il part au journal d'audit,
+  et c'est la seule chose qui répondra à « pourquoi cette ligne a-t-elle changé le 14 » ;
+- une autorisation **ouverte** pour cette session précise, non expirée, dont l'administrateur est
+  bien celui qui l'a ouverte et est **toujours** propriétaire de plateforme au moment du geste ;
+- `requirePlatformOwner` ne peut PAS servir de garde ici : il refuse par construction toute session
+  en impersonation, et c'est précisément depuis une telle session que l'appel arrive. Le contrôle
+  est donc écrit à part (`requireOpenImpersonation`) et vérifie cinq choses au lieu d'une.
+
+Redescendre en lecture seule est toujours permis, sans motif : on ne met pas d'obstacle sur le
+chemin qui RETIRE des droits.
+
+### `plan_change_requests` — le client demande, la plateforme décide
+`id`, `org_id`, `current_plan_code`, `requested_plan_code`, `reason`, `status`
+(`pending` | `approved` | `refused` | `withdrawn`), `requested_by`, `decided_by`, `decided_at`,
+`decision_note`, plus les colonnes communes.
+**Unicité sur `org_id` parmi les lignes `pending` vivantes** — deux onglets, deux clics, et le
+back-office recevrait deux demandes contradictoires de la même agence.
+
+Ajoutée le 28/08/2026. L'offre porte un prix, des quotas et une facturation : la laisser changer
+d'un clic ferait passer une agence de 5 à 40 voitures sans contrat commercial, et redescendre le
+lendemain avec 38 voitures en base — donc au-dessus du quota, donc bloquée jusqu'à en supprimer 33.
+
+`decidePlanChange` (src/db/repositories/plan-changes.ts) est le **seul** chemin qui écrit
+`organizations.plan_code` après la création d'une agence. C'est ce qui garantit qu'un changement
+d'offre laisse toujours derrière lui une demande, son motif, son auteur et la date de la décision.
+Le rôle `owner` est exigé côté client : c'est un engagement financier, pas un réglage.
 
 ### `feature_flags`
 `id`, `key`, `scope` (`global` | `org`), `org_id` (nullable), `enabled` (bool), `payload`,
@@ -410,6 +452,33 @@ moteur d'alertes**, pas la table de positions brutes.
 appliquée par un index unique en base et non par le code. C'est cette contrainte qui rend le moteur
 idempotent : relancer le calcul dix fois produit dix `INSERT … ON CONFLICT DO UPDATE`, pas dix
 alertes.
+
+### `alert_reads` — la pastille rouge de la rubrique « Alertes »
+`id`, `org_id`, `alert_id`, `user_id`, `read_at`, plus les colonnes communes.
+**Unicité sur (`org_id`, `alert_id`, `user_id`) parmi les lignes vivantes.**
+
+Ajoutée le 27/08/2026 avec la cloche de notifications. Elle existe parce que TROIS états
+distincts se cachent derrière un compteur, et que les confondre casse le produit :
+
+| état | portée | signification |
+|---|---|---|
+| actif | organisation | l'alerte demande un geste maintenant (`open`, ou `snoozed` échu) |
+| traité (`acknowledged`) | organisation | quelqu'un dit avoir fait le nécessaire. Acte MÉTIER |
+| lu (`alert_reads`) | **utilisateur** | cette personne a vu la notification |
+
+La pastille — posée sur la rubrique « Alertes » de la navigation, et non sur une cloche séparée —
+compte les alertes ACTIVES et NON LUES. Sans cette table, « tout marquer comme lu »
+n'aurait pu s'écrire qu'en `acknowledged` — c'est-à-dire déclarer en un clic que huit échéances
+sont réglées, exactement ce que le centre de notifications refuse depuis l'origine (« faire
+disparaître un problème en cliquant »).
+
+L'ABSENCE de ligne vaut « non lu » : rien à écrire quand une alerte naît, et une alerte rouverte
+par le moteur redevient non lue d'elle-même.
+
+Le sondage (`pollNotifications`) est un `POST` et non un `GET`, parce qu'il ÉCRIT : au plus une
+fois par minute et par organisation, il relance le balayage des échéances, en contexte SYSTÈME —
+constater une échéance n'a jamais demandé le droit d'écrire, et un rôle `viewer` ou une agence
+gelée doivent voir leurs échéances se mettre à jour.
 
 ### `alert_settings`
 `id`, `org_id`, `alert_type`, `thresholds` (JSON, ex. `[30, 14, 7, 1, 0]`),

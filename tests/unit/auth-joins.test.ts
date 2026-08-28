@@ -23,8 +23,8 @@ import { countQueries } from '../helpers/queries'
 
 let db: Db
 
-beforeEach(() => {
-  db = createTestDb()
+beforeEach(async () => {
+  db = await createTestDb()
   captureNotifications()
 })
 
@@ -40,7 +40,7 @@ async function measure(joins: boolean): Promise<{ queries: number; email: string
   })
 
   // On ne compte PAS l'inscription : ce qui nous intéresse est la lecture répétée.
-  const counter = countQueries(db)
+  const counter = countQueries()
   const session = await auth.api.getSession({ headers: user.headers })
   const queries = counter.count
   counter.stop()
@@ -53,7 +53,7 @@ describe('jointures de l’adaptateur', () => {
   it('renvoient la MÊME session, avec moins de requêtes', async () => {
     const withoutJoins = await measure(false)
 
-    db = createTestDb()
+    db = await createTestDb()
     const withJoins = await measure(true)
 
     // La session doit décrire la même personne : un chemin plus rapide qui renvoie

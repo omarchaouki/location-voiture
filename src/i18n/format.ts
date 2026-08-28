@@ -97,6 +97,21 @@ export function formatDateTime(iso: string, locale: Locale): string {
   return dateFormatter(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(toDate(iso))
 }
 
+/**
+ * L'HEURE SEULE.
+ *
+ * Le tableau de bord liste les retours attendus par jour : la date est déjà portée par
+ * la colonne, la répéter sur chaque ligne coûte de la largeur et n'apprend rien. Ce
+ * qu'on veut lire, c'est « 14:30 ».
+ *
+ * Elle passe par `dateFormatter` comme le reste — jamais un `Intl` écrit sur place :
+ * la locale du produit est `ar-MA`, jamais `ar`, et les deux n'ont pas les mêmes
+ * chiffres (docs/DECISIONS.md É7).
+ */
+export function formatTime(iso: string, locale: Locale): string {
+  return dateFormatter(locale, { timeStyle: 'short' }).format(toDate(iso))
+}
+
 export function formatDateShort(isoOrCivil: string, locale: Locale): string {
   return dateFormatter(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
     toDate(isoOrCivil),

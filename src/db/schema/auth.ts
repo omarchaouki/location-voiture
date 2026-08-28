@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { bool } from './_shared'
 
@@ -12,19 +12,23 @@ import { bool } from './_shared'
  * pas en recopiant une page de documentation.
  *
  * **Exception assumée à la règle 2 de la charte de portabilité** : ici les dates sont
- * des `integer` epoch (`mode: 'timestamp'`) et non des `text` ISO, parce que
- * l'adaptateur Drizzle de Better Auth passe des objets `Date` à Drizzle. Une colonne
- * `text` ferait échouer l'insertion (better-sqlite3 refuse de lier un `Date`).
+ * de vrais horodatages et non des `text` ISO, parce que l'adaptateur Drizzle de Better
+ * Auth passe des objets `Date` à Drizzle — le code qui les lit n'est pas le nôtre.
  * La règle reste entière pour toutes les tables métier, que nous écrivons nous-mêmes.
  * Voir docs/DECISIONS.md §11.
+ *
+ * En SQLite c'était un `integer` epoch, faute de type dédié. Postgres a `timestamptz`,
+ * et `withTimezone` est **obligatoire** ici : ce n'est pas cosmétique. Une session dont
+ * l'expiration serait stockée sans fuseau expirerait à contretemps deux fois par an, et
+ * le Maroc bascule aussi pendant le Ramadan (docs/DECISIONS.md É7).
  *
  * Les noms de tables sont au pluriel : l'adaptateur est configuré avec
  * `usePlural: true`, qui fait la correspondance `user` → `users` tout seul.
  */
 
-const authDate = (name: string) => integer(name, { mode: 'timestamp' })
+const authDate = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' })
 
-export const users = sqliteTable(
+export const users = pgTable(
   'users',
   {
     id: text('id').primaryKey(),
@@ -44,7 +48,7 @@ export const users = sqliteTable(
   (table) => [uniqueIndex('users_email_unique').on(table.email)],
 )
 
-export const sessions = sqliteTable(
+export const sessions = pgTable(
   'sessions',
   {
     id: text('id').primaryKey(),
@@ -73,7 +77,7 @@ export const sessions = sqliteTable(
   ],
 )
 
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   'accounts',
   {
     id: text('id').primaryKey(),
@@ -97,7 +101,7 @@ export const accounts = sqliteTable(
   (table) => [index('accounts_user_idx').on(table.userId)],
 )
 
-export const verifications = sqliteTable(
+export const verifications = pgTable(
   'verifications',
   {
     id: text('id').primaryKey(),
@@ -117,7 +121,7 @@ export const verifications = sqliteTable(
  * côté Better Auth en `additionalFields`. C'est l'écart É2 du cahier des charges :
  * on ne réécrit pas orgs, membres et invitations, on les habille.
  */
-export const organizations = sqliteTable(
+export const organizations = pgTable(
   'organizations',
   {
     // --- champs Better Auth ---
@@ -148,7 +152,7 @@ export const organizations = sqliteTable(
   (table) => [uniqueIndex('organizations_slug_unique').on(table.slug)],
 )
 
-export const members = sqliteTable(
+export const members = pgTable(
   'members',
   {
     id: text('id').primaryKey(),
@@ -168,7 +172,7 @@ export const members = sqliteTable(
   ],
 )
 
-export const invitations = sqliteTable(
+export const invitations = pgTable(
   'invitations',
   {
     id: text('id').primaryKey(),

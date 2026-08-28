@@ -1,2 +1,0 @@
-CREATE UNIQUE INDEX `geofence_events_unique` ON `geofence_events` (`org_id`,`geofence_id`,`vehicle_id`,`occurred_at`);--> statement-breakpoint
-CREATE UNIQUE INDEX `gps_positions_unique` ON `gps_positions` (`org_id`,`device_id`,`recorded_at`);

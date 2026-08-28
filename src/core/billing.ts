@@ -47,6 +47,73 @@ export function subtotalFromTotal(totalCents: number, vatRateBp = DEFAULT_VAT_RA
   return Math.round((totalCents * 10_000) / (10_000 + vatRateBp))
 }
 
+/* ------------------------------------------------------- mensuel ou annuel */
+
+/**
+ * LES DEUX RYTHMES DE PAIEMENT, et l'annuel EN PREMIER.
+ *
+ * L'ordre du tableau est celui des boutons, et il porte la valeur par défaut : la
+ * page tarifaire s'ouvre sur l'annuel. Ce n'est pas un réglage cosmétique — c'est le
+ * prix par mois le plus BAS qui s'affiche en premier, donc celui auquel le visiteur
+ * compare tout le reste. Montrer le mensuel d'abord fait paraître le produit un
+ * cinquième plus cher qu'il ne l'est pour qui s'engage à l'année.
+ */
+export const BILLING_PERIODS = ['yearly', 'monthly'] as const
+export type BillingPeriod = (typeof BILLING_PERIODS)[number]
+
+export const DEFAULT_BILLING_PERIOD: BillingPeriod = 'yearly'
+
+/**
+ * Combien de MOIS l'engagement annuel offre-t-il ?
+ *
+ * Calculé, jamais écrit. Le catalogue pose aujourd'hui `yearlyCents = monthlyCents × 10`,
+ * soit deux mois offerts — mais c'est une donnée en base, pas une constante du produit.
+ * Écrire « 2 mois offerts » dans la page, c'est signer une promesse que la prochaine
+ * grille tarifaire démentira sans prévenir, exactement comme un prix codé dans le JSX.
+ *
+ * Le résultat est arrondi au demi-mois près puis rendu en nombre ENTIER de mois : une
+ * remise commerciale s'annonce en mois pleins, et « 1,97 mois offert » ne se dit pas.
+ * Zéro quand l'annuel n'offre rien — l'écran n'affiche alors aucune promesse.
+ */
+export function monthsFreeOnYearly(monthlyCents: number, yearlyCents: number): number {
+  if (monthlyCents <= 0 || yearlyCents <= 0) return 0
+  const saved = monthlyCents * 12 - yearlyCents
+  if (saved <= 0) return 0
+  return Math.round(saved / monthlyCents)
+}
+
+/** Ce que l'engagement annuel fait économiser sur douze mois, en centimes. */
+export function yearlySavingsCents(monthlyCents: number, yearlyCents: number): number {
+  return Math.max(0, monthlyCents * 12 - yearlyCents)
+}
+
+/**
+ * Le prix PAR MOIS d'un engagement annuel.
+ *
+ * C'est le nombre qu'on affiche sous l'annuel, parce que c'est le seul qui se compare
+ * au mensuel. Montrer « 7 990 MAD / an » à côté de « 799 MAD / mois » demande une
+ * division mentale que personne ne fait — et celui qui la fait de travers s'en va.
+ *
+ * L'arrondi tombe au centime, et le total annoncé pour l'année reste `yearlyCents` :
+ * on n'affiche jamais douze fois ce nombre-ci, qui ne retomberait pas juste.
+ */
+export function monthlyEquivalentCents(yearlyCents: number): number {
+  return Math.round(yearlyCents / 12)
+}
+
+/**
+ * Le prix à afficher pour une offre, selon le rythme choisi.
+ *
+ * Toujours ramené au MOIS : la page compare des mensualités, quel que soit le rythme.
+ */
+export function displayedMonthlyCents(
+  period: BillingPeriod,
+  monthlyCents: number,
+  yearlyCents: number,
+): number {
+  return period === 'yearly' ? monthlyEquivalentCents(yearlyCents) : monthlyCents
+}
+
 /* ------------------------------------------------------------------- numéro */
 
 /**

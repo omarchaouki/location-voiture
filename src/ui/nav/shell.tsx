@@ -50,6 +50,37 @@ const STRIP_LINK =
 const TAP = { minHeight: 'var(--tap-target)' } as const
 
 /**
+ * PASTILLE DE RUBRIQUE — le compteur de notifications, là où il a un sens.
+ *
+ * Il vivait dans une cloche séparée, à côté du menu de compte. C'était une deuxième
+ * porte vers la même chose : la rubrique « Alertes » était déjà dans la navigation,
+ * et deux entrées pour un seul sujet obligent à choisir laquelle regarder. La pastille
+ * est donc posée SUR la rubrique — comme le fait n'importe quelle messagerie — et la
+ * page des alertes redevient le seul centre de notifications.
+ *
+ * Le nombre est ÉCRIT, jamais un simple point de couleur : un point rouge ne dit pas
+ * s'il reste une échéance ou douze, et il est muet pour un lecteur d'écran. Le libellé
+ * complet part dans un `sr-only` collé au lien, pour être annoncé avec lui.
+ */
+const MAX_BADGE = 99
+
+function NavBadge({ count, label }: { count: number; label: string }) {
+  if (count <= 0) return null
+
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="numeric ms-auto grid min-w-5 shrink-0 place-items-center rounded-full bg-destructive px-1.5 py-0.5 text-2xs font-medium text-destructive-foreground"
+      >
+        {count > MAX_BADGE ? `${MAX_BADGE}+` : count}
+      </span>
+      <span className="sr-only">{label}</span>
+    </>
+  )
+}
+
+/**
  * Bande défilante — la navigation sur téléphone, et la seule surface de `/design`
  * où on peut la mesurer à 320, 375 et 768 px sans ouvrir de session.
  */
@@ -57,10 +88,13 @@ export function NavStrip({
   locale,
   destinations,
   label,
+  badges,
 }: {
   locale: Locale
   destinations: readonly Destination[]
   label: string
+  /** Compteurs par destination (`to` → nombre). Zéro ou absent = pas de pastille. */
+  badges?: Readonly<Record<string, number>>
 }) {
   const { t } = useTranslation()
 
@@ -80,6 +114,10 @@ export function NavStrip({
         >
           <destination.icon size={17} className={SIDE_ICON} />
           {t(destination.key)}
+          <NavBadge
+            count={badges?.[destination.to] ?? 0}
+            label={t('alerts.bell.unread', { count: badges?.[destination.to] ?? 0 })}
+          />
         </Link>
       ))}
     </nav>
@@ -97,10 +135,12 @@ export function SideRail({
   locale,
   destinations,
   label,
+  badges,
 }: {
   locale: Locale
   destinations: readonly Destination[]
   label: string
+  badges?: Readonly<Record<string, number>>
 }) {
   const { t } = useTranslation()
 
@@ -117,6 +157,10 @@ export function SideRail({
         >
           <destination.icon size={18} className={SIDE_ICON} />
           {t(destination.key)}
+          <NavBadge
+            count={badges?.[destination.to] ?? 0}
+            label={t('alerts.bell.unread', { count: badges?.[destination.to] ?? 0 })}
+          />
         </Link>
       ))}
     </nav>
@@ -130,6 +174,7 @@ export function Shell({
   home,
   subtitle,
   banners,
+  badges,
   children,
 }: {
   locale: Locale
@@ -141,6 +186,14 @@ export function Shell({
   subtitle?: ReactNode
   /** Bandeaux qui ont le droit d'interrompre (impersonation, démo, échéances). */
   banners?: ReactNode
+  /**
+   * Compteurs de navigation (`to` → nombre), pour la pastille rouge.
+   *
+   * Calculés par la ROUTE, pas ici : la coquille sert aussi `/admin`, qui n'a pas
+   * d'échéances, et une coquille qui sonderait elle-même imposerait ce sondage aux
+   * deux espaces.
+   */
+  badges?: Readonly<Record<string, number>>
   children: ReactNode
 }) {
   const { t } = useTranslation()
@@ -148,7 +201,9 @@ export function Shell({
   return (
     <div className="lg:flex lg:min-h-dvh">
       {/* ---- Barre latérale : à partir de 1024 px seulement ---- */}
-      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-e lg:border-border lg:bg-card">
+      {/* La navigation ne s'imprime pas : une feuille qui sort de l'application
+          n'a plus rien à naviguer. */}
+      <aside data-print="hide" className="hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:border-e lg:border-border lg:bg-card">
         <div className="px-4 py-4">
           <Link to={home} params={{ lang: locale }} className="text-base font-semibold">
             {t('brand.name')}
@@ -156,7 +211,12 @@ export function Shell({
           {subtitle ? <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p> : null}
         </div>
 
-        <SideRail locale={locale} destinations={destinations} label={t('nav.primary')} />
+        <SideRail
+          locale={locale}
+          destinations={destinations}
+          label={t('nav.primary')}
+          {...(badges === undefined ? {} : { badges })}
+        />
 
         <div className="border-t border-border p-3">
           <div className="mb-2 flex items-center gap-3">
@@ -169,25 +229,37 @@ export function Shell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---- En-tête de téléphone et de tablette ---- */}
-        <header className="sticky top-0 z-20 border-b border-border bg-card lg:hidden">
+        <header data-print="hide" className="sticky top-0 z-20 border-b border-border bg-card lg:hidden">
           <div className="flex items-center gap-3 px-4 py-2 sm:px-6">
             <Link to={home} params={{ lang: locale }} className="text-base font-semibold">
               {t('brand.name')}
             </Link>
-            <div className="ms-auto flex items-center gap-3">
+            <div className="ms-auto flex items-center gap-1 sm:gap-3">
               <ThemeMenu />
               <LanguageSwitcher current={locale} />
               <AccountMenu viewer={viewer} locale={locale} />
             </div>
           </div>
           <div className="flex items-stretch px-4 sm:px-6">
-            <NavStrip locale={locale} destinations={destinations} label={t('nav.primary')} />
+            <NavStrip
+              locale={locale}
+              destinations={destinations}
+              label={t('nav.primary')}
+              {...(badges === undefined ? {} : { badges })}
+            />
           </div>
         </header>
 
-        {banners ? <div className="border-b border-border">{banners}</div> : null}
+        {banners ? (
+          <div data-print="hide" className="border-b border-border">
+            {banners}
+          </div>
+        ) : null}
 
-        <main id="content" className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main
+          id="content"
+          className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+        >
           {children}
         </main>
       </div>

@@ -19,6 +19,7 @@ import { APP_DESTINATIONS } from '~/ui/nav/destinations'
 import { NavStrip, SideRail } from '~/ui/nav/shell'
 import { Plate } from '~/ui/primitives/plate'
 import { Badge } from '~/ui/shadcn/badge'
+import { CheckboxField } from '~/ui/shadcn/field'
 import {
   AdminOrganizationsSkeleton,
   AlertListSkeleton,
@@ -244,17 +245,12 @@ function DesignPage() {
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('design.skeletons')}>
-        <label
-          className="mb-4 flex items-center gap-2 text-sm"
-          style={{ minHeight: 'var(--tap-target)' }}
-        >
-          <input
-            type="checkbox"
-            checked={showSkeletons}
-            onChange={(event) => setShowSkeletons(event.target.checked)}
-          />
-          {t('design.toggleSkeletons')}
-        </label>
+        <CheckboxField
+          className="mb-4"
+          checked={showSkeletons}
+          onChange={(event) => setShowSkeletons(event.target.checked)}
+          label={t('design.toggleSkeletons')}
+        />
         {showSkeletons ? (
           <div className="space-y-10">
             <DashboardSkeleton />

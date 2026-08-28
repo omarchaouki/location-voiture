@@ -4,6 +4,7 @@ import type { Db } from '~/db/client'
 import { planFeatures, plans } from '~/db/schema/billing'
 import type { TenantContext } from '~/db/tenant'
 import type { PlanLimits } from '~/core/billing'
+import { RECOMMENDED_FEATURE_KEY } from '~/core/plan-fit'
 
 /**
  * `can(org, 'gps.track')` — l'autorisation par PLAN, décidée côté serveur.
@@ -60,6 +61,20 @@ export const DEFAULT_PLAN_FEATURES: ReadonlyArray<{
   { planCode: 'starter', featureKey: 'gps.geofence', enabled: false },
   { planCode: 'pro', featureKey: 'gps.geofence', enabled: true },
   { planCode: 'business', featureKey: 'gps.geofence', enabled: true },
+
+  /*
+   * L'offre MISE EN AVANT sur la page tarifaire.
+   *
+   * Ce n'est pas une autorisation : elle n'ouvre rien, et `can()` ne la lira jamais.
+   * Elle vit ici parce que c'est la table qui porte déjà les marques PAR OFFRE, et
+   * parce qu'ainsi changer la mise en avant reste une écriture en base — la vitrine
+   * suit sans qu'une ligne de JSX bouge (`RECOMMENDED_FEATURE_KEY`).
+   *
+   * `pro` par défaut, et pas la plus chère : la mise en avant sert à orienter la
+   * majorité, pas à vendre le haut du catalogue. Une seule offre la porte — deux
+   * badges « conseillé » ne conseillent plus rien.
+   */
+  { planCode: 'pro', featureKey: RECOMMENDED_FEATURE_KEY, enabled: true },
 ]
 
 /**

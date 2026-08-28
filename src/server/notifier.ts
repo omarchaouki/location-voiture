@@ -12,8 +12,22 @@ import type { Locale } from '~/i18n/locales'
 export interface NotificationMessage {
   to: string
   subject: string
-  /** Texte brut. Les gabarits HTML arrivent en Phase 4, traduits dans les 3 langues. */
+  /**
+   * Texte brut — la version de RÉFÉRENCE, et la seule obligatoire.
+   *
+   * C'est elle qui est enregistrée dans `notifications.body`, donc elle qui sera
+   * relue le jour où quelqu'un demandera ce qui est réellement parti. Un gabarit HTML
+   * archivé se relit à coups de balises.
+   */
   body: string
+  /**
+   * Version HTML, facultative.
+   *
+   * Sans elle, le prestataire engendre le HTML à partir du texte. Elle n'existe que
+   * pour les messages dont la mise en forme porte du SENS — un tableau d'échéances,
+   * un bouton d'invitation —, jamais pour habiller.
+   */
+  html?: string
   locale: Locale
 }
 

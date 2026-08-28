@@ -52,7 +52,8 @@ export function assertCanWrite(ctx: TenantContext): void {
 /**
  * Exécute un travail dans le contexte du locataire.
  *
- * Sur SQLite c'est une simple délégation : il n'y a pas de RLS, donc rien à poser.
+ * Aujourd'hui c'est une simple délégation : le RLS n'est pas encore écrit, donc rien
+ * à poser sur la session.
  * La FORME de l'appel est déjà celle de Postgres, où le corps deviendra :
  *
  * ```ts

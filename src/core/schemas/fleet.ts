@@ -87,6 +87,20 @@ export const CreateFineInput = z.object({
   dueOn: civilDate.optional(),
 })
 
+/**
+ * Correction d'une contravention.
+ *
+ * Dérivée de la saisie, comme les pièces du carnet — une borne ajoutée à la création
+ * s'applique automatiquement à la correction. Le VÉHICULE en est retiré : il décide du
+ * rattachement au contrat, et le changer en douce refacturerait la contravention à
+ * quelqu'un d'autre. Changer de véhicule, c'est supprimer et ressaisir.
+ */
+export const UpdateFineInput = CreateFineInput.omit({ vehicleId: true }).extend({
+  id: z.string().min(1),
+})
+
+export const FineIdInput = z.object({ id: z.string().min(1) })
+
 export const AttachFineInput = z.object({
   id: z.string().min(1),
   /** `null` détache : on peut corriger un rattachement erroné. */

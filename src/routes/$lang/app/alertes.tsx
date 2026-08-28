@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { RefreshCw, Volume2, VolumeX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { formatDate } from '~/i18n/format'
@@ -9,19 +10,36 @@ import {
   listAlerts,
   rescanAlerts,
   snoozeAlert,
-  type AlertView,
+  type NotificationItem,
 } from '~/server/alerts'
+import { useNotificationsState } from '~/ui/alerts/notifications-context'
 import { Button } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
+import { Card, PageHeader } from '~/ui/primitives/card'
 import { AlertListSkeleton } from '~/ui/skeletons'
 import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 
 /**
- * Centre de notifications.
+ * CENTRE DE NOTIFICATIONS — et il n'y en a qu'un.
  *
- * Une ligne de registre par échéance, la plus grave en haut. La sévérité se lit à la
- * forme autant qu'à la couleur : filet épaissi en tête de ligne, cachet, et l'échéance
- * en chiffres tabulaires. Un daltonien lit l'urgence sans la couleur.
+ * Il y a eu, entre le 27/08/2026 et le même jour, une cloche séparée dans l'en-tête.
+ * C'était une seconde porte vers cette page : deux entrées pour un même sujet
+ * obligent à choisir laquelle regarder, et la moitié des gestes se font alors au
+ * mauvais endroit. La cloche est retirée ; il reste la PASTILLE sur la rubrique
+ * « Alertes », qui compte, et cette page, qui traite.
+ *
+ * Trois verbes distincts cohabitent ici, et c'est tout l'écran :
+ *
+ *  - **LU** — personnel, réversible, sans effet métier. Fait descendre la pastille.
+ *  - **REPORTÉ** — l'échéance revient dans sept jours. Elle reste dans la liste,
+ *    rangée derrière.
+ *  - **TRAITÉ** — quelqu'un déclare avoir fait le nécessaire. Acte d'agence, visible
+ *    de tous, et le moteur rouvrira quand même si la cause n'a pas bougé : dire
+ *    qu'on a payé ne paie pas la vignette.
+ *
+ * La sévérité se lit à la forme autant qu'à la couleur : filet épaissi en tête de
+ * ligne, cachet nommé, échéance en chiffres tabulaires. Un daltonien lit la même
+ * urgence que les autres.
  */
 export const Route = createFileRoute('/$lang/app/alertes')({
   loader: async () => ({ alerts: await listAlerts() }),
@@ -38,11 +56,11 @@ const SEVERITY_TONES: Record<string, BadgeVariant> = {
 }
 
 const SEVERITY_BORDER: Record<string, string> = {
-  blocking: 'border-destructive',
-  critical: 'border-destructive',
-  high: 'border-warning',
-  medium: 'border-input',
-  low: 'border-border',
+  blocking: 'border-s-destructive',
+  critical: 'border-s-destructive',
+  high: 'border-s-warning',
+  medium: 'border-s-input',
+  low: 'border-s-border',
 }
 
 function AlertsPage() {
@@ -51,13 +69,27 @@ function AlertsPage() {
   const { lang } = Route.useParams()
   const locale = isLocale(lang) ? lang : DEFAULT_LOCALE
   const router = useRouter()
+  const notifications = useNotificationsState()
   const [busy, setBusy] = useState(false)
 
-  async function rescan() {
+  const unread = alerts.filter((alert) => !alert.read)
+
+  /*
+   * Le sondage tourne toutes les minutes et peut trouver du neuf pendant qu'on est
+   * sur cette page. On ne remplace PAS la liste sous le curseur — quelqu'un en train
+   * de reporter une échéance verrait ses lignes bouger. On propose de l'actualiser,
+   * et c'est lui qui décide du moment.
+   */
+  const polled = notifications?.feed?.unread ?? 0
+  const hasNews = polled > unread.length
+
+  async function act(action: () => Promise<unknown>) {
     setBusy(true)
     try {
-      await rescanAlerts()
+      await action()
       await router.invalidate()
+      // La pastille de navigation descend TOUT DE SUITE, sans attendre le sondage.
+      notifications?.refresh()
     } finally {
       setBusy(false)
     }
@@ -65,45 +97,109 @@ function AlertsPage() {
 
   return (
     <div>
-      <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b-2 border-input pb-3">
-        <h1 className="text-2xl">{t('alerts.title')}</h1>
-        <span className="numeric text-xs text-muted-foreground">{alerts.length}</span>
-        <span className="ms-auto">
-          <Button onClick={() => void rescan()} disabled={busy}>
-            {busy ? t('auth.working') : t('alerts.rescan')}
+      <PageHeader
+        title={t('alerts.title')}
+        description={t('alerts.centreBody')}
+        meta={
+          <>
+            <Badge variant={unread.length > 0 ? 'danger' : 'neutral'}>
+              {t('alerts.bell.unread', { count: unread.length })}
+            </Badge>
+            <Badge variant="neutral">{t('alerts.activeCount', { count: alerts.length })}</Badge>
+          </>
+        }
+        action={
+          <>
+            {notifications ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-pressed={notifications.soundOn}
+                aria-label={
+                  notifications.soundOn ? t('alerts.bell.soundOn') : t('alerts.bell.soundOff')
+                }
+                onClick={notifications.toggleSound}
+              >
+                {notifications.soundOn ? (
+                  <Volume2 aria-hidden="true" />
+                ) : (
+                  <VolumeX aria-hidden="true" />
+                )}
+              </Button>
+            ) : null}
+
+            <Button
+              variant="outline"
+              disabled={busy || unread.length === 0}
+              onClick={() => void act(() => notifications?.markRead() ?? Promise.resolve())}
+            >
+              {t('alerts.bell.markAll')}
+            </Button>
+
+            <Button
+              disabled={busy}
+              onClick={() => void act(() => rescanAlerts())}
+            >
+              <RefreshCw aria-hidden="true" />
+              <span>{busy ? t('auth.working') : t('alerts.rescan')}</span>
+            </Button>
+          </>
+        }
+      />
+
+      {hasNews ? (
+        <div
+          role="status"
+          className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-ring bg-accent/40 px-4 py-3"
+        >
+          <span className="text-sm">{t('alerts.newSince', { count: polled - unread.length })}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="ms-auto"
+            onClick={() => void router.invalidate()}
+          >
+            {t('alerts.refreshList')}
           </Button>
-        </span>
-      </header>
+        </div>
+      ) : null}
 
       {alerts.length === 0 ? (
-        <div className="mt-8">
-          <EmptyState title={t('alerts.none')} body={t('alerts.noneBody')} />
-        </div>
+        <EmptyState title={t('alerts.none')} body={t('alerts.noneBody')} />
       ) : (
-        <ul className="mt-6 border-t border-border">
-          {alerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} locale={locale} />
-          ))}
-        </ul>
+        <Card as="div">
+          <ul>
+            {alerts.map((alert) => (
+              <AlertRow
+                key={alert.id}
+                alert={alert}
+                locale={locale}
+                busy={busy}
+                onAct={act}
+                onRead={() => notifications?.markRead([alert.id]) ?? Promise.resolve()}
+              />
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   )
 }
 
-function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
+function AlertRow({
+  alert,
+  locale,
+  busy,
+  onAct,
+  onRead,
+}: {
+  alert: NotificationItem
+  locale: Locale
+  busy: boolean
+  onAct: (action: () => Promise<unknown>) => Promise<void>
+  onRead: () => Promise<void>
+}) {
   const { t } = useTranslation()
-  const router = useRouter()
-  const [busy, setBusy] = useState(false)
-
-  async function act(action: () => Promise<unknown>) {
-    setBusy(true)
-    try {
-      await action()
-      await router.invalidate()
-    } finally {
-      setBusy(false)
-    }
-  }
 
   const subject =
     typeof alert.payload['vehicle'] === 'string'
@@ -116,10 +212,17 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
 
   return (
     <li
-      className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border border-s-2 px-4 py-3 ${
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border border-s-2 px-4 py-3 last:border-b-0 ${
         SEVERITY_BORDER[alert.severity] ?? 'border-s-border'
-      }`}
+      } ${alert.read ? '' : 'bg-accent/30'}`}
     >
+      {/* Le non-lu se marque par un point ET par un fond : la graisse seule ne se voit
+          pas sur une liste parcourue en diagonale. */}
+      <span
+        aria-hidden="true"
+        className={`size-2 shrink-0 rounded-full ${alert.read ? 'bg-transparent' : 'bg-destructive'}`}
+      />
+
       <Badge variant={SEVERITY_TONES[alert.severity] ?? 'neutral'}>
         {t(`alerts.severity.${alert.severity}`)}
       </Badge>
@@ -128,10 +231,14 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
       {subject ? <span className="text-sm text-muted-foreground">{subject}</span> : null}
 
       {alert.dueOn ? (
-        <span className="numeric text-xs text-muted-foreground">{formatDate(alert.dueOn, locale)}</span>
+        <span className="numeric text-xs text-muted-foreground">
+          {formatDate(alert.dueOn, locale)}
+        </span>
       ) : null}
 
-      {alert.state === 'acknowledged' ? <Badge variant="calm">{t('alerts.acknowledged')}</Badge> : null}
+      {alert.state === 'acknowledged' ? (
+        <Badge variant="calm">{t('alerts.acknowledged')}</Badge>
+      ) : null}
       {alert.state === 'snoozed' && alert.snoozedUntilAt ? (
         <span className="numeric text-xs text-muted-foreground">
           {t('alerts.snoozedUntil')} {formatDate(alert.snoozedUntilAt.slice(0, 10), locale)}
@@ -149,16 +256,30 @@ function AlertRow({ alert, locale }: { alert: AlertView; locale: Locale }) {
           </Link>
         ) : null}
 
+        {alert.read ? null : (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            onClick={() => void onAct(onRead)}
+          >
+            {t('alerts.bell.markRead')}
+          </Button>
+        )}
+
         <Button
-          onClick={() => void act(() => snoozeAlert({ data: { id: alert.id, days: 7 } }))}
+          size="sm"
+          variant="ghost"
           disabled={busy}
+          onClick={() => void onAct(() => snoozeAlert({ data: { id: alert.id, days: 7 } }))}
         >
           {t('alerts.snoozeDays', { count: 7 })}
         </Button>
         <Button
+          size="sm"
           variant="outline"
-          onClick={() => void act(() => acknowledgeAlert({ data: { id: alert.id } }))}
           disabled={busy || alert.state === 'acknowledged'}
+          onClick={() => void onAct(() => acknowledgeAlert({ data: { id: alert.id } }))}
         >
           {t('alerts.acknowledge')}
         </Button>

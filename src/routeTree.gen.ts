@@ -25,18 +25,21 @@ import { Route as LangAppIndexRouteImport } from './routes/$lang/app/index'
 import { Route as LangAppAbonnementRouteImport } from './routes/$lang/app/abonnement'
 import { Route as LangAppAlertesRouteImport } from './routes/$lang/app/alertes'
 import { Route as LangAppAmendesRouteImport } from './routes/$lang/app/amendes'
+import { Route as LangAppCompteRouteImport } from './routes/$lang/app/compte'
 import { Route as LangAppReglagesRouteImport } from './routes/$lang/app/reglages'
 import { Route as LangAppSuiviRouteImport } from './routes/$lang/app/suivi'
 import { Route as LangInvitationInvitationIdRouteImport } from './routes/$lang/invitation.$invitationId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as LangAppClientsIndexRouteImport } from './routes/$lang/app/clients/index'
+import { Route as LangAppClientsCustomerIdRouteImport } from './routes/$lang/app/clients/$customerId'
 import { Route as LangAppClientsNouveauRouteImport } from './routes/$lang/app/clients/nouveau'
 import { Route as LangAppContratsIndexRouteImport } from './routes/$lang/app/contrats/index'
 import { Route as LangAppContratsContractIdRouteImport } from './routes/$lang/app/contrats/$contractId'
 import { Route as LangAppContratsNouveauRouteImport } from './routes/$lang/app/contrats/nouveau'
 import { Route as LangAppVehiculesIndexRouteImport } from './routes/$lang/app/vehicules/index'
-import { Route as LangAppVehiculesVehicleIdRouteImport } from './routes/$lang/app/vehicules/$vehicleId'
 import { Route as LangAppVehiculesNouveauRouteImport } from './routes/$lang/app/vehicules/nouveau'
+import { Route as LangAppVehiculesVehicleIdIndexRouteImport } from './routes/$lang/app/vehicules/$vehicleId.index'
+import { Route as LangAppVehiculesVehicleIdModifierRouteImport } from './routes/$lang/app/vehicules/$vehicleId.modifier'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +121,11 @@ const LangAppAmendesRoute = LangAppAmendesRouteImport.update({
   path: '/amendes',
   getParentRoute: () => LangAppRoute,
 } as any)
+const LangAppCompteRoute = LangAppCompteRouteImport.update({
+  id: '/compte',
+  path: '/compte',
+  getParentRoute: () => LangAppRoute,
+} as any)
 const LangAppReglagesRoute = LangAppReglagesRouteImport.update({
   id: '/reglages',
   path: '/reglages',
@@ -144,6 +152,12 @@ const LangAppClientsIndexRoute = LangAppClientsIndexRouteImport.update({
   path: '/clients/',
   getParentRoute: () => LangAppRoute,
 } as any)
+const LangAppClientsCustomerIdRoute =
+  LangAppClientsCustomerIdRouteImport.update({
+    id: '/clients/$customerId',
+    path: '/clients/$customerId',
+    getParentRoute: () => LangAppRoute,
+  } as any)
 const LangAppClientsNouveauRoute = LangAppClientsNouveauRouteImport.update({
   id: '/clients/nouveau',
   path: '/clients/nouveau',
@@ -170,17 +184,23 @@ const LangAppVehiculesIndexRoute = LangAppVehiculesIndexRouteImport.update({
   path: '/vehicules/',
   getParentRoute: () => LangAppRoute,
 } as any)
-const LangAppVehiculesVehicleIdRoute =
-  LangAppVehiculesVehicleIdRouteImport.update({
-    id: '/vehicules/$vehicleId',
-    path: '/vehicules/$vehicleId',
-    getParentRoute: () => LangAppRoute,
-  } as any)
 const LangAppVehiculesNouveauRoute = LangAppVehiculesNouveauRouteImport.update({
   id: '/vehicules/nouveau',
   path: '/vehicules/nouveau',
   getParentRoute: () => LangAppRoute,
 } as any)
+const LangAppVehiculesVehicleIdIndexRoute =
+  LangAppVehiculesVehicleIdIndexRouteImport.update({
+    id: '/vehicules/$vehicleId/',
+    path: '/vehicules/$vehicleId/',
+    getParentRoute: () => LangAppRoute,
+  } as any)
+const LangAppVehiculesVehicleIdModifierRoute =
+  LangAppVehiculesVehicleIdModifierRouteImport.update({
+    id: '/vehicules/$vehicleId/modifier',
+    path: '/vehicules/$vehicleId/modifier',
+    getParentRoute: () => LangAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -197,20 +217,23 @@ export interface FileRoutesByFullPath {
   '/$lang/app/abonnement': typeof LangAppAbonnementRoute
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
+  '/$lang/app/compte': typeof LangAppCompteRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/$lang/admin/': typeof LangAdminIndexRoute
   '/$lang/app/': typeof LangAppIndexRoute
+  '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
   '/$lang/app/clients/nouveau': typeof LangAppClientsNouveauRoute
   '/$lang/app/contrats/$contractId': typeof LangAppContratsContractIdRoute
   '/$lang/app/contrats/nouveau': typeof LangAppContratsNouveauRoute
-  '/$lang/app/vehicules/$vehicleId': typeof LangAppVehiculesVehicleIdRoute
   '/$lang/app/vehicules/nouveau': typeof LangAppVehiculesNouveauRoute
   '/$lang/app/clients/': typeof LangAppClientsIndexRoute
   '/$lang/app/contrats/': typeof LangAppContratsIndexRoute
   '/$lang/app/vehicules/': typeof LangAppVehiculesIndexRoute
+  '/$lang/app/vehicules/$vehicleId/modifier': typeof LangAppVehiculesVehicleIdModifierRoute
+  '/$lang/app/vehicules/$vehicleId/': typeof LangAppVehiculesVehicleIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -224,20 +247,23 @@ export interface FileRoutesByTo {
   '/$lang/app/abonnement': typeof LangAppAbonnementRoute
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
+  '/$lang/app/compte': typeof LangAppCompteRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/$lang/admin': typeof LangAdminIndexRoute
   '/$lang/app': typeof LangAppIndexRoute
+  '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
   '/$lang/app/clients/nouveau': typeof LangAppClientsNouveauRoute
   '/$lang/app/contrats/$contractId': typeof LangAppContratsContractIdRoute
   '/$lang/app/contrats/nouveau': typeof LangAppContratsNouveauRoute
-  '/$lang/app/vehicules/$vehicleId': typeof LangAppVehiculesVehicleIdRoute
   '/$lang/app/vehicules/nouveau': typeof LangAppVehiculesNouveauRoute
   '/$lang/app/clients': typeof LangAppClientsIndexRoute
   '/$lang/app/contrats': typeof LangAppContratsIndexRoute
   '/$lang/app/vehicules': typeof LangAppVehiculesIndexRoute
+  '/$lang/app/vehicules/$vehicleId/modifier': typeof LangAppVehiculesVehicleIdModifierRoute
+  '/$lang/app/vehicules/$vehicleId': typeof LangAppVehiculesVehicleIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -255,20 +281,23 @@ export interface FileRoutesById {
   '/$lang/app/abonnement': typeof LangAppAbonnementRoute
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
+  '/$lang/app/compte': typeof LangAppCompteRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/$lang/admin/': typeof LangAdminIndexRoute
   '/$lang/app/': typeof LangAppIndexRoute
+  '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
   '/$lang/app/clients/nouveau': typeof LangAppClientsNouveauRoute
   '/$lang/app/contrats/$contractId': typeof LangAppContratsContractIdRoute
   '/$lang/app/contrats/nouveau': typeof LangAppContratsNouveauRoute
-  '/$lang/app/vehicules/$vehicleId': typeof LangAppVehiculesVehicleIdRoute
   '/$lang/app/vehicules/nouveau': typeof LangAppVehiculesNouveauRoute
   '/$lang/app/clients/': typeof LangAppClientsIndexRoute
   '/$lang/app/contrats/': typeof LangAppContratsIndexRoute
   '/$lang/app/vehicules/': typeof LangAppVehiculesIndexRoute
+  '/$lang/app/vehicules/$vehicleId/modifier': typeof LangAppVehiculesVehicleIdModifierRoute
+  '/$lang/app/vehicules/$vehicleId/': typeof LangAppVehiculesVehicleIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -287,20 +316,23 @@ export interface FileRouteTypes {
     | '/$lang/app/abonnement'
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
+    | '/$lang/app/compte'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
     | '/$lang/admin/'
     | '/$lang/app/'
+    | '/$lang/app/clients/$customerId'
     | '/$lang/app/clients/nouveau'
     | '/$lang/app/contrats/$contractId'
     | '/$lang/app/contrats/nouveau'
-    | '/$lang/app/vehicules/$vehicleId'
     | '/$lang/app/vehicules/nouveau'
     | '/$lang/app/clients/'
     | '/$lang/app/contrats/'
     | '/$lang/app/vehicules/'
+    | '/$lang/app/vehicules/$vehicleId/modifier'
+    | '/$lang/app/vehicules/$vehicleId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -314,20 +346,23 @@ export interface FileRouteTypes {
     | '/$lang/app/abonnement'
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
+    | '/$lang/app/compte'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
     | '/$lang/admin'
     | '/$lang/app'
+    | '/$lang/app/clients/$customerId'
     | '/$lang/app/clients/nouveau'
     | '/$lang/app/contrats/$contractId'
     | '/$lang/app/contrats/nouveau'
-    | '/$lang/app/vehicules/$vehicleId'
     | '/$lang/app/vehicules/nouveau'
     | '/$lang/app/clients'
     | '/$lang/app/contrats'
     | '/$lang/app/vehicules'
+    | '/$lang/app/vehicules/$vehicleId/modifier'
+    | '/$lang/app/vehicules/$vehicleId'
   id:
     | '__root__'
     | '/'
@@ -344,20 +379,23 @@ export interface FileRouteTypes {
     | '/$lang/app/abonnement'
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
+    | '/$lang/app/compte'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
     | '/$lang/admin/'
     | '/$lang/app/'
+    | '/$lang/app/clients/$customerId'
     | '/$lang/app/clients/nouveau'
     | '/$lang/app/contrats/$contractId'
     | '/$lang/app/contrats/nouveau'
-    | '/$lang/app/vehicules/$vehicleId'
     | '/$lang/app/vehicules/nouveau'
     | '/$lang/app/clients/'
     | '/$lang/app/contrats/'
     | '/$lang/app/vehicules/'
+    | '/$lang/app/vehicules/$vehicleId/modifier'
+    | '/$lang/app/vehicules/$vehicleId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -480,6 +518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangAppAmendesRouteImport
       parentRoute: typeof LangAppRoute
     }
+    '/$lang/app/compte': {
+      id: '/$lang/app/compte'
+      path: '/compte'
+      fullPath: '/$lang/app/compte'
+      preLoaderRoute: typeof LangAppCompteRouteImport
+      parentRoute: typeof LangAppRoute
+    }
     '/$lang/app/reglages': {
       id: '/$lang/app/reglages'
       path: '/reglages'
@@ -513,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/$lang/app/clients/'
       preLoaderRoute: typeof LangAppClientsIndexRouteImport
+      parentRoute: typeof LangAppRoute
+    }
+    '/$lang/app/clients/$customerId': {
+      id: '/$lang/app/clients/$customerId'
+      path: '/clients/$customerId'
+      fullPath: '/$lang/app/clients/$customerId'
+      preLoaderRoute: typeof LangAppClientsCustomerIdRouteImport
       parentRoute: typeof LangAppRoute
     }
     '/$lang/app/clients/nouveau': {
@@ -550,18 +602,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangAppVehiculesIndexRouteImport
       parentRoute: typeof LangAppRoute
     }
-    '/$lang/app/vehicules/$vehicleId': {
-      id: '/$lang/app/vehicules/$vehicleId'
-      path: '/vehicules/$vehicleId'
-      fullPath: '/$lang/app/vehicules/$vehicleId'
-      preLoaderRoute: typeof LangAppVehiculesVehicleIdRouteImport
-      parentRoute: typeof LangAppRoute
-    }
     '/$lang/app/vehicules/nouveau': {
       id: '/$lang/app/vehicules/nouveau'
       path: '/vehicules/nouveau'
       fullPath: '/$lang/app/vehicules/nouveau'
       preLoaderRoute: typeof LangAppVehiculesNouveauRouteImport
+      parentRoute: typeof LangAppRoute
+    }
+    '/$lang/app/vehicules/$vehicleId/': {
+      id: '/$lang/app/vehicules/$vehicleId/'
+      path: '/vehicules/$vehicleId'
+      fullPath: '/$lang/app/vehicules/$vehicleId/'
+      preLoaderRoute: typeof LangAppVehiculesVehicleIdIndexRouteImport
+      parentRoute: typeof LangAppRoute
+    }
+    '/$lang/app/vehicules/$vehicleId/modifier': {
+      id: '/$lang/app/vehicules/$vehicleId/modifier'
+      path: '/vehicules/$vehicleId/modifier'
+      fullPath: '/$lang/app/vehicules/$vehicleId/modifier'
+      preLoaderRoute: typeof LangAppVehiculesVehicleIdModifierRouteImport
       parentRoute: typeof LangAppRoute
     }
   }
@@ -587,34 +646,41 @@ interface LangAppRouteChildren {
   LangAppAbonnementRoute: typeof LangAppAbonnementRoute
   LangAppAlertesRoute: typeof LangAppAlertesRoute
   LangAppAmendesRoute: typeof LangAppAmendesRoute
+  LangAppCompteRoute: typeof LangAppCompteRoute
   LangAppReglagesRoute: typeof LangAppReglagesRoute
   LangAppSuiviRoute: typeof LangAppSuiviRoute
   LangAppIndexRoute: typeof LangAppIndexRoute
+  LangAppClientsCustomerIdRoute: typeof LangAppClientsCustomerIdRoute
   LangAppClientsNouveauRoute: typeof LangAppClientsNouveauRoute
   LangAppContratsContractIdRoute: typeof LangAppContratsContractIdRoute
   LangAppContratsNouveauRoute: typeof LangAppContratsNouveauRoute
-  LangAppVehiculesVehicleIdRoute: typeof LangAppVehiculesVehicleIdRoute
   LangAppVehiculesNouveauRoute: typeof LangAppVehiculesNouveauRoute
   LangAppClientsIndexRoute: typeof LangAppClientsIndexRoute
   LangAppContratsIndexRoute: typeof LangAppContratsIndexRoute
   LangAppVehiculesIndexRoute: typeof LangAppVehiculesIndexRoute
+  LangAppVehiculesVehicleIdModifierRoute: typeof LangAppVehiculesVehicleIdModifierRoute
+  LangAppVehiculesVehicleIdIndexRoute: typeof LangAppVehiculesVehicleIdIndexRoute
 }
 
 const LangAppRouteChildren: LangAppRouteChildren = {
   LangAppAbonnementRoute: LangAppAbonnementRoute,
   LangAppAlertesRoute: LangAppAlertesRoute,
   LangAppAmendesRoute: LangAppAmendesRoute,
+  LangAppCompteRoute: LangAppCompteRoute,
   LangAppReglagesRoute: LangAppReglagesRoute,
   LangAppSuiviRoute: LangAppSuiviRoute,
   LangAppIndexRoute: LangAppIndexRoute,
+  LangAppClientsCustomerIdRoute: LangAppClientsCustomerIdRoute,
   LangAppClientsNouveauRoute: LangAppClientsNouveauRoute,
   LangAppContratsContractIdRoute: LangAppContratsContractIdRoute,
   LangAppContratsNouveauRoute: LangAppContratsNouveauRoute,
-  LangAppVehiculesVehicleIdRoute: LangAppVehiculesVehicleIdRoute,
   LangAppVehiculesNouveauRoute: LangAppVehiculesNouveauRoute,
   LangAppClientsIndexRoute: LangAppClientsIndexRoute,
   LangAppContratsIndexRoute: LangAppContratsIndexRoute,
   LangAppVehiculesIndexRoute: LangAppVehiculesIndexRoute,
+  LangAppVehiculesVehicleIdModifierRoute:
+    LangAppVehiculesVehicleIdModifierRoute,
+  LangAppVehiculesVehicleIdIndexRoute: LangAppVehiculesVehicleIdIndexRoute,
 }
 
 const LangAppRouteWithChildren =

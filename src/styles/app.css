@@ -154,6 +154,49 @@
   }
 
   /*
+   * Cases et radios NATIFS, au bleu du thème.
+   *
+   * `accent-color` est la seule façon de teinter un contrôle natif sans le
+   * redessiner — et le redessiner en `<div>` coûte la navigation clavier, le mode
+   * contrasté du système et le comportement d'un vrai `<input>`. Une ligne ici
+   * remplace un composant.
+   */
+  input[type='checkbox'],
+  input[type='radio'],
+  progress,
+  ::marker {
+    accent-color: var(--primary);
+  }
+
+  /*
+   * REMPLISSAGE AUTOMATIQUE — le jaune de Chrome, retiré.
+   *
+   * Un champ rempli par le gestionnaire de mots de passe repasse en jaune pâle avec
+   * une encre noire, quel que soit le thème : sur l'écran de connexion, deux champs
+   * sur trois cessaient d'appartenir au formulaire, et en thème sombre ils devenaient
+   * illisibles. Le fond ne s'écrase pas (Chrome l'ignore) — on le recouvre d'une ombre
+   * interne opaque, qui est le seul levier que le navigateur laisse.
+   */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  textarea:-webkit-autofill {
+    -webkit-text-fill-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 3rem var(--card) inset;
+    caret-color: var(--foreground);
+  }
+
+  /*
+   * Le recours habituel à cet endroit est un `transition: background-color 100000s`,
+   * qui repousse le fond jaune hors de la durée de vie de la page. Il est écarté ici,
+   * et pour une raison mesurée : il fige AUSSI le changement de thème. Un champ rempli
+   * automatiquement gardait son fond clair après un passage en sombre, pendant les
+   * vingt-sept heures suivantes. L'ombre interne ci-dessus recouvre le jaune sans rien
+   * geler.
+   */
+
+  /*
    * Chiffres, plaques, montants : toujours tabulaires. Une colonne de montants
    * s'aligne sans changer de voix au milieu d'un tableau.
    */
@@ -373,6 +416,107 @@
   }
 }
 
+/*
+ * APPARITION AU DÉFILEMENT — la seule animation de la vitrine.
+ *
+ * Trois contraintes la dessinent, et aucune n'est décorative :
+ *
+ *  1. **`opacity` et `transform` uniquement.** Ce sont les deux seules propriétés que
+ *     le navigateur compose sans repasser par la mise en page. Animer une hauteur ou
+ *     une marge fait recalculer le document à chaque image, et sur le téléphone d'un
+ *     loueur ça se voit immédiatement.
+ *  2. **Le déplacement est VERTICAL.** Un glissement latéral devrait être écrit deux
+ *     fois — une par sens de lecture — comme les tiroirs plus haut. Douze pixels vers
+ *     le haut disent la même chose et se lisent pareil en arabe.
+ *  3. **Le contenu est visible si rien ne s'exécute.** L'état caché n'est posé que par
+ *     `data-reveal`, et le `<noscript>` du document racine l'annule. Une vitrine dont
+ *     le texte reste invisible parce qu'un script a échoué ne vend rien.
+ */
+@layer utilities {
+  [data-reveal] {
+    opacity: 0;
+    /* 12px : assez pour que l'œil perçoive une arrivée, trop peu pour qu'on attende. */
+    transform: translateY(12px);
+    will-change: opacity, transform;
+  }
+
+  [data-reveal='shown'] {
+    opacity: 1;
+    transform: none;
+    /*
+     * `--reveal-delay` porte l'ÉCHELONNEMENT d'une grille : 40 ms par carte, posés en
+     * ligne par le composant. Au-delà de la sixième, le délai est plafonné — sinon la
+     * dernière carte d'une grille de neuf arrive une demi-seconde après la première,
+     * et on regarde la page se construire au lieu de la lire.
+     */
+    transition:
+      opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /*
+   * Le repos de l'animation, une fois jouée : `will-change` relâché.
+   * Le laisser posé garde une couche de composition par élément révélé — sur une page
+   * qui en compte trente, c'est de la mémoire vidéo retenue pour rien.
+   */
+  [data-reveal='shown'] {
+    will-change: auto;
+  }
+
+  /*
+   * MOUVEMENT RÉDUIT — le contenu est simplement LÀ.
+   *
+   * La règle globale plus bas ramène toutes les durées à 0,01 ms, ce qui ne suffit
+   * pas ici : un élément resté en `data-reveal="pending"` garderait `opacity: 0` pour
+   * toujours si l'observateur ne l'atteint jamais. On neutralise donc l'état caché
+   * lui-même, pas seulement sa transition.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/*
+ * BARRE D'ACTION DU TÉLÉPHONE — collée en bas, au-dessus du geste système.
+ *
+ * `env(safe-area-inset-bottom)` est ce qui la sépare de la barre de gestes de l'iPhone.
+ * Sans lui, le bouton se retrouve sous le trait blanc : on le vise, on renvoie
+ * l'application à l'arrière-plan. La marge est ajoutée à un fond de 8px, jamais à la
+ * place — sur un appareil sans encoche, `env()` vaut zéro.
+ */
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /*
+   * La page doit se terminer AU-DESSUS de la barre, sinon la barre couvre le dernier
+   * champ du formulaire — celui du bouton d'envoi, exactement celui qu'on cherche.
+   *
+   * La BORNE EST ÉCRITE ICI plutôt que d'être annulée par un `sm:pb-0` dans le JSX, et
+   * c'est le même piège que celui des utilitaires d'impression : `.pb-action-bar` et
+   * `sm:pb-0` ont exactement la même spécificité, et cette feuille est importée APRÈS
+   * Tailwind. C'est donc la classe maison qui l'emporterait — silencieusement, et
+   * seulement au-dessus de 640 px, là où personne ne pense à regarder une barre qui
+   * n'existe plus.
+   */
+  .pb-action-bar {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 40rem = la borne `sm` de Tailwind, celle du `sm:hidden` porté par la barre. */
+  @media (min-width: 40rem) {
+    .pb-action-bar {
+      padding-bottom: 0;
+    }
+  }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -401,5 +545,89 @@
   select,
   textarea {
     font-size: 1rem;
+  }
+}
+
+/*
+ * MISE EN PAGE D'IMPRESSION.
+ *
+ * Hors de toute couche, comme la règle des 16 px : ces déclarations doivent
+ * l'emporter sur les utilitaires Tailwind sans avoir à surenchérir en spécificité.
+ *
+ * Ce que la feuille corrige, dans l'ordre où ça se voit sur un tirage raté :
+ *  - la coupure au milieu d'une ligne de tableau ou d'une carte, qui rend une
+ *    échéance illisible à cheval sur deux pages ;
+ *  - l'en-tête de tableau perdu dès la deuxième page ;
+ *  - le `overflow-x: hidden` du corps, garde-fou du téléphone, qui TRONQUE à
+ *    l'impression au lieu de laisser la page se répartir ;
+ *  - les aplats de couleur, que les navigateurs suppriment par défaut : un cachet
+ *    « expiré » qui s'imprime blanc sur blanc ne dit plus rien.
+ */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /*
+   * CE QUI APPARTIENT À L'APPLICATION, ET CE QUI APPARTIENT AU DOCUMENT.
+   *
+   * Deux attributs plutôt que les variantes `print:hidden` / `print:block` de
+   * Tailwind, et la raison est de robustesse, pas de goût : ces utilitaires n'ont
+   * aucune spécificité de plus que ceux qu'ils doivent battre (`lg:flex` sur la barre
+   * latérale, `inline-flex` sur un bouton, `hidden` sur l'en-tête papier). Qui
+   * l'emporte dépend alors de l'ORDRE dans lequel Tailwind a écrit ses variantes —
+   * un détail d'implémentation, invisible en développement, et qui ne se découvre
+   * qu'en tenant une feuille dans la main.
+   *
+   * `!important` est ici l'outil juste : ces deux règles ne décrivent pas un style,
+   * elles décrivent une APPARTENANCE, et rien ne doit pouvoir les contredire.
+   */
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  [data-print='only'] {
+    display: block !important;
+  }
+
+  /* La gouttière et la largeur de lecture sont un confort d'écran. */
+  #content {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  html,
+  body {
+    overflow-x: visible;
+  }
+
+  /* Les fonds des cachets de sévérité doivent survivre au tirage. */
+  [data-slot='badge'],
+  [data-slot='alert'] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  tr,
+  li,
+  [data-slot='card'] {
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  /* Une zone qui défile à l'écran doit se déplier sur le papier. */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    overflow: visible !important;
+    max-height: none !important;
   }
 }

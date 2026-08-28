@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { LeadInput } from '~/core/schemas/lead'
 import type { Db } from '~/db/client'
 import { leadRepository } from '~/db/repositories/leads'
+import { leadAckMessage } from './emails/lead-ack'
 import { getNotifier } from './notifier'
 
 /**
@@ -102,6 +103,27 @@ export async function recordLead(
       })
       .catch(() => {
         // Le prospect est en base ; l'échec d'envoi ne doit rien interrompre.
+      })
+  }
+
+  /*
+   * ACCUSÉ DE RÉCEPTION au prospect — dans SA langue.
+   *
+   * Il n'existe que si une adresse a été laissée, et l'adresse est facultative : la
+   * moitié des gérants ne communiquent qu'au téléphone. Pas d'adresse, pas de
+   * courriel, et c'est un comportement correct — le rappel reste la promesse
+   * principale, l'écran de confirmation l'a déjà annoncée.
+   *
+   * Hors du chemin de réponse, comme l'avertissement ci-dessus, et pour la même
+   * raison : un prospect enregistré est acquis, et un serveur de courriel injoignable
+   * ne doit pas transformer une demande réussie en erreur à l'écran.
+   */
+  if (lead.email) {
+    const ack = leadAckMessage(input.locale, lead.name)
+    void getNotifier()
+      .send({ to: lead.email, locale: input.locale, subject: ack.subject, body: ack.body })
+      .catch(() => {
+        // Idem : l'accusé de réception est un confort, pas la demande elle-même.
       })
   }
 

@@ -8,11 +8,11 @@
  * auraient fini par diverger, et la démo se serait mise à différer selon l'heure.
  */
 
-import { createDb, resolveDatabaseFile } from '~/db/client'
+import { closeDb, createDb, resolveDatabaseUrl } from '~/db/client'
 import { resetAllDemoOrganizations } from '~/server/demo/reset'
 import { businessCivilDate } from '~/i18n/format'
 
-const db = createDb(resolveDatabaseFile())
+const db = createDb(resolveDatabaseUrl())
 const today = businessCivilDate(new Date())
 const result = await resetAllDemoOrganizations(db, today)
 
@@ -21,3 +21,6 @@ if (result.organizations === 0) {
 } else {
   console.log(`${result.organizations} espace(s) réinitialisé(s) au ${today}.`)
 }
+
+// Sans ça le pool postgres-js garde ses sockets et le script ne rend jamais la main.
+await closeDb(db)

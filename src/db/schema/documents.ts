@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { aliveOnly, bool, cents, civilDate, orgColumns } from './_shared'
 
@@ -13,7 +13,7 @@ import { aliveOnly, bool, cents, civilDate, orgColumns } from './_shared'
  *    d'année : c'est une campagne, pas une échéance individuelle.
  */
 
-export const insurancePolicies = sqliteTable(
+export const insurancePolicies = pgTable(
   'insurance_policies',
   {
     ...orgColumns,
@@ -35,7 +35,7 @@ export const insurancePolicies = sqliteTable(
   ],
 )
 
-export const technicalInspections = sqliteTable(
+export const technicalInspections = pgTable(
   'technical_inspections',
   {
     ...orgColumns,
@@ -62,7 +62,7 @@ export const technicalInspections = sqliteTable(
 )
 
 /** Vignette (TSAVA) — une ligne par véhicule et par année civile. Voir É3. */
-export const roadTaxes = sqliteTable(
+export const roadTaxes = pgTable(
   'road_taxes',
   {
     ...orgColumns,
@@ -80,7 +80,7 @@ export const roadTaxes = sqliteTable(
 )
 
 /** Carte grise — document PERMANENT au Maroc : pas d'`expires_on`, pas d'alerte. É1. */
-export const registrationDocs = sqliteTable(
+export const registrationDocs = pgTable(
   'registration_docs',
   {
     ...orgColumns,
@@ -100,7 +100,7 @@ export const registrationDocs = sqliteTable(
  * et, le cas échéant, la carte de transport. Leur expiration ferme l'agence — c'est
  * là que les alertes J-60/J-30/J-7 ont un sens, pas sur la carte grise.
  */
-export const permits = sqliteTable(
+export const permits = pgTable(
   'permits',
   {
     ...orgColumns,

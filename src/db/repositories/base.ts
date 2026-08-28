@@ -1,5 +1,5 @@
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm'
-import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
+import type { PgColumn, PgTable } from 'drizzle-orm/pg-core'
 
 import type { Db } from '../client'
 import { nowIso } from '../schema/_shared'
@@ -13,15 +13,16 @@ import { assertCanWrite, withTenant, type TenantContext } from '../tenant'
  * il n'existe donc aucun chemin d'appel capable de l'omettre — ce n'est pas une
  * convention que l'on peut oublier, c'est une signature qui n'existe pas.
  *
- * Tant qu'on est sur SQLite, c'est la SEULE barrière (pas de RLS). Voir
+ * Tant que le RLS n'est pas écrit, c'est la SEULE barrière — et elle le reste même
+ * après, parce que le service_role de Supabase le contourne par conception. Voir
  * docs/DECISIONS.md §4 et §6, et tests/unit/tenant-isolation.test.ts.
  */
 
 /** Toute table métier expose ces trois colonnes — c'est la charte. */
-export type OrgScopedTable = SQLiteTable & {
-  id: SQLiteColumn
-  orgId: SQLiteColumn
-  deletedAt: SQLiteColumn
+export type OrgScopedTable = PgTable & {
+  id: PgColumn
+  orgId: PgColumn
+  deletedAt: PgColumn
 }
 
 export interface OrgRepository<TRow> {

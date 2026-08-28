@@ -8,6 +8,7 @@ commentaires explicatifs, qui sont en français comme le reste du projet.
 ```
 pnpm dev          pnpm build          pnpm start
 pnpm typecheck    pnpm lint           pnpm test
+pnpm db:local     (Postgres local, sans Docker — le laisser tourner)
 pnpm db:generate  pnpm db:migrate     pnpm db:studio
 pnpm check:tokens (contrastes)        pnpm check:hardcoded (chaînes, RTL, ombres, cloisonnement)
 pnpm check:budget (poids du paquet client, après `pnpm build`)
@@ -17,11 +18,23 @@ pnpm seed         pnpm demo:reset     (espaces de démonstration)
 Aucun script n'est déclaré tant qu'il n'existe pas. `test:e2e` reste à venir : aucun
 parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien du projet.
 
-## Les 8 règles de portabilité (SQLite en dev → Postgres en prod)
+## Base : Postgres partout (Supabase)
 
-1. Clé primaire `text` UUID v4 généré par l'application. Jamais d'AUTOINCREMENT.
+Il n'y a plus de SQLite depuis le 28/08/2026. `pnpm dev` exige un vrai Postgres :
+`pnpm db:local` en fournit un sur `127.0.0.1:5433` sans Docker ni installation (PGlite
+derrière une prise TCP), avec **`DATABASE_POOL_MAX=1` obligatoire** — il ne sert qu'une
+connexion à la fois. Les tests, eux, montent leur propre Postgres en mémoire.
+
+Deux chaînes de connexion, et elles ne sont PAS interchangeables : `DATABASE_URL` passe
+par le pooler Supabase (6543, mode transaction) et sert l'application ; `DIRECT_URL`
+passe en direct (5432) et ne sert QU'aux migrations — un pooler qui rend la connexion
+entre deux ordres laisse une migration appliquée à moitié. Déploiement : `docs/DEPLOY.md`.
+
+## Les 8 règles de portabilité, qui ont permis la bascule
+
+1. Clé primaire `text` UUID v4 généré par l'application. Jamais de séquence.
 2. Dates : `text` ISO 8601 UTC (`*_at`) ou date civile `YYYY-MM-DD` (`*_on`).
-3. Booléens : `integer` 0/1, exposés via `mode: 'boolean'`.
+3. Booléens : `boolean` natif. (C'était `integer` 0/1 du temps de SQLite.)
 4. Argent : **entiers en centimes** + `currency` par ligne. Jamais de flottant.
 5. Enums : `text` + Zod. JSON : `text` sérialisé, parsé par Zod au bord.
 6. Aucun SQL brut hors migrations et hors `aliveOnly` (index partiels).
@@ -54,13 +67,45 @@ parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien d
   barre. Les objets du MÉTIER restent dessinés à la main dans `src/ui/icons/` : voiture, clé,
   bidon d'huile, plaque.
 - **Aucun `Intl` direct** : tout passe par `src/i18n/format.ts` (locale `ar-MA`, jamais `ar`).
-- **Le thème est celui de shadcn/ui**, réécrit de zéro le 27/08/2026 : `--background`,
+- **Les noms de jetons sont ceux de shadcn/ui**, les valeurs sont celles du produit : **bleu et
+  blanc**, une seule teinte 250–262 en OKLCH qui traverse aussi les gris. `--background`,
   `--foreground`, `--card`, `--primary`, `--muted`, `--border`, `--ring`, plus `--warning` et
   `--success` que shadcn ne livre pas et dont un loueur a besoin. Couleurs uniquement par jeton de
   RÔLE, jamais littérales, et jamais ailleurs que dans `src/styles/tokens.css`.
-- **Les cibles font 44 px** (`--tap-target`). Ce n'est pas du style : l'écran principal du produit
-  est un téléphone posé sur un comptoir. shadcn dessine ses contrôles à 36 px ; on ne le suit pas
-  là-dessus.
+- **Les cibles font 44 px** (`--tap-target`) : boutons, lignes cliquables, onglets, navigation.
+  Ce n'est pas du style — l'écran principal du produit est un téléphone posé sur un comptoir.
+- **Les champs font `--control-h`** : 40 px à la souris, 44 px sur pointeur grossier. Quatorze
+  champs à 44 px font deux écrans. Les boutons lisent le même jeton, pour tomber au pixel sur la
+  hauteur du champ d'à côté.
+- **Un contrôle ne se dessine qu'à un seul endroit** : `CONTROL` dans `src/ui/shadcn/field.tsx`.
+  `src/ui/forms/fields.tsx` l'habille, le combobox l'importe par `controlClass()`, les écrans
+  n'écrivent aucune classe de champ. Il y avait quatre copies divergentes avant le 27/08/2026.
+- **Au-delà de huit champs, le formulaire passe en ÉTAPES** (`src/ui/forms/steps.tsx`). Les étapes
+  restent MONTÉES, cachées en CSS : `new FormData(form)` ramasse tout, revenir en arrière ne perd
+  rien, et le `noValidate` posé par `formProps` est obligatoire — un champ `required` invisible
+  fait échouer la soumission sans aucun message. La validation se fait étape par étape, pendant
+  que l'étape est visible.
+- **Trois à quatre réponses à comparer = `ChoiceGroup`**, pas un `<select>` (`src/ui/forms/
+  choice-group.tsx`). Ce sont de vrais boutons radio, cachés : le clavier, le groupement et
+  `required` viennent du navigateur, l'état coché se lit en CSS.
+- **L'impression se pilote par `data-print`**, jamais par `print:hidden` / `print:block`. Ces
+  utilitaires n'ont aucune spécificité de plus que ceux qu'ils doivent battre (`lg:flex` sur la
+  barre latérale, `inline-flex` sur un bouton) : qui gagne dépend de l'ordre des variantes
+  Tailwind, et ça ne se découvre qu'une feuille à la main. `data-print="hide"` pour ce qui
+  appartient à l'application, `data-print="only"` pour ce qui n'existe que sur le papier ; les
+  deux règles sont dans `@media print` d'`app.css`, en `!important` assumé.
+- **« Lu » n'est pas « traité ».** La PASTILLE de la rubrique « Alertes » compte les alertes
+  ACTIVES et NON LUES par la personne connectée (`alert_reads`, une ligne par alerte et par
+  utilisateur). `acknowledged` est un acte métier partagé par l'agence ; les câbler ensemble ferait
+  de « tout marquer comme lu » une déclaration que huit échéances sont réglées.
+- **Un seul centre de notifications**, la page `/alertes`. Il y a eu une cloche séparée dans
+  l'en-tête pendant une demi-journée : deux portes vers le même sujet obligent à choisir laquelle
+  regarder, et la moitié des gestes se font au mauvais endroit. Le sondage vit dans la coquille
+  (`useNotifications`, une minute) et descend par contexte.
+- **L'offre ne se change pas en libre-service.** Le client DÉPOSE une demande motivée
+  (`plan_change_requests`), la plateforme tranche depuis `/admin`. C'est le seul chemin qui écrit
+  `organizations.plan_code` après la création d'une agence — donc le seul qui garantisse qu'un
+  changement d'offre laisse un motif et un auteur.
 - `pnpm check:tokens` mesure les contrastes réels dans les deux thèmes. Il a d'ailleurs attrapé
   deux valeurs par défaut de shadcn qui échouent en clair — `--muted-foreground` et `--input` —,
   foncées ici pour tenir WCAG.
@@ -75,5 +120,6 @@ parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien d
 ## Où lire le reste
 
 `docs/DECISIONS.md` (choix et écarts, avec sources datées) · `docs/DOMAIN.md` (modèle et invariants)
-· `docs/DESIGN.md` (direction artistique et jetons) · `docs/AUDIT.md` (auto-évaluations de phase).
+· `docs/DESIGN.md` (direction artistique et jetons) · `docs/DEPLOY.md` (Supabase et Lightsail)
+· `docs/AUDIT.md` (auto-évaluations de phase).
 Les procédures détaillées sont dans `.claude/skills/`.

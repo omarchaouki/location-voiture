@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { integer, text } from 'drizzle-orm/sqlite-core'
+import { boolean, integer, text } from 'drizzle-orm/pg-core'
 
 /**
  * Colonnes communes à toutes les tables — la charte de portabilité rendue exécutable.
@@ -15,14 +15,33 @@ export const id = () =>
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID())
 
-/** Instant ISO 8601 UTC (`2026-08-22T09:15:00.000Z`). */
+/**
+ * Instant ISO 8601 UTC (`2026-08-22T09:15:00.000Z`), stocké en `text`.
+ *
+ * Postgres a un `timestamptz` natif, et on ne s'en sert PAS pour les tables métier.
+ * Ce n'est pas de la timidité : tout le produit compare et trie ces instants comme des
+ * chaînes, et `businessCivilDate()` les découpe à la main pour tenir compte du passage
+ * du Maroc à UTC+0 pendant le Ramadan. Changer de type ferait remonter des `Date` là où
+ * le code attend des chaînes, dans les 54 tables d'un coup, pour un gain nul.
+ *
+ * Les chaînes sont normalisées en `Z` avec millisecondes : le tri lexicographique est
+ * alors exactement le tri chronologique.
+ */
 export const timestamp = (name: string) => text(name)
 
 /** Date civile `YYYY-MM-DD` : une échéance administrative n'a pas d'heure. */
 export const civilDate = (name: string) => text(name)
 
-/** Booléen : `integer` 0/1, exposé en `boolean` par src/db/mappers. */
-export const bool = (name: string) => integer(name, { mode: 'boolean' })
+/**
+ * Booléen — `boolean` NATIF, et c'est l'un des deux seuls changements de type de la
+ * bascule Postgres (28/08/2026).
+ *
+ * En SQLite c'était un `integer` 0/1 exposé en booléen par Drizzle, faute de type
+ * dédié. Postgres en a un ; garder l'entier serait porter une prothèse qui n'a plus de
+ * jambe cassée à soutenir. Côté application le type TypeScript est identique : aucun
+ * appelant ne change.
+ */
+export const bool = (name: string) => boolean(name)
 
 /** Argent : entier en centimes. Jamais de flottant, jamais de `real`. */
 export const cents = (name: string) => integer(name)
@@ -46,7 +65,8 @@ export const timestamps = {
  *
  * Pas de contrainte de clé étrangère déclarée ici pour éviter une dépendance
  * circulaire entre modules de schéma ; l'intégrité est garantie par la couche
- * repository (aucune écriture sans `orgId` valide) puis, en Postgres, par le RLS.
+ * repository (aucune écriture sans `orgId` valide) puis, quand il sera écrit, par le
+ * RLS — qui reste à faire.
  */
 export const orgId = () => text('org_id').notNull()
 
@@ -68,6 +88,6 @@ export const platformColumns = {
  * Une plaque libérée par un véhicule vendu doit pouvoir être ressaisie.
  *
  * SQLite et Postgres ont ici la même sémantique — c'est le seul fragment SQL du
- * schéma, isolé pour rester relisible au moment de la bascule.
+ * schéma, et il a traversé la bascule sans une modification.
  */
 export const aliveOnly = sql`deleted_at is null`

@@ -109,13 +109,67 @@ export const createCustomer = createServerFn({ method: 'POST' })
     return { id: created.id }
   })
 
+/** Levée quand une correction viderait l'identité affichable du client. */
+export class CustomerNameRequiredError extends Error {
+  constructor() {
+    super('customer.nameRequired')
+    this.name = 'CustomerNameRequiredError'
+  }
+}
+
 export const updateCustomer = createServerFn({ method: 'POST' })
   .middleware([writableTenantMiddleware])
   .validator(UpdateCustomerInput)
   .handler(async ({ data, context }) => {
+    const tenant = context.tenant
     const { id, ...rest } = data
-    const updated = await customerRepository(getDb(), context.tenant).update(id, rest)
+    const repository = customerRepository(getDb(), tenant)
+
+    const before = await repository.findById(id)
+    // Client d'une autre organisation : introuvable, jamais « interdit ».
+    if (!before) throw notFound()
+
+    /*
+     * L'INVARIANT D'IDENTITÉ, vérifié sur l'état FUSIONNÉ.
+     *
+     * `CreateCustomerInput` le porte par un `refine` ; la correction ne peut pas, parce
+     * que chaque champ y est facultatif et qu'un champ absent veut dire « inchangé ».
+     * On reconstitue donc la ligne telle qu'elle sera, et on refuse si elle n'a plus de
+     * nom — un client sans identité affichable apparaît en blanc dans toutes les listes
+     * et dans tous les contrats déjà signés.
+     */
+    const merged: CustomerRow = {
+      ...before,
+      // Un champ ABSENT de la correction veut dire « inchangé », jamais « vidé ».
+      // `?? before` est donc la fusion correcte, et `{ ...before, ...rest }` ne l'est
+      // pas : il écraserait avec `undefined` les champs que le formulaire n'envoie pas.
+      kind: rest.kind ?? before.kind,
+      firstName: rest.firstName ?? before.firstName,
+      lastName: rest.lastName ?? before.lastName,
+      companyName: rest.companyName ?? before.companyName,
+    }
+
+    const hasIdentity =
+      merged.kind === 'company'
+        ? Boolean(merged.companyName)
+        : Boolean(merged.firstName ?? merged.lastName)
+    if (!hasIdentity) throw new CustomerNameRequiredError()
+
+    const updated = await repository.update(id, rest)
     if (!updated) throw notFound()
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'customer.update',
+      entityType: 'customer',
+      entityId: id,
+      before: { label: repository.label(before), phone: before.phone },
+      after: { label: repository.label(merged), phone: rest.phone ?? before.phone },
+      request: { ip: getRequestIP() ?? null },
+    })
+
     return { id }
   })
 

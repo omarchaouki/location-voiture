@@ -10,6 +10,7 @@ import { getDb, type Db } from '~/db/client'
 import * as schema from '~/db/schema'
 import { invitations } from '~/db/schema/auth'
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
+import { getNotifier } from '~/server/notifier'
 import { ac, PLATFORM_OWNER, platformAc, platformRoles, roles } from './permissions'
 
 /**
@@ -88,7 +89,7 @@ export function createAuth(db: Db, options: AuthOptions = {}) {
     secret: process.env['AUTH_SECRET'] ?? 'dev-only-secret-change-me',
 
     database: drizzleAdapter(db, {
-      provider: 'sqlite',
+      provider: 'pg',
       schema,
       // `user` → `users`, `organization` → `organizations`, etc.
       usePlural: true,
@@ -98,6 +99,52 @@ export function createAuth(db: Db, options: AuthOptions = {}) {
       enabled: true,
       minPasswordLength: 10,
       autoSignIn: true,
+    },
+
+    user: {
+      /**
+       * CHANGEMENT D'ADRESSE — validé depuis l'ANCIENNE.
+       *
+       * L'adresse est l'identifiant de connexion : la laisser changer sans preuve
+       * ferait d'un poste laissé déverrouillé une prise de compte définitive, puisque
+       * la victime ne pourrait même plus demander un mot de passe oublié.
+       *
+       * Better Auth envoie donc un lien de confirmation à l'adresse ACTUELLE, et
+       * n'écrit la nouvelle qu'une fois ce lien suivi. C'est le bon sens : celui qui
+       * contrôle l'ancienne boîte est le propriétaire du compte, celui qui est assis
+       * devant l'écran ne l'est pas forcément.
+       *
+       * Le message part par le `Notifier` du produit — console en développement,
+       * Resend en production. Aucune partie du code ne connaît le prestataire.
+       */
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailVerification: async ({
+          user,
+          newEmail,
+          url,
+        }: {
+          user: { email: string }
+          newEmail: string
+          url: string
+        }) => {
+          await getNotifier().send({
+            to: user.email,
+            locale: DEFAULT_LOCALE,
+            subject: 'Confirmez le changement d’adresse',
+            body: [
+              `Une demande de changement d'adresse a été faite sur votre compte Flotta.`,
+              '',
+              `Nouvelle adresse demandée : ${newEmail}`,
+              '',
+              'Si vous êtes à l’origine de cette demande, confirmez-la ici :',
+              url,
+              '',
+              "Si ce n'est pas vous, ignorez ce message : rien ne changera.",
+            ].join('\n'),
+          })
+        },
+      },
     },
 
     hooks: {
@@ -192,8 +239,17 @@ export function createAuth(db: Db, options: AuthOptions = {}) {
            * `is_demo` existait, s'affichait dans un cachet à l'écran, et n'empêchait
            * rien du tout.
            */
-          const { notifyForOrganizationWithDefaultDb } = await import('~/server/demo/locks')
-          await notifyForOrganizationWithDefaultDb(data.organization.id, {
+          /*
+           * `db` — celui de CETTE instance d'authentification — et non une connexion
+           * par défaut. La variante `…WithDefaultDb` appelait `getDb()`, donc une
+           * AUTRE base que celle qui venait d'écrire l'invitation. SQLite ne s'en
+           * plaignait pas : il ouvrait simplement un second fichier, l'organisation
+           * n'y existait pas, et l'envoi était abandonné en silence. Postgres, lui,
+           * refuse net faute de `DATABASE_URL` — et c'est ce refus qui a montré le
+           * défaut, resté invisible pendant toute la vie du projet.
+           */
+          const { notifyForOrganization } = await import('~/server/demo/locks')
+          await notifyForOrganization(db, data.organization.id, {
             to: data.email,
             locale,
             subject: `Invitation — ${data.organization.name}`,
