@@ -8,6 +8,7 @@ import { formatMoney, formatNumber } from '~/i18n/format'
 import type { Locale } from '~/i18n/locales'
 import type { PublicPlan } from '~/server/pricing'
 import { signUpAgency } from '~/server/signup'
+import { trackLead } from '~/ui/analytics/meta-pixel'
 import { ChoiceGroup } from '~/ui/forms/choice-group'
 import { CityCombobox } from '~/ui/forms/city-combobox'
 import { Field } from '~/ui/forms/fields'
@@ -77,6 +78,20 @@ export function RegisterForm({
         setRefusal(result.reason)
         return
       }
+
+      /*
+       * LE PROSPECT EST COMPTÉ ICI, et pas ailleurs.
+       *
+       * Ni à la soumission du formulaire — un refus pour adresse déjà prise compterait
+       * une conversion qui n'existe pas —, ni à l'arrivée sur `/app`, qui se visite
+       * ensuite à chaque connexion. Ce point-ci est le seul du produit qu'on ne
+       * traverse qu'une fois par agence créée.
+       *
+       * Avant `navigate`, aussi : la navigation démonte cet arbre, et `fbq` ne
+       * retiendrait pas un appel émis pendant son démontage.
+       */
+      trackLead()
+
       /*
        * Les cookies de session sont posés par la réponse de la server function : à cet
        * instant la personne est déjà connectée, et `/app` s'ouvre sur son espace.
