@@ -28,8 +28,9 @@ export interface LeadAckMessage {
 }
 
 /**
- * `Record<Locale, …>` et non un objet libre : ajouter une quatrième langue au produit
- * fera échouer la COMPILATION de ce fichier tant que son gabarit manque. C'est le
+ * `Record<Locale, …>` et non un objet libre : ajouter une langue au produit fera
+ * échouer la COMPILATION de ce fichier tant que son gabarit manque. C'est arrivé le
+ * 29/08/2026 avec l'espagnol, et c'est exactement ce qu'on attendait de lui. C'est le
  * remplaçant du test de parité, pour du texte que le navigateur ne verra jamais.
  */
 const TEMPLATES: Record<Locale, (name: string) => LeadAckMessage> = {
@@ -62,6 +63,22 @@ const TEMPLATES: Record<Locale, (name: string) => LeadAckMessage> = {
       '',
       'إلى اللقاء،',
       'فريق Flotta',
+    ].join('\n'),
+  }),
+
+  es: (name) => ({
+    subject: 'Su solicitud de demostración de Flotta',
+    body: [
+      `Hola ${name}:`,
+      '',
+      'Hemos recibido su solicitud y le llamaremos en un plazo de un día laborable.',
+      '',
+      'La llamada dura unos quince minutos: usted nos describe su flota, nosotros le mostramos Flotta con datos parecidos a los suyos, y abrimos su espacio si le conviene.',
+      '',
+      'Si prefiere que le llamemos a una hora concreta, basta con que responda a este mensaje.',
+      '',
+      'Hasta pronto,',
+      'El equipo de Flotta',
     ].join('\n'),
   }),
 

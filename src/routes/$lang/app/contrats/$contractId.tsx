@@ -3,8 +3,9 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { PAYMENT_METHODS } from '~/core/schemas/rental'
+import { loadContractTerms } from '~/server/contract-template'
 import { formatDateTime, formatMoney } from '~/i18n/format'
-import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
+import { DEFAULT_LOCALE, isLocale, type Locale } from '~/i18n/locales'
 import {
   cancelContract,
   getContract,
@@ -17,6 +18,7 @@ import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { toLocalInput } from '~/ui/forms/datetime'
 import { Field, FormError, Select } from '~/ui/forms/fields'
 import { PrintButton, PrintHeader } from '~/ui/print/printable'
+import { TemplateRender } from '~/ui/contracts/template-render'
 import { ReturnPanel } from '~/ui/rental/return-panel'
 import { choiceField, textField } from '~/ui/forms/form-data'
 import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
@@ -30,7 +32,17 @@ import { VehicleFileSkeleton } from '~/ui/skeletons'
  * remettre les clés, récupérer la voiture, encaisser.
  */
 export const Route = createFileRoute('/$lang/app/contrats/$contractId')({
-  loader: async ({ params }) => ({ file: await getContract({ data: { id: params.contractId } }) }),
+  loader: async ({ params }) => ({
+    file: await getContract({ data: { id: params.contractId } }),
+    /*
+     * LES CLAUSES, chargées en même temps que la fiche mais à part.
+     *
+     * Elles ne s'affichent que sur le PAPIER : à l'écran, la fiche sert à vérifier une
+     * date et à encaisser, et six articles de conditions générales entre les montants
+     * et les boutons noieraient exactement ce qu'on vient y chercher.
+     */
+    terms: await loadContractTerms({ data: { contractId: params.contractId } }),
+  }),
   pendingComponent: VehicleFileSkeleton,
   component: ContractPage,
 })
@@ -52,7 +64,7 @@ function cents(form: FormData, name: string): number | undefined {
 
 function ContractPage() {
   const { t } = useTranslation()
-  const { file } = Route.useLoaderData()
+  const { file, terms } = Route.useLoaderData()
   const { lang } = Route.useParams()
   const locale = isLocale(lang) ? lang : DEFAULT_LOCALE
   const router = useRouter()
@@ -327,6 +339,28 @@ function ContractPage() {
           </Button>
         </form>
       ) : null}
+
+      {/*
+        LES CLAUSES DU CONTRAT — sur le papier, et seulement là.
+
+        `data-print="only"` et non `print:block` : ces utilitaires n'ont aucune
+        spécificité de plus que ceux qu'ils doivent battre, et qui gagne dépend de
+        l'ordre des variantes Tailwind. Les deux règles vivent dans le `@media print`
+        d'`app.css`, en `!important` assumé.
+
+        `break-before-page` place les conditions générales sur leur propre feuille :
+        c'est celle qu'on agrafe, et la première page — parties, véhicule, montants —
+        doit rester lisible d'un seul regard au comptoir.
+      */}
+      {terms === null || terms.blocks.length === 0 ? null : (
+        <div data-print="only" className="hidden break-before-page pt-6">
+          <TemplateRender
+            blocks={terms.blocks}
+            values={terms.values}
+            signatureLabels={[t('template.signLessor'), t('template.signRenter')]}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -349,7 +383,7 @@ function Money({
 }: {
   label: string
   value: number
-  locale: 'fr' | 'ar' | 'en'
+  locale: Locale
   strong?: boolean
   warn?: boolean
 }) {

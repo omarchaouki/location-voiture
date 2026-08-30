@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { buildDemoDataset } from '~/server/demo/dataset'
+import { DEFAULT_DEMO_SIZE, buildDemoDataset } from '~/server/demo/dataset'
 import { parsePlate } from '~/core/plate'
 import type { Db } from '~/db/client'
 import { forOrg } from '~/db/repositories/base'
 import { vehicleRepository } from '~/db/repositories/vehicles'
 import { alerts } from '~/db/schema/alerts'
 import { organizations } from '~/db/schema/auth'
+import { subscriptions } from '~/db/schema/billing'
 import { notifications } from '~/db/schema/alerts'
 import { runAlertScan } from '~/server/alert-scan'
 import { DemoLockedError, assertNotDemo, notifyForOrganization } from '~/server/demo/locks'
-import { resetDemoOrganization } from '~/server/demo/reset'
+import {
+  countOrganizationRows,
+  purgeOrganizationData,
+  resetDemoOrganization,
+} from '~/server/demo/reset'
 import { seedDemoOrganization } from '~/server/demo/seed'
 import { shouldResetNow } from '~/server/demo-cron'
 import { setNotifier } from '~/server/notifier'
@@ -89,6 +94,176 @@ describe('le jeu de données', () => {
     expect(later.today).toBe('2027-08-25')
     // Les décalages sont relatifs : le contrat de demain est toujours celui de demain.
     expect(later.contracts.some((contract) => contract.endsInDays === 1)).toBe(true)
+  })
+})
+
+/**
+ * MISE À L'ÉCHELLE.
+ *
+ * Le jeu sert deux usages opposés : douze voitures pour la démonstration publique,
+ * plusieurs dizaines pour éprouver un compte. Ce qui est vérifié ici, c'est que le
+ * second ne casse aucune des propriétés du premier — ni l'unicité des plaques, ni la
+ * cohérence entre le statut d'une voiture et les contrats qui la sortent.
+ */
+describe('mise à l’échelle', () => {
+  const LARGE = { vehicles: 30, customers: 100, historyPerVehicle: 3 }
+
+  it('laisse le jeu d’origine EXACTEMENT tel qu’il était', () => {
+    // Le défaut est la taille des espaces partagés : le paramètre ne doit rien changer
+    // pour eux, sans quoi la démonstration nocturne aurait mué en silence.
+    expect(buildDemoDataset(TODAY)).toEqual(buildDemoDataset(TODAY, DEFAULT_DEMO_SIZE))
+    expect(buildDemoDataset(TODAY).vehicles).toHaveLength(12)
+    expect(buildDemoDataset(TODAY).customers).toHaveLength(8)
+  })
+
+  it('rend le volume demandé, et reste déterministe', () => {
+    const data = buildDemoDataset(TODAY, LARGE)
+    expect(data.vehicles).toHaveLength(30)
+    expect(data.customers).toHaveLength(100)
+    expect(data).toEqual(buildDemoDataset(TODAY, LARGE))
+  })
+
+  it('n’émet que des plaques marocaines valides, et toutes distinctes', () => {
+    const plates = buildDemoDataset(TODAY, LARGE).vehicles.map((vehicle) => vehicle.plate)
+    for (const plate of plates) expect(parsePlate(plate), plate).not.toBeNull()
+    expect(new Set(plates).size).toBe(plates.length)
+  })
+
+  it('ne donne jamais deux fois le même nom à deux clients', () => {
+    const names = buildDemoDataset(TODAY, LARGE).customers.map(
+      (customer) => `${customer.firstName} ${customer.lastName}`,
+    )
+    expect(new Set(names).size).toBe(names.length)
+  })
+
+  /**
+   * L'invariant qui compte vraiment. Deux contrats qui se chevauchent sur la même
+   * voiture rendraient le rattachement d'une amende ambigu (`src/core/fines.ts`) et
+   * feraient compter deux fois la même journée dans le chiffre d'affaires.
+   */
+  it('ne loue jamais la même voiture à deux moments qui se recouvrent', () => {
+    const byVehicle = new Map<number, Array<{ from: number; to: number }>>()
+
+    for (const contract of buildDemoDataset(TODAY, LARGE).contracts) {
+      const windows = byVehicle.get(contract.vehicleIndex) ?? []
+      windows.push({ from: contract.startsInDays, to: contract.endsInDays })
+      byVehicle.set(contract.vehicleIndex, windows)
+    }
+
+    for (const [vehicleIndex, windows] of byVehicle) {
+      const sorted = [...windows].sort((left, right) => left.from - right.from)
+      for (let index = 1; index < sorted.length; index += 1) {
+        expect(
+          sorted[index]!.from,
+          `véhicule ${vehicleIndex} : deux contrats se recouvrent`,
+        ).toBeGreaterThan(sorted[index - 1]!.to)
+      }
+    }
+  })
+
+  /**
+   * Une voiture « louée » sans contrat en cours est le détail qui fait douter de tout
+   * l'écran : la liste des véhicules et celle des contrats doivent raconter la même
+   * journée.
+   */
+  it('ne marque « louée » qu’une voiture qu’un contrat sort vraiment', () => {
+    const data = buildDemoDataset(TODAY, LARGE)
+    const out = new Set(
+      data.contracts
+        .filter((contract) => contract.status === 'active')
+        .map((contract) => contract.vehicleIndex),
+    )
+
+    data.vehicles.forEach((vehicle, index) => {
+      if (vehicle.status === 'rented') expect(out.has(index), vehicle.plate).toBe(true)
+    })
+  })
+
+  /**
+   * Une alerte qui sort quatre-vingt-treize fois n'est plus une alerte : c'est un mur
+   * derrière lequel les sept autres catégories disparaissent. Constaté sur un compte
+   * réel — chaque contrat d'historique gardait sa caution.
+   */
+  it('ne laisse pas l’historique noyer le centre de notifications', () => {
+    const data = buildDemoDataset(TODAY, LARGE)
+    const pending = data.contracts.filter(
+      (contract) => contract.returnedInDays !== null && contract.depositReturnedInDays === null,
+    )
+    expect(pending.length).toBeLessThanOrEqual(3)
+    // Mais il en reste au moins une : `deposit.pending` doit avoir de quoi exister.
+    expect(pending.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('reste vivant à grande échelle : des permis et des assurances expirent', () => {
+    const data = buildDemoDataset(TODAY, LARGE)
+    expect(data.customers.filter((customer) => customer.licenceExpiresInDays < 0).length)
+      .toBeGreaterThanOrEqual(3)
+    expect(data.documents.filter((document) => document.insuranceExpiresInDays < 0).length)
+      .toBeGreaterThanOrEqual(3)
+  })
+
+  it('écrit le volume demandé dans une organisation ordinaire', async () => {
+    const real = tenant('org-vrai')
+    const result = await seedDemoOrganization(db, real, TODAY, {
+      vehicles: 15,
+      customers: 20,
+      historyPerVehicle: 2,
+    })
+
+    expect(result.vehicles).toBe(15)
+    expect(result.customers).toBe(20)
+    // Sept écrits à la main, trente d'historique, plus ce qui est dehors aujourd'hui.
+    expect(result.contracts).toBeGreaterThan(35)
+    expect(await vehicleRepository(db, real).count()).toBe(15)
+  })
+})
+
+/**
+ * LA SORTIE. Remplir un compte d'essai n'a d'intérêt que si on peut le rendre à son
+ * état vide — et cette purge-là ne regarde pas `is_demo`, contrairement à la nocturne.
+ */
+describe('purge d’une organisation ordinaire', () => {
+  it('compte ce qu’elle va effacer avant de l’effacer', async () => {
+    await seedDemoOrganization(db, tenant('org-vrai'), TODAY)
+
+    const before = await countOrganizationRows(db, 'org-vrai', 'agency-data')
+    expect(before.total).toBeGreaterThan(30)
+    expect(before.byTable['vehicles']).toBe(12)
+    expect(before.byTable['customers']).toBe(8)
+  })
+
+  it('vide la cible et ne touche pas à la voisine', async () => {
+    await seedDemoOrganization(db, tenant('org-vrai'), TODAY)
+    await seedDemoOrganization(db, DEMO, TODAY)
+
+    await purgeOrganizationData(db, 'org-vrai', 'agency-data')
+
+    expect((await countOrganizationRows(db, 'org-vrai', 'agency-data')).total).toBe(0)
+    expect(await vehicleRepository(db, DEMO).count()).toBe(12)
+  })
+
+  /**
+   * LE test qui protège un vrai compte.
+   *
+   * Écrit après coup, et pas par prudence théorique : la première version de
+   * `pnpm demo:fill` s'apprêtait à effacer l'abonnement d'un compte en essai avec sa
+   * flotte. Un compte vivant, connecté, sans offre ni date de fin d'essai — et rien
+   * dans le produit ne sait lui en rendre un.
+   */
+  it('épargne l’abonnement du compte, et la nocturne continue de tout prendre', async () => {
+    const real = tenant('org-vrai')
+    const abonnement = forOrg<typeof subscriptions.$inferSelect>(db, real, subscriptions)
+    await abonnement.insert({ planCode: 'starter', status: 'trialing' })
+
+    await seedDemoOrganization(db, real, TODAY)
+    await purgeOrganizationData(db, 'org-vrai', 'agency-data')
+
+    expect(await vehicleRepository(db, real).count()).toBe(0)
+    expect(await abonnement.count()).toBe(1)
+
+    // La réinitialisation des espaces partagés, elle, ne garde rien.
+    await purgeOrganizationData(db, 'org-vrai', 'everything')
+    expect(await abonnement.count()).toBe(0)
   })
 })
 

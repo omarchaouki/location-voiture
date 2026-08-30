@@ -9,7 +9,7 @@ import { contracts } from '~/db/schema/contracts'
 import { insurancePolicies, roadTaxes, technicalInspections } from '~/db/schema/documents'
 import { fines, maintenanceSchedules } from '~/db/schema/maintenance'
 import type { TenantContext } from '~/db/tenant'
-import { buildDemoDataset, dayOffset, instantOffset } from './dataset'
+import { DEFAULT_DEMO_SIZE, buildDemoDataset, dayOffset, instantOffset, type DemoSize } from './dataset'
 
 /**
  * Écrit le jeu de démonstration dans une organisation.
@@ -36,8 +36,9 @@ export async function seedDemoOrganization(
   db: Db,
   ctx: TenantContext,
   today: string,
+  size: DemoSize = DEFAULT_DEMO_SIZE,
 ): Promise<SeedResult> {
-  const data = buildDemoDataset(today)
+  const data = buildDemoDataset(today, size)
   const year = Number(today.slice(0, 4))
 
   const vehicles = vehicleRepository(db, ctx)
@@ -116,6 +117,7 @@ export async function seedDemoOrganization(
 
   const contractRepo = forOrg<typeof contracts.$inferSelect>(db, ctx, contracts)
   let reference: string | null = null
+  let written = 0
 
   for (const contract of data.contracts) {
     const vehicleId = vehicleIds[contract.vehicleIndex]
@@ -140,12 +142,19 @@ export async function seedDemoOrganization(
       totalCents: subtotal,
       depositCents: contract.depositCents,
       depositTakenAt: contract.status === 'reservation' ? null : instantOffset(today, contract.startsInDays, 9),
-      // Caution NON restituée sur le contrat rendu il y a trois jours : c'est ce qui
-      // fait vivre l'alerte `deposit.pending` à 48 h.
-      depositReturnedAt: null,
+      /*
+       * Caution NON restituée sur le contrat rendu il y a trois jours : c'est ce qui
+       * fait vivre l'alerte `deposit.pending` à 48 h. L'historique, lui, rend les
+       * siennes — sans quoi le centre de notifications ne parlerait plus que de ça.
+       */
+      depositReturnedAt:
+        contract.depositReturnedInDays === null
+          ? null
+          : instantOffset(today, contract.depositReturnedInDays, 17),
       status: contract.status,
       paymentStatus: contract.status === 'returned' ? 'paid' : 'unpaid',
     })
+    written += 1
   }
 
   /* ------------------------------------------------------------- entretien */
@@ -210,7 +219,9 @@ export async function seedDemoOrganization(
   return {
     vehicles: vehicleIds.length,
     customers: customerIds.length,
-    contracts: data.contracts.length,
+    // Ce qui a été ÉCRIT, pas ce qui était prévu : une entrée qui désigne un véhicule
+    // absent est écartée en silence, et le compte doit le dire.
+    contracts: written,
     documents,
     fines: data.fines.length,
     devices: data.devices.length,

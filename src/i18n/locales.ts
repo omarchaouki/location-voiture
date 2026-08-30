@@ -6,7 +6,7 @@
  * Un montant mal formaté se lit à un facteur 1000 près.
  */
 
-export const LOCALES = ['fr', 'ar', 'en'] as const
+export const LOCALES = ['fr', 'ar', 'en', 'es'] as const
 
 export type Locale = (typeof LOCALES)[number]
 
@@ -17,12 +17,23 @@ const INTL_TAGS: Record<Locale, string> = {
   fr: 'fr-MA',
   ar: 'ar-MA',
   en: 'en-GB',
+  /*
+   * `es-ES` et non `es` nu, pour la même raison qui interdit `ar` nu : les variantes
+   * d'espagnol ne séparent pas les milliers de la même façon. `es-MX` écrit
+   * « 1,234.56 » là où `es-ES` écrit « 1.234,56 » — un facteur mille sur un montant,
+   * exactement le piège relevé pour l'arabe (docs/DECISIONS.md É6).
+   *
+   * L'Espagne plutôt que l'Amérique latine parce que la clientèle hispanophone d'un
+   * loueur marocain vient de Tarifa et d'Algésiras, à quatorze kilomètres de Tanger.
+   */
+  es: 'es-ES',
 }
 
 const DIRECTIONS: Record<Locale, 'ltr' | 'rtl'> = {
   fr: 'ltr',
   ar: 'rtl',
   en: 'ltr',
+  es: 'ltr',
 }
 
 /** Nom de la langue écrit dans cette langue — jamais traduit. */
@@ -30,6 +41,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   fr: 'Français',
   ar: 'العربية',
   en: 'English',
+  es: 'Español',
 }
 
 export function isLocale(value: unknown): value is Locale {

@@ -76,7 +76,7 @@ sudo apt update && sudo apt upgrade -y
 ```
 
 ```bash
-sudo apt install -y nginx rsync
+sudo apt install -y nginx
 ```
 
 **Node 22.** Les dépôts d'Ubuntu livrent une version bien plus ancienne, et
@@ -119,8 +119,28 @@ sudo useradd --system --home /opt/flotta --shell /usr/sbin/nologin flotta
 ```
 
 ```bash
-sudo mkdir -p /opt/flotta/data /etc/flotta && sudo chown -R flotta:flotta /opt/flotta
+sudo mkdir -p /opt/flotta/data/uploads /etc/flotta
 ```
+
+Les droits demandent une seconde d'attention, parce que **deux comptes différents** se
+partagent ce répertoire : `ubuntu` y DÉPOSE le code au déploiement, `flotta` le LIT pour
+l'exécuter. Un `chown -R flotta:flotta` sur tout — le réflexe — rendrait le déploiement
+impossible.
+
+```bash
+sudo chown -R ubuntu:flotta /opt/flotta && sudo chmod 2755 /opt/flotta
+```
+
+Le `2` de `2755` est le bit setgid : tout ce qu'`ubuntu` créera ensuite — `dist/`,
+`node_modules/` — appartiendra au groupe `flotta`, qui pourra donc le lire. Sans lui, le
+service démarrerait sur un « permission denied » après le premier déploiement.
+
+```bash
+sudo chown -R flotta:flotta /opt/flotta/data && sudo chmod 2775 /opt/flotta/data
+```
+
+`data/` est le seul endroit que le service ÉCRIT, et le seul que l'unité systemd ouvre en
+écriture (`ReadWritePaths`). Tout le reste du disque lui est en lecture seule.
 
 ### Les secrets
 

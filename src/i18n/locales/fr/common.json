@@ -184,15 +184,17 @@
     "activate": "Activer mon accès",
     "alreadyAccount": "J'ai déjà un mot de passe",
     "choosePassword": "Choisir un mot de passe",
+    "createAccount": "Créer mon espace",
     "email": "Adresse électronique",
     "invitationIntro": "Choisissez votre mot de passe pour activer votre accès. Le lien est à usage unique.",
     "invitationInvalid": "Cette invitation n'est plus valable. Demandez-en une nouvelle.",
     "invitationTitle": "Rejoindre l'organisation",
+    "noAccount": "Pas encore d'espace ?",
     "password": "Mot de passe",
     "passwordHint": "10 caractères minimum.",
     "signIn": "Se connecter",
     "signInFailed": "Adresse ou mot de passe incorrect.",
-    "signInIntro": "L'accès se fait sur invitation. Si vous n'avez pas encore de compte, votre invitation vous a été envoyée par courriel.",
+    "signInIntro": "Entrez l'adresse et le mot de passe de votre compte.",
     "signInTitle": "Connexion",
     "signOut": "Se déconnecter",
     "working": "En cours…",
@@ -386,6 +388,20 @@
       "individual": "Particulier"
     },
     "lastName": "Nom",
+    "ledger": {
+      "billed": "Facturé",
+      "customers_one": "{{count}} client",
+      "customers_other": "{{count}} clients",
+      "lastRental": "Dernière location le {{date}}",
+      "noPhone": "Pas de numéro",
+      "noneDue": "Aucun impayé",
+      "noneDueBody": "Tous les contrats facturés sont réglés.",
+      "outstanding": "Reste dû",
+      "paid": "Encaissé",
+      "paidOf": "{{paid}} sur {{billed}}",
+      "seeAll": "Voir tous les clients",
+      "seeDebtors": "Voir les impayés"
+    },
     "licenceExpired": "Permis expiré",
     "licenceExpiresOn": "Permis valable jusqu'au",
     "licenceMissing": "Permis non renseigné",
@@ -596,7 +612,11 @@
     "title": "Incidents"
   },
   "language": {
+    "ar": "Arabe",
     "change": "Changer de langue",
+    "en": "Anglais",
+    "es": "Espagnol",
+    "fr": "Français",
     "label": "Langue"
   },
   "legal": {
@@ -661,10 +681,13 @@
   },
   "maintenance": {
     "addSchedule": "Programmer un entretien",
+    "editInterval": "Modifier l'intervalle",
     "empty": "Aucun entretien programmé",
     "garage": "Garage",
-    "intervalKm": "Intervalle (km)",
-    "intervalMonths": "Intervalle (mois)",
+    "interval": "Intervalle",
+    "intervalHint": "L'échéance tombe au premier des deux seuils atteint.",
+    "intervalKm": "Tous les combien (km)",
+    "intervalMonths": "Tous les combien (mois)",
     "intervalRequired": "Indiquez au moins un intervalle, en kilomètres ou en mois.",
     "invoiceNumber": "Numéro de facture",
     "kind": "Type",
@@ -677,16 +700,30 @@
       "timing_belt": "Courroie de distribution",
       "tires": "Pneus"
     },
-    "km": "Kilométrage",
+    "km": "Compteur",
     "labour": "Main-d'œuvre (MAD)",
+    "lastDone": "Dernière faite",
     "lastDoneKm": "Kilométrage au dernier passage",
     "lastDoneOn": "Dernier passage le",
+    "months_one": "{{count}} mois",
+    "months_other": "{{count}} mois",
+    "never": "Jamais",
     "nextDue": "Prochaine échéance",
+    "nextDueKm": "Prochaine, au compteur",
+    "nextDueOn": "Prochaine, au calendrier",
     "notes": "Notes",
+    "oilNone": "Aucun programme de vidange n'est réglé pour cette voiture.",
+    "oilTitle": "Vidange",
     "parts": "Pièces (MAD)",
-    "performedOn": "Passé le",
-    "record": "Enregistrer un passage",
+    "performedOn": "Date de la vidange",
+    "record": "Enregistrer une vidange",
     "save": "Enregistrer",
+    "setUp": "Régler la vidange",
+    "state": {
+      "due": "À faire",
+      "ok": "À jour",
+      "soon": "Bientôt"
+    },
     "title": "Entretien"
   },
   "nav": {
@@ -706,6 +743,7 @@
   },
   "plan": {
     "business": "Business",
+    "premium": "Premium",
     "pro": "Pro",
     "starter": "Starter",
     "trial": "Essai"
@@ -722,6 +760,14 @@
     "contactEmail": "Adresse électronique",
     "contactPhone": "Téléphone",
     "defaultLocale": "Langue par défaut",
+    "editTemplate": "Modifier le contrat",
+    "logo": "Logo de l'agence",
+    "logoAlt": "Logo de {{name}}",
+    "logoHint": "Il s'imprime en tête de vos contrats. JPEG, PNG ou WebP.",
+    "logoPick": "Choisir un logo",
+    "logoRemove": "Retirer",
+    "logoReplace": "Remplacer",
+    "manageTeam": "Gérer l'équipe",
     "name": "Nom de l'agence",
     "orgSection": "Organisation",
     "planSection": "Offre",
@@ -732,8 +778,36 @@
     "saved": "Réglages enregistrés.",
     "seeBilling": "Voir l'abonnement",
     "subtitle": "L'identité de l'agence, telle qu'elle apparaît sur les documents",
+    "teamHint": "Les comptes de votre agence, dans la limite de votre offre.",
+    "templateHint": "Les clauses imprimées avec chaque contrat de location.",
     "timezone": "Fuseau horaire",
     "title": "Réglages"
+  },
+  "signup": {
+    "agencyName": "Nom de l'agence",
+    "agencyNameHint": "Tel qu'il apparaîtra sur vos contrats et vos factures.",
+    "city": "Ville",
+    "emailHint": "C'est aussi votre identifiant de connexion.",
+    "error": {
+      "email_taken": "Un compte existe déjà pour cette adresse. Connectez-vous plutôt.",
+      "passwordMismatch": "Les deux mots de passe ne sont pas identiques.",
+      "refused": "L'inscription n'a pas abouti. Réessayez dans un instant.",
+      "unknown_plan": "Cette offre n'est plus disponible. Choisissez-en une autre."
+    },
+    "haveAccount": "Vous avez déjà un espace ?",
+    "intro": "Trois étapes, deux minutes. Votre agence est prête à l'usage à la fin.",
+    "passwordConfirm": "Confirmer le mot de passe",
+    "phone": "Téléphone",
+    "planHint": "Modifiable plus tard. Rien n'est prélevé pendant les {{days}} premiers jours.",
+    "planLegend": "Choisissez votre offre",
+    "step": {
+      "account": "Votre compte",
+      "agency": "Votre agence",
+      "plan": "Votre offre"
+    },
+    "submit": "Ouvrir mon espace",
+    "title": "Ouvrir votre espace",
+    "trialNote": "{{days}} jours gratuits, sans carte bancaire. Vous ne payez qu'à la fin de l'essai."
   },
   "site": {
     "badge": "Pour les loueurs marocains",
@@ -782,7 +856,7 @@
     "fieldPhone": "Téléphone",
     "fieldPhoneHint": "Format marocain : 06 12 34 56 78 ou +212 6 12 34 56 78.",
     "heroBody": "Assurance, visite technique, vignette, autorisation, contrats, cautions, amendes, boîtiers GPS. Flotta surveille les échéances et vous prévient avant qu'elles ne coûtent.",
-    "heroNote": "L'accès se fait sur invitation : nous ouvrons votre espace après un premier appel.",
+    "heroNote": "Ouvrez votre espace en deux minutes et essayez gratuitement pendant {{days}} jours, sans carte bancaire.",
     "heroTitle": "Le registre de votre agence, tenu à jour tout seul.",
     "limitBranches": "Agences",
     "limitUsers": "Utilisateurs",
@@ -817,7 +891,7 @@
     "pricing": {
       "billedMonthly": "Sans engagement",
       "billedYearly": "Soit {{total}} par an",
-      "cta": "Demander une démonstration",
+      "cta": "Commencer l'essai gratuit",
       "free": "Gratuit",
       "monthly": "Mensuel",
       "monthsFree_one": "{{count}} mois offert",
@@ -895,6 +969,7 @@
       "fleetCaption": "La flotte : plaques marocaines, état de chaque location.",
       "title": "Le produit, tel qu’il est livré"
     },
+    "startNow": "Ouvrir mon espace",
     "trialDays": "{{days}} jours d'essai",
     "trust": {
       "cancel": "Sans engagement",
@@ -908,11 +983,107 @@
     "error": "Une opération n'a pas abouti",
     "loading": "Chargement"
   },
+  "team": {
+    "add": "Créer le compte",
+    "addTitle": "Ajouter un compte",
+    "created": "Compte créé. Communiquez le mot de passe à la personne.",
+    "empty": "Aucun collègue",
+    "emptyBody": "Vous êtes seul sur cet espace pour l'instant.",
+    "error": {
+      "email_taken": "Cette adresse est déjà utilisée par un compte.",
+      "last_owner": "Il doit rester au moins un propriétaire.",
+      "not_found": "Ce membre n'existe plus.",
+      "quota": "L'offre n'autorise pas de compte supplémentaire."
+    },
+    "password": "Mot de passe initial",
+    "passwordHint": "10 caractères minimum. La personne pourra le changer.",
+    "quotaReached": "L'offre {{plan}} n'autorise pas de compte supplémentaire.",
+    "remove": "Retirer",
+    "role": "Rôle",
+    "roleHint": "Un agent saisit contrats et clients. Un gérant règle aussi l'agence.",
+    "roleOf": "Rôle de {{name}}",
+    "seePlans": "Voir les offres",
+    "subtitle": "Qui a un accès, et lequel.",
+    "title": "Équipe",
+    "usage": "{{used}} / {{max}} comptes",
+    "usageUnlimited": "{{used}} comptes",
+    "you": "Vous"
+  },
+  "template": {
+    "addKind": "Ajouter : {{kind}}",
+    "blockKind": "Type de bloc",
+    "bold": "G",
+    "defaultName": "Contrat de location",
+    "insertVariable": "Insérer une donnée",
+    "italic": "I",
+    "kind": {
+      "heading": "Titre",
+      "list": "Liste",
+      "paragraph": "Paragraphe",
+      "signatures": "Signatures"
+    },
+    "legalNotice": "Ces clauses sont un point de départ, pas un avis juridique. Faites-les valider par votre conseil.",
+    "listHint": "Une ligne par point.",
+    "locale": "Langue du contrat",
+    "localeHint": "Celle dans laquelle il sera signé, pas celle de l'écran.",
+    "locked": "L'offre {{plan}} n'ouvre pas la personnalisation du contrat.",
+    "marksHint": "Sélectionnez du texte, puis G ou I.",
+    "moveDown": "Descendre",
+    "moveUp": "Monter",
+    "name": "Nom du modèle",
+    "pickField": "Cliquez dans un bloc pour l'utiliser.",
+    "preview": "Aperçu",
+    "reset": "Repartir du modèle proposé",
+    "signLessor": "Le loueur",
+    "signRenter": "Le locataire",
+    "signaturesHint": "Deux cadres à signer, côté loueur et côté locataire.",
+    "subtitle": "Vos clauses, imprimées avec chaque contrat.",
+    "title": "Modèle de contrat",
+    "variable": {
+      "agency": {
+        "city": "Agence — ville",
+        "email": "Agence — courriel",
+        "name": "Agence — nom",
+        "phone": "Agence — téléphone"
+      },
+      "contract": {
+        "dailyPrice": "Contrat — prix par jour",
+        "days": "Contrat — nombre de jours",
+        "deposit": "Contrat — caution",
+        "endAt": "Contrat — fin",
+        "reference": "Contrat — référence",
+        "startAt": "Contrat — début",
+        "total": "Contrat — total"
+      },
+      "customer": {
+        "address": "Client — adresse",
+        "idNumber": "Client — pièce d'identité",
+        "licenceNumber": "Client — permis",
+        "name": "Client — nom",
+        "phone": "Client — téléphone"
+      },
+      "vehicle": {
+        "km": "Véhicule — compteur",
+        "make": "Véhicule — marque",
+        "model": "Véhicule — modèle",
+        "plate": "Véhicule — plaque"
+      }
+    }
+  },
   "theme": {
     "dark": "Sombre",
     "label": "Thème",
     "light": "Clair",
     "system": "Système"
+  },
+  "upload": {
+    "error": {
+      "bad_format": "Cette image n'a pas pu être lue.",
+      "decode_failed": "Cette image n'a pas pu être lue.",
+      "not_found": "Véhicule introuvable.",
+      "too_large": "Image trop lourde. Prenez-en une plus petite.",
+      "unsupported_type": "Format non accepté. Choisissez un JPEG, un PNG ou un WebP."
+    }
   },
   "vehicle": {
     "category": {
@@ -1017,6 +1188,12 @@
       "title": "Véhicules"
     },
     "odometer": "Kilométrage",
+    "photo": "Photo du véhicule",
+    "photoAlt": "Photo du véhicule {{plate}}",
+    "photoHint": "Facultative. Elle sert à reconnaître la voiture dans la liste.",
+    "photoPick": "Ajouter une photo",
+    "photoRemove": "Retirer",
+    "photoReplace": "Remplacer",
     "plate": "Immatriculation",
     "status": {
       "available": "Disponible",

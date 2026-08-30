@@ -249,7 +249,7 @@ function VehicleRow({
   locale,
 }: {
   vehicle: VehicleListRow
-  locale: 'fr' | 'ar' | 'en'
+  locale: Locale
 }) {
   const { t } = useTranslation()
 
@@ -263,6 +263,27 @@ function VehicleRow({
            liste est une CIBLE, pas une rangée de tableau. */
         style={{ minHeight: 'var(--row-height-comfy)' }}
       >
+        {/*
+          LA VIGNETTE, avant la plaque, et seulement si elle existe.
+
+          Pas de cadre gris à la place quand il n'y en a pas : une colonne de rectangles
+          vides sur quarante lignes coûte plus d'attention qu'elle n'en rend, et la
+          plaque suffit à identifier une voiture — c'est son rôle. La photo n'est là que
+          pour les agences qui l'ont posée, et pour la reconnaissance à l'œil qu'elle
+          permet alors : « la Dacia blanche », qu'on retrouve plus vite qu'un numéro.
+
+          `loading="lazy"` parce qu'une flotte de quarante lignes tient sur trois écrans
+          et que les trente premières images ne servent à personne au chargement.
+        */}
+        {vehicle.photoPath === null ? null : (
+          <img
+            src={`/api/fichiers/${vehicle.photoPath}`}
+            alt=""
+            loading="lazy"
+            className="hidden size-9 shrink-0 rounded-md object-cover sm:block"
+          />
+        )}
+
         {/* La marge de registre porte l'identifiant : ici la plaque. */}
         <span className="ledger-margin w-24 sm:w-32 shrink-0 pe-4">
           <Plate value={vehicle.plate} />

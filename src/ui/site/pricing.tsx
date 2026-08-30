@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { ArrowRight, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -214,13 +215,27 @@ function PlanCard({
             <p className="text-xs text-muted-foreground">{t('site.trialDays', { days: plan.trialDays })}</p>
           ) : null}
 
-          {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
+          {/*
+            LE BOUTON EMPORTE L'OFFRE avec lui (`?offre=<code>`).
+
+            Sans ce paramètre, quelqu'un qui vient de comparer quatre colonnes et de
+            choisir doit rechoisir dans le formulaire d'inscription — c'est-à-dire
+            refaire, deux écrans plus loin, la seule décision qu'on venait de lui faire
+            prendre. Le code d'offre n'AUTORISE rien : le serveur le relit en base et
+            refuse tout ce qui n'est pas une offre publique.
+
+            Un lien reste un <a>/<Link> : jamais de <button> imbriqué dans une ancre.
+          */}
           <Button asChild variant={plan.isRecommended ? 'default' : 'outline'} className="w-full">
-            <a href="#demo">
+            <Link
+              to="/$lang/inscription"
+              params={{ lang: locale }}
+              search={{ offre: plan.code }}
+            >
               <span>{t('site.pricing.cta')}</span>
               {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
               <ArrowRight className="icon-directional" aria-hidden="true" />
-            </a>
+            </Link>
           </Button>
         </CardContent>
       </Card>
@@ -353,7 +368,13 @@ function ComparisonTable({
 
               <TableCell className="text-end">
                 <Button asChild size="sm" variant={plan.isRecommended ? 'default' : 'outline'}>
-                  <a href="#demo">{t('site.pricing.cta')}</a>
+                  <Link
+                    to="/$lang/inscription"
+                    params={{ lang: locale }}
+                    search={{ offre: plan.code }}
+                  >
+                    {t('site.pricing.cta')}
+                  </Link>
                 </Button>
               </TableCell>
             </TableRow>

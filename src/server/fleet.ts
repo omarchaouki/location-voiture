@@ -16,6 +16,7 @@ import {
   RecordMaintenanceInput,
   SettleFineInput,
   UpdateFineInput,
+  UpdateScheduleInput,
 } from '~/core/schemas/fleet'
 import { getDb } from '~/db/client'
 import { forOrg } from '~/db/repositories/base'
@@ -66,6 +67,66 @@ export const createSchedule = createServerFn({ method: 'POST' })
     })
 
     return { id: created.id, nextDueOn: due.nextDueOn, nextDueKm: due.nextDueKm }
+  })
+
+/**
+ * Correction d'un programme d'entretien — changer l'intervalle, ou l'arrêter.
+ *
+ * Les échéances dénormalisées sont RECALCULÉES ici, et c'est tout l'intérêt de la
+ * fonction : passer une vidange de 10 000 à 7 500 km sans recalculer laisserait
+ * `next_due_km` sur l'ancienne borne, et le moteur d'alertes continuerait de
+ * prévenir 2 500 km trop tard — c'est-à-dire quand le mal est fait.
+ *
+ * Le recalcul repart du DERNIER passage, pas d'aujourd'hui : une vidange faite il y a
+ * 3 000 km reste due dans 4 500, et non dans 7 500.
+ */
+export const updateSchedule = createServerFn({ method: 'POST' })
+  .middleware([writableTenantMiddleware])
+  .validator(UpdateScheduleInput)
+  .handler(async ({ data, context }) => {
+    const db = getDb()
+    const tenant = context.tenant
+
+    const schedules = forOrg<ScheduleRow>(db, tenant, maintenanceSchedules)
+    const current = await schedules.findById(data.id)
+    // Programme d'une autre organisation : 404, jamais 403.
+    if (!current) throw notFound()
+
+    const intervalKm = data.intervalKm === undefined ? current.intervalKm : data.intervalKm
+    const intervalMonths =
+      data.intervalMonths === undefined ? current.intervalMonths : data.intervalMonths
+
+    const vehicle = await vehicleRepository(db, tenant).findById(current.vehicleId)
+    if (!vehicle) throw notFound()
+
+    const due = nextMaintenanceDue({
+      performedOn: current.lastDoneOn ?? new Date().toISOString().slice(0, 10),
+      km: current.lastDoneKm ?? vehicle.currentKm,
+      intervalMonths,
+      intervalKm,
+    })
+
+    await schedules.update(data.id, {
+      intervalKm,
+      intervalMonths,
+      nextDueOn: due.nextDueOn,
+      nextDueKm: due.nextDueKm,
+      ...(data.isActive === undefined ? {} : { isActive: data.isActive }),
+    })
+
+    await audit({
+      orgId: tenant.orgId,
+      actorUserId: tenant.userId,
+      impersonated: tenant.impersonated,
+      action: 'maintenance.schedule',
+      entityType: 'vehicle',
+      entityId: current.vehicleId,
+      before: { intervalKm: current.intervalKm, intervalMonths: current.intervalMonths },
+      after: { intervalKm, intervalMonths, isActive: data.isActive ?? current.isActive },
+      request: { ip: getRequestIP() ?? null },
+    })
+
+    return { id: data.id, nextDueOn: due.nextDueOn, nextDueKm: due.nextDueKm }
   })
 
 /**

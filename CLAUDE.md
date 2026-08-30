@@ -12,8 +12,18 @@ pnpm db:local     (Postgres local, sans Docker — le laisser tourner)
 pnpm db:generate  pnpm db:migrate     pnpm db:studio
 pnpm check:tokens (contrastes)        pnpm check:hardcoded (chaînes, RTL, ombres, cloisonnement)
 pnpm check:budget (poids du paquet client, après `pnpm build`)
-pnpm seed         pnpm demo:reset     (espaces de démonstration)
+pnpm seed         pnpm demo:reset     (espaces de démonstration partagés)
+pnpm demo:fill --org <slug> [--vehicles 30 --customers 100 --history 3]
+pnpm demo:purge --org <slug> --confirm <slug>
 ```
+
+`demo:fill` et `demo:purge` visent une organisation ORDINAIRE — un compte d'essai qu'on
+veut éprouver —, pas les deux espaces partagés de `seed`. `fill` efface avant d'écrire
+(les plaques et les références de contrat sont uniques par organisation), sème à la
+taille demandée, recalcule les compteurs et lance le balayage d'alertes. `purge` rend
+l'agence à zéro. Les deux ÉPARGNENT l'abonnement, les membres et l'organisation :
+`PurgeScope` dans `src/server/demo/reset.ts` dit ce qui relève du compte et ce qui
+relève de l'agence. Le garde-fou n'est pas un `--yes` mais le slug de la cible, retapé.
 
 Aucun script n'est déclaré tant qu'il n'existe pas. `test:e2e` reste à venir : aucun
 parcours Playwright n'est écrit à ce jour, et c'est le manque le plus ancien du projet.
@@ -55,8 +65,10 @@ entre deux ordres laisse une migration appliquée à moitié. Déploiement : `do
 
 ## Interface
 
-- **Aucune chaîne en dur** dans un composant : tout passe par `t('clé')`, et les trois langues
-  (`fr`, `ar`, `en`) sont remplies en même temps. `tests/unit/i18n-parity.test.ts` échoue sinon.
+- **Aucune chaîne en dur** dans un composant : tout passe par `t('clé')`, et les quatre langues
+  (`fr`, `ar`, `en`, `es`) sont remplies en même temps. `tests/unit/i18n-parity.test.ts` échoue sinon —
+  il est piloté par `LOCALES`, donc une cinquième langue entre dans le contrôle sans qu'on y pense.
+  L'espagnol n'est pas décoratif : quatorze kilomètres séparent Tarifa de Tanger.
 - **Aucune propriété physique** : `ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`, jamais
   `ml-`, `pr-`, `left-`, `text-left`.
 - **Aucune ombre** écrite à la main. Trois jetons, et trois seulement : `shadow-control`
@@ -66,7 +78,8 @@ entre deux ordres laisse une migration appliquée à moitié. Déploiement : `do
   Heroicons et react-icons sont refusés — deux jeux, ce sont deux graisses de trait dans la même
   barre. Les objets du MÉTIER restent dessinés à la main dans `src/ui/icons/` : voiture, clé,
   bidon d'huile, plaque.
-- **Aucun `Intl` direct** : tout passe par `src/i18n/format.ts` (locale `ar-MA`, jamais `ar`).
+- **Aucun `Intl` direct** : tout passe par `src/i18n/format.ts` (locale `ar-MA`, jamais `ar` ;
+  `es-ES`, jamais `es` — `es-MX` sépare les milliers à l'anglaise).
 - **Les noms de jetons sont ceux de shadcn/ui**, les valeurs sont celles du produit : **bleu et
   blanc**, une seule teinte 250–262 en OKLCH qui traverse aussi les gris. `--background`,
   `--foreground`, `--card`, `--primary`, `--muted`, `--border`, `--ring`, plus `--warning` et
@@ -106,7 +119,30 @@ entre deux ordres laisse une migration appliquée à moitié. Déploiement : `do
   (`plan_change_requests`), la plateforme tranche depuis `/admin`. C'est le seul chemin qui écrit
   `organizations.plan_code` après la création d'une agence — donc le seul qui garantisse qu'un
   changement d'offre laisse un motif et un auteur.
-- `pnpm check:tokens` mesure les contrastes réels dans les deux thèmes. Il a d'ailleurs attrapé
+- **L'INSCRIPTION, elle, est libre et instantanée** (`/$lang/inscription`, depuis le 29/08/2026).
+  Elle monte le compte, l'organisation, l'appartenance, l'abonnement d'essai et les compteurs d'un
+  geste, puis ouvre la session. L'endpoint d'inscription de Better Auth reste fermé : il n'accepte
+  que les adresses ouvertes le temps d'une création par le serveur — la fenêtre porte L'ADRESSE, pas
+  un booléen (`src/auth/server.ts`). Deux mois d'essai sur toutes les offres.
+- **Un compte se crée aussi À LA MAIN, avec son mot de passe** (`/$lang/app/equipe`). L'invitation
+  par courriel reste ; elle ne suffit pas à une agence où trois agents partagent la boîte du gérant.
+  Le quota d'utilisateurs de l'offre s'applique, et la dernière personne `owner` ne peut être ni
+  retirée ni rétrogradée.
+- **Les fichiers passent par `src/server/storage/`**, jamais par `node:fs` écrit à la main. Toute
+  clé commence par `org/<orgId>/` : c'est ce qui permet à `/api/fichiers/*` de refuser en une
+  comparaison de chaîne, et un fichier d'une autre organisation rend **404**. Le SVG est refusé (du
+  XML qui peut porter un script). Les images sont redimensionnées PAR LE NAVIGATEUR avant l'envoi
+  (`src/ui/forms/image-field.tsx`) ; le serveur revérifie, parce qu'un client peut mentir.
+- **Le modèle de contrat est un tableau de BLOCS, jamais du HTML** (`src/core/contract-template.ts`).
+  Rien n'est rendu en `dangerouslySetInnerHTML` : une balise tapée dans une clause s'imprime comme
+  du texte. Les variables s'écrivent `{{customer.name}}`, la liste est fermée, et une variable
+  inconnue reste affichée telle quelle plutôt que de s'effacer en silence.
+- Les tarifs et les quotas vivent en base (`plans`), jamais dans le JSX. La grille du 29/08/2026 est
+calée sur le concurrent direct et le dépasse sur chaque axe — 89/179/279/449 MAD, 10/30/60/∞
+véhicules, essai de **60 jours partout** (docs/DECISIONS.md D-11). Changer un prix est une ÉCRITURE,
+pas un déploiement : `ensurePlans()` ne pose que ce qui manque.
+
+`pnpm check:tokens` mesure les contrastes réels dans les deux thèmes. Il a d'ailleurs attrapé
   deux valeurs par défaut de shadcn qui échouent en clair — `--muted-foreground` et `--input` —,
   foncées ici pour tenir WCAG.
 

@@ -52,6 +52,53 @@ export const listCustomers = createServerFn({ method: 'GET' })
       .sort((a, b) => a.label.localeCompare(b.label))
   })
 
+/**
+ * LE COMPTE D'UN CLIENT — facturé, encaissé, reste dû.
+ *
+ * Trois nombres en centimes ENTIERS, jamais un flottant, et jamais un pourcentage
+ * calculé au serveur : l'écran présentera ce qu'il veut, mais l'argent qui traverse
+ * la frontière reste de l'argent exact.
+ */
+export interface CustomerLedger {
+  id: string
+  label: string
+  phone: string | null
+  email: string | null
+  /** Nombre de locations facturables — annulations exclues. */
+  contracts: number
+  billedCents: number
+  paidCents: number
+  /** Ce qui reste dû. Jamais négatif : un trop-perçu n'efface pas la dette d'un autre. */
+  balanceCents: number
+  /** Fin de la location la plus récente. C'est ce qu'on cite au téléphone. */
+  lastRentalOn: string | null
+}
+
+export interface CustomersLedger {
+  rows: CustomerLedger[]
+  billedCents: number
+  paidCents: number
+  outstandingCents: number
+  outstandingCustomers: number
+  payingCustomers: number
+}
+
+/**
+ * L'état des encaissements, client par client.
+ *
+ * Séparée de `listCustomers` et non fondue dedans : la liste des clients sert au
+ * COMPTOIR — on y cherche un nom et une date de permis, et elle doit rester rapide —
+ * tandis que ceci lit tous les contrats et tous les encaissements de l'agence. Les
+ * mélanger ferait payer à chaque ouverture de la liste le prix d'un tableau qu'on ne
+ * consulte qu'au bureau.
+ */
+export const loadCustomersLedger = createServerFn({ method: 'GET' })
+  .middleware([tenantMiddleware])
+  .handler(async ({ context }): Promise<CustomersLedger> => {
+    const { readCustomersLedger } = await import('./reads/customers')
+    return readCustomersLedger(getDb(), context.tenant)
+  })
+
 export interface CustomerFile extends CustomerSummary {
   firstName: string | null
   lastName: string | null

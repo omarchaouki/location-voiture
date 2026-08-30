@@ -6,10 +6,13 @@ import { formatDate, formatDateTime, formatKilometers, formatMoney } from '~/i18
 import { DEFAULT_LOCALE, isLocale } from '~/i18n/locales'
 import type { DocumentType } from '~/core/schemas/document'
 import { deleteDocument } from '~/server/documents'
+import { removeVehiclePhoto, uploadVehiclePhoto } from '~/server/files'
 import { getVehicleFile, type VehicleFile } from '~/server/vehicles'
 import { buttonVariants } from '~/ui/shadcn/button'
 import { EmptyState } from '~/ui/feedback/states'
+import { ImageField, type ImagePickError } from '~/ui/forms/image-field'
 import {
+  CarSideIcon,
   InsuranceShieldIcon,
   InspectionBadgeIcon,
   RegistrationCardIcon,
@@ -21,6 +24,7 @@ import { Badge, type BadgeVariant } from '~/ui/shadcn/badge'
 import { VehicleFileSkeleton } from '~/ui/skeletons'
 import { PrintButton, PrintHeader } from '~/ui/print/printable'
 import { centsToInput, DocumentForm, type EditingDocument } from '~/ui/vehicles/document-form'
+import { MaintenancePanel } from '~/ui/vehicles/maintenance-panel'
 
 /**
  * LA FICHE VÉHICULE — la signature du produit.
@@ -45,6 +49,7 @@ const STATUS_TONES: Record<string, BadgeVariant> = {
 
 function VehicleFilePage() {
   const { t } = useTranslation()
+  const router = useRouter()
   const { file } = Route.useLoaderData()
   const { lang } = Route.useParams()
   const locale = isLocale(lang) ? lang : DEFAULT_LOCALE
@@ -60,6 +65,40 @@ function VehicleFilePage() {
    * pièces en parallèle n'a aucun sens et doublerait les états à suivre.
    */
   const [editing, setEditing] = useState<EditingDocument | null>(null)
+
+  /**
+   * LA VIGNETTE s'enregistre immédiatement, comme le logo de l'agence.
+   *
+   * Elle n'appartient à aucun formulaire : c'est une propriété de la voiture qu'on
+   * pose au moment où on l'a sous les yeux, sur le parking, téléphone en main. Lui
+   * imposer un bouton « Enregistrer » en bas d'un écran de quatorze champs, c'est
+   * garantir qu'aucune voiture n'aura de photo.
+   */
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+
+  async function pickPhoto(dataUrl: string) {
+    setPhotoBusy(true)
+    setPhotoError(null)
+    try {
+      const result = await uploadVehiclePhoto({ data: { vehicleId: vehicle.id, dataUrl } })
+      if (!result.ok) setPhotoError(result.reason)
+      else await router.invalidate()
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
+  async function dropPhoto() {
+    setPhotoBusy(true)
+    setPhotoError(null)
+    try {
+      await removeVehiclePhoto({ data: { vehicleId: vehicle.id } })
+      await router.invalidate()
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
 
   return (
     <div>
@@ -124,6 +163,38 @@ function VehicleFilePage() {
         ) : null}
       </p>
 
+      {/*
+        LA PHOTO, sous l'identité et hors du papier.
+
+        `data-print="hide"` et non `print:hidden` : ces utilitaires n'ont aucune
+        spécificité de plus que ceux qu'ils doivent battre, et qui gagne dépend de
+        l'ordre des variantes Tailwind. Un contrat imprimé n'a pas besoin d'une
+        vignette de 640 px — il a besoin de la plaque, qui est juste au-dessus.
+      */}
+      <div className="mt-6" data-print="hide">
+        <ImageField
+          label={t('vehicle.photo')}
+          hint={t('vehicle.photoHint')}
+          value={vehicle.photoPath}
+          alt={t('vehicle.photoAlt', { plate: vehicle.plate })}
+          pickLabel={t('vehicle.photoPick')}
+          replaceLabel={t('vehicle.photoReplace')}
+          removeLabel={t('vehicle.photoRemove')}
+          errorLabel={(reason: ImagePickError) => t(`upload.error.${reason}`)}
+          emptyIcon={<CarSideIcon size={32} />}
+          aspect="wide"
+          disabled={!file.canWrite}
+          busy={photoBusy}
+          onPick={(dataUrl) => void pickPhoto(dataUrl)}
+          onRemove={() => void dropPhoto()}
+        />
+        {photoError === null ? null : (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            {t(`upload.error.${photoError}`)}
+          </p>
+        )}
+      </div>
+
       {/* --- LE CARNET. --- */}
       <section className="mt-8">
         <h2 className="mb-2 text-lg">{t('vehicle.file.logbook')}</h2>
@@ -136,6 +207,15 @@ function VehicleFilePage() {
           <LogbookRail entries={file.entries} today={file.today} />
         )}
       </section>
+
+      <MaintenancePanel
+        vehicleId={vehicle.id}
+        currentKm={vehicle.currentKm}
+        today={file.today}
+        schedules={file.maintenance}
+        locale={locale}
+        canWrite={file.canWrite}
+      />
 
       {/* --- Documents : ce que le carnet résume, sous forme de pièces. --- */}
       <section className="mt-12">

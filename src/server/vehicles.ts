@@ -39,6 +39,11 @@ export interface VehicleSummary {
   status: string
   currentKm: number
   dailyCents: number | null
+  /**
+   * Clé de stockage de la vignette, jamais une URL — le fichier est servi par
+   * `/api/fichiers/*`, qui vérifie l'organisation avant le premier octet.
+   */
+  photoPath: string | null
 }
 
 /** L'échéance la plus urgente d'un véhicule, telle qu'elle s'affiche en bout de ligne. */
@@ -63,6 +68,7 @@ function toSummary(row: VehicleRow): VehicleSummary {
     status: row.status,
     currentKm: row.currentKm,
     dailyCents: row.dailyCents,
+    photoPath: row.photoPath,
   }
 }
 
@@ -87,6 +93,14 @@ export interface VehicleFile {
   }
   /** Date d'aujourd'hui à Casablanca, calculée au serveur (docs/DECISIONS.md É7). */
   today: string
+  /**
+   * Droit d'écrire, tel que le SERVEUR le voit — pas tel que l'écran le suppose.
+   *
+   * Il porte déjà l'abonnement gelé, l'impersonation non élevée et le rôle `viewer`
+   * (`src/db/tenant.ts`). L'écran s'en sert pour ne pas proposer un bouton qui sera
+   * refusé ; le refus, lui, reste porté par la server function.
+   */
+  canWrite: boolean
   entries: LogbookEntry[]
   /**
    * Les pièces, avec TOUT ce qui se corrige.
@@ -131,6 +145,25 @@ export interface VehicleFile {
       isWw: boolean
     } | null
   }
+  /**
+   * LES PROGRAMMES D'ENTRETIEN, vidange en tête.
+   *
+   * Ils étaient déjà lus par cette fonction — pour alimenter la frise — et n'étaient
+   * exposés nulle part : le carnet montrait « vidange dans 500 km » sans qu'aucun
+   * écran ne permette de dire tous les combien elle revient, ni d'enregistrer celle
+   * qu'on vient de faire. Le programme se réglait donc uniquement par un appel d'API.
+   */
+  maintenance: Array<{
+    id: string
+    kind: string
+    intervalKm: number | null
+    intervalMonths: number | null
+    lastDoneOn: string | null
+    lastDoneKm: number | null
+    nextDueOn: string | null
+    nextDueKm: number | null
+    isActive: boolean
+  }>
 }
 
 /** Fenêtre de référence du rythme d'un véhicule. Assez longue pour lisser, assez courte pour rester actuelle. */
@@ -252,6 +285,7 @@ export const getVehicleFile = createServerFn({ method: 'GET' })
         notes: vehicle.notes,
       },
       today,
+      canWrite: tenant.canWrite,
       entries,
       documents: {
         insurance: insurance
@@ -295,6 +329,17 @@ export const getVehicleFile = createServerFn({ method: 'GET' })
             }
           : null,
       },
+      maintenance: schedules.map((row) => ({
+        id: row.id,
+        kind: row.kind,
+        intervalKm: row.intervalKm,
+        intervalMonths: row.intervalMonths,
+        lastDoneOn: row.lastDoneOn,
+        lastDoneKm: row.lastDoneKm,
+        nextDueOn: row.nextDueOn,
+        nextDueKm: row.nextDueKm,
+        isActive: row.isActive,
+      })),
     }
   })
 

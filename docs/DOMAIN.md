@@ -496,6 +496,38 @@ et non une supposition.
 `uploaded_by_user_id`, `original_name`. Sert aux scans de CIN, permis, cartes grises, constats.
 Le stockage passe par `StorageProvider` : disque en dev, Supabase Storage en prod.
 
+**Livré le 29/08/2026** : `StorageProvider` existe (`src/server/storage/`), avec ses deux
+implémentations. Les colonnes `*_path` du schéma désignent une **clé de stockage**, jamais une URL —
+une URL signée expire, et une URL locale n'existe pas au même endroit d'un déploiement à l'autre.
+Toute clé commence par `org/<orgId>/` : c'est le seul contrôle entre la session et les octets servis
+par `/api/fichiers/*`, et une clé d'une autre organisation rend **404**, jamais 403.
+
+### `vehicles.photo_path` — la vignette
+Une image facultative, dénormalisée sur le véhicule et distincte de `vehicle_photos` (qui sert à
+l'état des lieux). Les rapprocher obligerait à joindre une table par ligne de liste pour afficher une
+image de 30 ko, et à inventer une règle du genre « la photo de tri 0 » — qu'un état des lieux
+bousculerait au premier retour de véhicule.
+
+### `contract_templates` — les clauses de l'agence
+`id`, `org_id`, `name`, `locale`, `blocks_json`, `is_default`, plus les colonnes de la charte.
+
+`blocks_json` est un tableau de blocs sérialisé (`heading` | `paragraph` | `list` | `signatures`),
+validé par Zod au bord — **et jamais du HTML** : les blocs sont rendus en éléments React, de sorte
+qu'une balise tapée dans une clause s'imprime comme du texte (`src/core/contract-template.ts`).
+
+`locale` est la langue dans laquelle le contrat sera SIGNÉ, pas celle de l'utilisateur : une agence
+de Tanger peut imprimer en français pour un client français et en arabe pour un client marocain. Un
+index unique partiel garantit **un seul modèle par défaut par organisation** — deux onglets, deux
+enregistrements, et l'impression tirerait au sort lequel des deux contrats fait foi.
+
+### Encaissement par client — une LECTURE, pas une table
+« Qui doit encore de l'argent » se calcule (`src/server/reads/customers.ts`) à partir des contrats et
+de `contract_payments`, **jamais depuis `contracts.payment_status`** : ce statut est un résumé écrit
+à la main au moment de l'encaissement, et il peut être en retard sur les lignes de paiement, qui sont
+des faits. Un client dont on aurait oublié de repasser le contrat en « payé » apparaîtrait comme
+débiteur, et on l'appellerait pour rien. Un contrat `cancelled` ne doit rien ; un trop-perçu est borné
+à zéro et ne vient pas effacer la dette d'un autre client.
+
 ---
 
 ## 4. Machines à états

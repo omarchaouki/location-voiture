@@ -46,6 +46,21 @@ export const vehicles = pgTable(
     depositCents: cents('deposit_cents'),
     currency: text('currency').notNull().default('MAD'),
 
+    /**
+     * VIGNETTE — la clé de stockage d'UNE image, celle qu'on voit dans la liste.
+     *
+     * Une colonne dénormalisée à côté de `vehicle_photos`, et c'est délibéré : la
+     * galerie sert à l'état des lieux (quatre faces, les dommages), la vignette sert à
+     * reconnaître une voiture dans une liste de quarante. Les rapprocher obligerait à
+     * joindre une table par ligne de liste pour afficher une image de 30 ko, et à
+     * inventer une règle du genre « la photo de tri 0 » — qu'un état des lieux
+     * bousculerait au premier retour de véhicule.
+     *
+     * Facultative, et elle doit le rester : une agence qui saisit quarante voitures un
+     * dimanche soir ne les photographie pas.
+     */
+    photoPath: text('photo_path'),
+
     notes: text('notes'),
   },
   (table) => [

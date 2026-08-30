@@ -184,15 +184,17 @@
     "activate": "Activate my access",
     "alreadyAccount": "I already have a password",
     "choosePassword": "Choose a password",
+    "createAccount": "Create my account",
     "email": "Email address",
     "invitationIntro": "Choose your password to activate your access. The link works once.",
     "invitationInvalid": "This invitation is no longer valid. Ask for a new one.",
     "invitationTitle": "Join the organisation",
+    "noAccount": "No account yet?",
     "password": "Password",
     "passwordHint": "10 characters minimum.",
     "signIn": "Sign in",
     "signInFailed": "Wrong email or password.",
-    "signInIntro": "Access is by invitation. If you do not have an account yet, your invitation was sent to you by email.",
+    "signInIntro": "Enter the email address and password for your account.",
     "signInTitle": "Sign in",
     "signOut": "Sign out",
     "working": "Working…",
@@ -386,6 +388,20 @@
       "individual": "Individual"
     },
     "lastName": "Last name",
+    "ledger": {
+      "billed": "Billed",
+      "customers_one": "{{count}} customer",
+      "customers_other": "{{count}} customers",
+      "lastRental": "Last rental on {{date}}",
+      "noPhone": "No phone number",
+      "noneDue": "Nothing outstanding",
+      "noneDueBody": "Every billed contract has been settled.",
+      "outstanding": "Outstanding",
+      "paid": "Collected",
+      "paidOf": "{{paid}} of {{billed}}",
+      "seeAll": "See all customers",
+      "seeDebtors": "See unpaid customers"
+    },
     "licenceExpired": "Licence expired",
     "licenceExpiresOn": "Licence valid until",
     "licenceMissing": "Licence not recorded",
@@ -596,7 +612,11 @@
     "title": "Incidents"
   },
   "language": {
+    "ar": "Arabic",
     "change": "Change language",
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
     "label": "Language"
   },
   "legal": {
@@ -661,10 +681,13 @@
   },
   "maintenance": {
     "addSchedule": "Schedule maintenance",
+    "editInterval": "Change interval",
     "empty": "No scheduled maintenance",
     "garage": "Garage",
-    "intervalKm": "Interval (km)",
-    "intervalMonths": "Interval (months)",
+    "interval": "Interval",
+    "intervalHint": "Due at whichever of the two thresholds comes first.",
+    "intervalKm": "Every (km)",
+    "intervalMonths": "Every (months)",
     "intervalRequired": "Enter at least one interval, in kilometres or months.",
     "invoiceNumber": "Invoice number",
     "kind": "Type",
@@ -679,14 +702,28 @@
     },
     "km": "Odometer",
     "labour": "Labour (MAD)",
+    "lastDone": "Last done",
     "lastDoneKm": "Odometer at last service",
     "lastDoneOn": "Last done on",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "never": "Never",
     "nextDue": "Next due",
+    "nextDueKm": "Next, on the odometer",
+    "nextDueOn": "Next, on the calendar",
     "notes": "Notes",
+    "oilNone": "No oil-change schedule is set for this car.",
+    "oilTitle": "Oil change",
     "parts": "Parts (MAD)",
-    "performedOn": "Performed on",
-    "record": "Record a service",
+    "performedOn": "Oil change date",
+    "record": "Record an oil change",
     "save": "Save",
+    "setUp": "Set up oil change",
+    "state": {
+      "due": "Due",
+      "ok": "Up to date",
+      "soon": "Soon"
+    },
     "title": "Maintenance"
   },
   "nav": {
@@ -706,6 +743,7 @@
   },
   "plan": {
     "business": "Business",
+    "premium": "Premium",
     "pro": "Pro",
     "starter": "Starter",
     "trial": "Trial"
@@ -722,6 +760,14 @@
     "contactEmail": "Email address",
     "contactPhone": "Phone",
     "defaultLocale": "Default language",
+    "editTemplate": "Edit the contract",
+    "logo": "Agency logo",
+    "logoAlt": "{{name}} logo",
+    "logoHint": "It prints at the top of your contracts. JPEG, PNG or WebP.",
+    "logoPick": "Choose a logo",
+    "logoRemove": "Remove",
+    "logoReplace": "Replace",
+    "manageTeam": "Manage the team",
     "name": "Agency name",
     "orgSection": "Organisation",
     "planSection": "Plan",
@@ -732,8 +778,36 @@
     "saved": "Settings saved.",
     "seeBilling": "View subscription",
     "subtitle": "The agency's identity, as it appears on documents",
+    "teamHint": "Your agency's accounts, within the limit of your plan.",
+    "templateHint": "The clauses printed with every rental contract.",
     "timezone": "Time zone",
     "title": "Settings"
+  },
+  "signup": {
+    "agencyName": "Agency name",
+    "agencyNameHint": "As it will appear on your contracts and invoices.",
+    "city": "City",
+    "emailHint": "This is also your sign-in identifier.",
+    "error": {
+      "email_taken": "An account already exists for this address. Sign in instead.",
+      "passwordMismatch": "The two passwords are not identical.",
+      "refused": "Sign-up did not go through. Please try again in a moment.",
+      "unknown_plan": "This plan is no longer available. Please choose another."
+    },
+    "haveAccount": "Already have an account?",
+    "intro": "Three steps, two minutes. Your agency is ready to use at the end.",
+    "passwordConfirm": "Confirm password",
+    "phone": "Phone",
+    "planHint": "Changeable later. Nothing is charged during the first {{days}} days.",
+    "planLegend": "Choose your plan",
+    "step": {
+      "account": "Your account",
+      "agency": "Your agency",
+      "plan": "Your plan"
+    },
+    "submit": "Open my account",
+    "title": "Open your account",
+    "trialNote": "{{days}} days free, no card required. You only pay once the trial ends."
   },
   "site": {
     "badge": "For Moroccan rental agencies",
@@ -782,7 +856,7 @@
     "fieldPhone": "Phone",
     "fieldPhoneHint": "Moroccan format: 06 12 34 56 78 or +212 6 12 34 56 78.",
     "heroBody": "Insurance, roadworthiness, road tax, permits, contracts, deposits, fines, GPS trackers. Flotta watches every deadline and warns you before it costs you.",
-    "heroNote": "Access is by invitation: we open your workspace after a first call.",
+    "heroNote": "Open your account in two minutes and try it free for {{days}} days, no card required.",
     "heroTitle": "Your agency ledger, kept up to date on its own.",
     "limitBranches": "Branches",
     "limitUsers": "Users",
@@ -817,7 +891,7 @@
     "pricing": {
       "billedMonthly": "No commitment",
       "billedYearly": "That is {{total}} per year",
-      "cta": "Request a demo",
+      "cta": "Start the free trial",
       "free": "Free",
       "monthly": "Monthly",
       "monthsFree_one": "{{count}} month free",
@@ -895,6 +969,7 @@
       "fleetCaption": "The fleet: Moroccan plates, status of every rental.",
       "title": "The product, exactly as delivered"
     },
+    "startNow": "Open my account",
     "trialDays": "{{days}}-day trial",
     "trust": {
       "cancel": "No commitment",
@@ -908,11 +983,107 @@
     "error": "That did not go through",
     "loading": "Loading"
   },
+  "team": {
+    "add": "Create the account",
+    "addTitle": "Add an account",
+    "created": "Account created. Pass the password on to the person.",
+    "empty": "No colleagues",
+    "emptyBody": "You are alone on this workspace for now.",
+    "error": {
+      "email_taken": "This address is already used by an account.",
+      "last_owner": "At least one owner must remain.",
+      "not_found": "This member no longer exists.",
+      "quota": "The plan does not allow another account."
+    },
+    "password": "Initial password",
+    "passwordHint": "10 characters minimum. They will be able to change it.",
+    "quotaReached": "The {{plan}} plan does not allow another account.",
+    "remove": "Remove",
+    "role": "Role",
+    "roleHint": "An agent records contracts and customers. A manager also configures the agency.",
+    "roleOf": "{{name}}'s role",
+    "seePlans": "See the plans",
+    "subtitle": "Who has access, and which access.",
+    "title": "Team",
+    "usage": "{{used}} / {{max}} accounts",
+    "usageUnlimited": "{{used}} accounts",
+    "you": "You"
+  },
+  "template": {
+    "addKind": "Add: {{kind}}",
+    "blockKind": "Block type",
+    "bold": "B",
+    "defaultName": "Rental agreement",
+    "insertVariable": "Insert a field",
+    "italic": "I",
+    "kind": {
+      "heading": "Heading",
+      "list": "List",
+      "paragraph": "Paragraph",
+      "signatures": "Signatures"
+    },
+    "legalNotice": "These clauses are a starting point, not legal advice. Have them checked by your counsel.",
+    "listHint": "One line per bullet.",
+    "locale": "Contract language",
+    "localeHint": "The one it will be signed in, not the one on screen.",
+    "locked": "The {{plan}} plan does not unlock contract customisation.",
+    "marksHint": "Select some text, then B or I.",
+    "moveDown": "Move down",
+    "moveUp": "Move up",
+    "name": "Template name",
+    "pickField": "Click inside a block to use it.",
+    "preview": "Preview",
+    "reset": "Start again from the suggested template",
+    "signLessor": "The lessor",
+    "signRenter": "The renter",
+    "signaturesHint": "Two boxes to sign, lessor side and renter side.",
+    "subtitle": "Your clauses, printed with every contract.",
+    "title": "Contract template",
+    "variable": {
+      "agency": {
+        "city": "Agency — city",
+        "email": "Agency — email",
+        "name": "Agency — name",
+        "phone": "Agency — phone"
+      },
+      "contract": {
+        "dailyPrice": "Contract — daily price",
+        "days": "Contract — number of days",
+        "deposit": "Contract — deposit",
+        "endAt": "Contract — end",
+        "reference": "Contract — reference",
+        "startAt": "Contract — start",
+        "total": "Contract — total"
+      },
+      "customer": {
+        "address": "Customer — address",
+        "idNumber": "Customer — identity document",
+        "licenceNumber": "Customer — driving licence",
+        "name": "Customer — name",
+        "phone": "Customer — phone"
+      },
+      "vehicle": {
+        "km": "Vehicle — odometer",
+        "make": "Vehicle — make",
+        "model": "Vehicle — model",
+        "plate": "Vehicle — plate"
+      }
+    }
+  },
   "theme": {
     "dark": "Dark",
     "label": "Theme",
     "light": "Light",
     "system": "System"
+  },
+  "upload": {
+    "error": {
+      "bad_format": "This image could not be read.",
+      "decode_failed": "This image could not be read.",
+      "not_found": "Vehicle not found.",
+      "too_large": "Image too heavy. Please pick a smaller one.",
+      "unsupported_type": "Format not accepted. Choose a JPEG, PNG or WebP."
+    }
   },
   "vehicle": {
     "category": {
@@ -1017,6 +1188,12 @@
       "title": "Vehicles"
     },
     "odometer": "Odometer",
+    "photo": "Vehicle photo",
+    "photoAlt": "Photo of vehicle {{plate}}",
+    "photoHint": "Optional. It helps recognise the car in the list.",
+    "photoPick": "Add a photo",
+    "photoRemove": "Remove",
+    "photoReplace": "Replace",
     "plate": "Plate",
     "status": {
       "available": "Available",

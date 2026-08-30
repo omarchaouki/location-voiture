@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { parseMoroccanPhone } from '~/core/phone'
+import { LOCALES } from '~/i18n/locales'
 
 /**
  * Demande de démonstration venue du site vitrine.
@@ -44,7 +45,7 @@ export const LeadInput = z.object({
   city: z.string().trim().max(80).optional(),
   fleetSize: z.enum(FLEET_SIZES).optional(),
   message: z.string().trim().max(1000).optional(),
-  locale: z.enum(['fr', 'ar', 'en']),
+  locale: z.enum(LOCALES),
 
   /** Leurre anti-robot. Rempli = requête ignorée en silence. */
   website: z.string().max(200).optional(),

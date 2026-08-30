@@ -54,15 +54,18 @@ echo "── Construction ──────────────────
 pnpm build
 
 echo "── Envoi vers $TARGET ──────────────────────────────────────────"
-# `--delete` sur dist/ : les fichiers d'un ancien build portent un autre nom (empreinte
-# de contenu). Sans effacement, le répertoire grossit à chaque déploiement et finit par
-# remplir un disque de 40 Go.
-rsync -az --delete \
-  dist/ "$TARGET:$REMOTE_DIR/dist/"
-
-rsync -az \
-  server.mjs package.json pnpm-lock.yaml pnpm-workspace.yaml \
-  "$TARGET:$REMOTE_DIR/"
+#
+# `tar` sur un tube ssh, et PAS rsync.
+#
+# Git Bash sous Windows ne fournit pas rsync — la commande n'existe tout simplement
+# pas, et le déploiement s'arrêtait là. `tar` et `ssh`, eux, sont livrés avec Git. Un
+# envoi complet coûte environ 6 Mo compressés : le transfert différentiel de rsync
+# n'aurait de toute façon presque rien économisé sur un build dont chaque fichier
+# change de nom à chaque construction.
+#
+# `rm -rf dist` d'abord : les fichiers d'un ancien build portent une autre empreinte
+# dans leur nom. Sans effacement, le répertoire grossit à chaque déploiement.
+tar czf - dist server.mjs package.json pnpm-lock.yaml pnpm-workspace.yaml   | ssh "$TARGET" "rm -rf $REMOTE_DIR/dist && tar xzf - -C $REMOTE_DIR"
 
 echo "── Dépendances et redémarrage ──────────────────────────────────"
 # `--frozen-lockfile` : le serveur installe EXACTEMENT ce qui a été testé ici. Sans lui,

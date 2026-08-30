@@ -35,6 +35,7 @@ function toSummary(row: VehicleRow): VehicleSummary {
     status: row.status,
     currentKm: row.currentKm,
     dailyCents: row.dailyCents,
+    photoPath: row.photoPath,
   }
 }
 

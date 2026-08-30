@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import type { Db } from '~/db/client'
 import { users } from '~/db/schema/auth'
 import { PLATFORM_OWNER } from './permissions'
-import { closeBootstrapWindow, openBootstrapWindow, type Auth } from './server'
+import { closeSignupWindow, openSignupWindow, type Auth } from './server'
 
 /**
  * Création du compte de plateforme — le tien.
@@ -33,7 +33,7 @@ export async function createPlatformOwner(
     throw new Error(`Un compte existe déjà pour ${email}`)
   }
 
-  openBootstrapWindow()
+  openSignupWindow(email)
   let userId: string
   try {
     const response = await auth.api.signUpEmail({
@@ -47,7 +47,7 @@ export async function createPlatformOwner(
     }
     userId = created
   } finally {
-    closeBootstrapWindow()
+    closeSignupWindow(email)
   }
 
   // La promotion se fait en base, sans passer par le réseau : il ne doit exister

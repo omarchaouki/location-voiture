@@ -95,3 +95,61 @@ Aucun critère ne reste sous 4 après itération. Aucune option tranchée à te 
   fonction de création deux fois.
 - **J'aurais commencé par appeler un loueur, pas par lire des documentations.** Le modèle de
   domaine aurait été meilleur, et deux jours de Phase 5 seraient déjà économisés.
+
+
+---
+
+## Phase « ouverture commerciale » — 29/08/2026
+
+Douze demandes livrées en un lot, parce qu'elles racontent une seule histoire : rendre le produit
+achetable sans passer par un appel téléphonique.
+
+### Ce qui a été livré
+
+| # | Demande | État |
+|---|---|---|
+| 1 | Processus de retour du véhicule | **existait déjà** (`settleReturn`, `ReturnPanel`) — vérifié, non réécrit |
+| 2 | Inscription multi-étapes avec accès instantané | livré (`/$lang/inscription`, 12 tests) |
+| 3 | Lien d'inscription sur la page de connexion | livré |
+| 4 | Grille tarifaire compétitive | livrée (migration `0002`, relevé concurrent daté) |
+| 5 | Téléversement du logo d'agence | livré (couche `storage`, 19 tests) |
+| 6 | Contenu du contrat modifiable | livré (blocs + variables, aperçu, impression) |
+| 7 | Image optionnelle par voiture | livré (vignette, liste + fiche) |
+| 8 | Vidange par voiture | livré côté écran ; le domaine existait depuis la Phase 3 |
+| 9 | Espagnol sur tout le produit | livré (995 clés, parité vérifiée) |
+| 10 | Deux mois gratuits par offre | livré (`TRIAL_DAYS = 60`) |
+| 11 | Comptes créés avec mot de passe, selon l'offre | livré (`/$lang/app/equipe`, quota appliqué) |
+| 12 | Tableau payé / impayé et relance des débiteurs | livré (3 requêtes fixes, 8 tests) |
+
+633 → 633 + 49 tests, tous verts. `typecheck`, `lint`, `check:tokens`, `check:hardcoded` et
+`check:budget` passent.
+
+### Ce que je n'ai pas fait, et pourquoi
+
+- **La migration n'a pas été appliquée à ta base Supabase.** `drizzle/0001` (colonne vignette,
+  table des modèles de contrat) et `drizzle/0002` (nouvelle grille) attendent un `pnpm db:migrate`
+  que tu déclenches. Écrire dans ta base de production sans le demander n'est pas à moi de le
+  décider — et tant que `0002` n'a pas tourné, la page tarifaire affiche encore l'ANCIENNE grille,
+  puisqu'elle lit les prix en base.
+- **Aucune inscription réelle n'a été jouée sur ta base.** Le parcours est prouvé par
+  `tests/unit/signup.test.ts` contre un vrai Postgres en mémoire, pas contre Supabase : un essai à
+  la main y aurait laissé une organisation fantôme.
+- **Le découpage des dictionnaires par langue a été tenté puis retiré.** Il faisait tomber le paquet
+  d'entrée de 203,7 à 144,5 ko — meilleur qu'avant l'espagnol — mais l'hydratation repartait sur des
+  clés brutes. Voir R-8 : c'est un travail d'amorçage de l'application, pas d'internationalisation.
+
+### Ce qui reste ouvert, et que je surveillerais en premier
+
+- **Le budget d'entrée est relevé à 210 ko.** C'est une dette explicite, pas une nouvelle norme.
+  Une cinquième langue coûterait encore 16 ko à tout le monde : c'est le moment où R-8 devra être
+  traité plutôt que le chiffre relevé.
+- **Les clauses du contrat par défaut ne sont pas un avis juridique**, et l'écran le dit. Elles
+  reprennent l'ossature d'un contrat de courte durée au Maroc pour qu'une agence ne parte pas d'une
+  page blanche. Une relecture par un avocat vaudrait plus que ma journée de rédaction — c'est le
+  même constat que pour le modèle de domaine.
+- **Le mot de passe initial d'un agent est connu du gérant.** C'est le modèle de tous les logiciels
+  de comptoir, et c'est un compromis assumé ; l'invitation par courriel reste disponible pour qui
+  veut l'éviter.
+- **Le stockage local ne survit pas à deux machines.** `STORAGE_PROVIDER=supabase` est écrit et
+  éprouvé côté interface, mais jamais exécuté contre un vrai seau : il faudra créer le seau privé
+  `flotta` et faire un aller-retour réel avant de basculer.

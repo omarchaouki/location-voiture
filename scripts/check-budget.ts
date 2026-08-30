@@ -48,7 +48,27 @@ const ASSETS = join(process.cwd(), 'dist', 'client', 'assets')
  *    pas : les menus rares se chargent paresseusement, pas depuis la couche de langue.
  */
 const BUDGETS = {
-  entry: 185,
+  /*
+   * 185 → 210 le 29/08/2026, avec l'arrivée de l'ESPAGNOL — quatrième langue du produit.
+   *
+   * **Ce n'est pas une dérive diffuse, c'est un poste identifié et mesuré.** Les quatre
+   * dictionnaires sont importés statiquement par `src/i18n/index.ts`, donc empaquetés
+   * dans l'entrée : 16,1 ko pour le français, 17,5 pour l'arabe, 14,4 pour l'anglais,
+   * 15,8 pour l'espagnol — 64 ko gzip à eux quatre, sur 203,7 mesurés. L'espagnol seul
+   * en apporte 16, d'où le seuil relevé de 25.
+   *
+   * **Le découpage par langue a été tenté et retiré le même jour.** `import()` par
+   * langue, attendu par le `beforeLoad` de la racine : le paquet d'entrée retombait à
+   * 144,5 ko — meilleur qu'avant l'espagnol — mais l'hydratation repartait sur des clés
+   * brutes, parce que TanStack Start ne rejoue pas `beforeLoad` avant d'hydrater une
+   * page déjà rendue. La raison complète est dans `src/i18n/index.ts`.
+   *
+   * Ce seuil doit donc REDESCENDRE, pas monter : le jour où l'entrée client attend le
+   * dictionnaire avant d'hydrater, l'entrée repasse sous 150 et ce budget avec elle.
+   * Une cinquième langue ajoutée sans ce travail coûterait encore 16 ko à tout le monde,
+   * et c'est le moment où il faudra le faire plutôt que de relever le chiffre.
+   */
+  entry: 210,
   css: 30,
   /** Au-delà, un morceau doit figurer dans `HEAVY_BY_DESIGN`. */
   chunk: 120,

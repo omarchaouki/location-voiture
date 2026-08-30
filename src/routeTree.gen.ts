@@ -17,6 +17,7 @@ import { Route as LangAppRouteImport } from './routes/$lang/app'
 import { Route as LangConfidentialiteRouteImport } from './routes/$lang/confidentialite'
 import { Route as LangConnexionRouteImport } from './routes/$lang/connexion'
 import { Route as LangDesignRouteImport } from './routes/$lang/design'
+import { Route as LangInscriptionRouteImport } from './routes/$lang/inscription'
 import { Route as LangMentionsLegalesRouteImport } from './routes/$lang/mentions-legales'
 import { Route as LangAdminIndexRouteImport } from './routes/$lang/admin/index'
 import { Route as LangAdminOrganisationsRouteImport } from './routes/$lang/admin/organisations'
@@ -26,10 +27,13 @@ import { Route as LangAppAbonnementRouteImport } from './routes/$lang/app/abonne
 import { Route as LangAppAlertesRouteImport } from './routes/$lang/app/alertes'
 import { Route as LangAppAmendesRouteImport } from './routes/$lang/app/amendes'
 import { Route as LangAppCompteRouteImport } from './routes/$lang/app/compte'
+import { Route as LangAppEquipeRouteImport } from './routes/$lang/app/equipe'
+import { Route as LangAppModeleContratRouteImport } from './routes/$lang/app/modele-contrat'
 import { Route as LangAppReglagesRouteImport } from './routes/$lang/app/reglages'
 import { Route as LangAppSuiviRouteImport } from './routes/$lang/app/suivi'
 import { Route as LangInvitationInvitationIdRouteImport } from './routes/$lang/invitation.$invitationId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiFichiersSplatRouteImport } from './routes/api/fichiers/$'
 import { Route as LangAppClientsIndexRouteImport } from './routes/$lang/app/clients/index'
 import { Route as LangAppClientsCustomerIdRouteImport } from './routes/$lang/app/clients/$customerId'
 import { Route as LangAppClientsNouveauRouteImport } from './routes/$lang/app/clients/nouveau'
@@ -81,6 +85,11 @@ const LangDesignRoute = LangDesignRouteImport.update({
   path: '/design',
   getParentRoute: () => LangRoute,
 } as any)
+const LangInscriptionRoute = LangInscriptionRouteImport.update({
+  id: '/inscription',
+  path: '/inscription',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangMentionsLegalesRoute = LangMentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
@@ -126,6 +135,16 @@ const LangAppCompteRoute = LangAppCompteRouteImport.update({
   path: '/compte',
   getParentRoute: () => LangAppRoute,
 } as any)
+const LangAppEquipeRoute = LangAppEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => LangAppRoute,
+} as any)
+const LangAppModeleContratRoute = LangAppModeleContratRouteImport.update({
+  id: '/modele-contrat',
+  path: '/modele-contrat',
+  getParentRoute: () => LangAppRoute,
+} as any)
 const LangAppReglagesRoute = LangAppReglagesRouteImport.update({
   id: '/reglages',
   path: '/reglages',
@@ -145,6 +164,11 @@ const LangInvitationInvitationIdRoute =
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFichiersSplatRoute = ApiFichiersSplatRouteImport.update({
+  id: '/api/fichiers/$',
+  path: '/api/fichiers/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LangAppClientsIndexRoute = LangAppClientsIndexRouteImport.update({
@@ -210,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/$lang/confidentialite': typeof LangConfidentialiteRoute
   '/$lang/connexion': typeof LangConnexionRoute
   '/$lang/design': typeof LangDesignRoute
+  '/$lang/inscription': typeof LangInscriptionRoute
   '/$lang/mentions-legales': typeof LangMentionsLegalesRoute
   '/$lang/': typeof LangIndexRoute
   '/$lang/admin/organisations': typeof LangAdminOrganisationsRoute
@@ -218,10 +243,13 @@ export interface FileRoutesByFullPath {
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
   '/$lang/app/compte': typeof LangAppCompteRoute
+  '/$lang/app/equipe': typeof LangAppEquipeRoute
+  '/$lang/app/modele-contrat': typeof LangAppModeleContratRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/fichiers/$': typeof ApiFichiersSplatRoute
   '/$lang/admin/': typeof LangAdminIndexRoute
   '/$lang/app/': typeof LangAppIndexRoute
   '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
@@ -240,6 +268,7 @@ export interface FileRoutesByTo {
   '/$lang/confidentialite': typeof LangConfidentialiteRoute
   '/$lang/connexion': typeof LangConnexionRoute
   '/$lang/design': typeof LangDesignRoute
+  '/$lang/inscription': typeof LangInscriptionRoute
   '/$lang/mentions-legales': typeof LangMentionsLegalesRoute
   '/$lang': typeof LangIndexRoute
   '/$lang/admin/organisations': typeof LangAdminOrganisationsRoute
@@ -248,10 +277,13 @@ export interface FileRoutesByTo {
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
   '/$lang/app/compte': typeof LangAppCompteRoute
+  '/$lang/app/equipe': typeof LangAppEquipeRoute
+  '/$lang/app/modele-contrat': typeof LangAppModeleContratRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/fichiers/$': typeof ApiFichiersSplatRoute
   '/$lang/admin': typeof LangAdminIndexRoute
   '/$lang/app': typeof LangAppIndexRoute
   '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
@@ -274,6 +306,7 @@ export interface FileRoutesById {
   '/$lang/confidentialite': typeof LangConfidentialiteRoute
   '/$lang/connexion': typeof LangConnexionRoute
   '/$lang/design': typeof LangDesignRoute
+  '/$lang/inscription': typeof LangInscriptionRoute
   '/$lang/mentions-legales': typeof LangMentionsLegalesRoute
   '/$lang/': typeof LangIndexRoute
   '/$lang/admin/organisations': typeof LangAdminOrganisationsRoute
@@ -282,10 +315,13 @@ export interface FileRoutesById {
   '/$lang/app/alertes': typeof LangAppAlertesRoute
   '/$lang/app/amendes': typeof LangAppAmendesRoute
   '/$lang/app/compte': typeof LangAppCompteRoute
+  '/$lang/app/equipe': typeof LangAppEquipeRoute
+  '/$lang/app/modele-contrat': typeof LangAppModeleContratRoute
   '/$lang/app/reglages': typeof LangAppReglagesRoute
   '/$lang/app/suivi': typeof LangAppSuiviRoute
   '/$lang/invitation/$invitationId': typeof LangInvitationInvitationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/fichiers/$': typeof ApiFichiersSplatRoute
   '/$lang/admin/': typeof LangAdminIndexRoute
   '/$lang/app/': typeof LangAppIndexRoute
   '/$lang/app/clients/$customerId': typeof LangAppClientsCustomerIdRoute
@@ -309,6 +345,7 @@ export interface FileRouteTypes {
     | '/$lang/confidentialite'
     | '/$lang/connexion'
     | '/$lang/design'
+    | '/$lang/inscription'
     | '/$lang/mentions-legales'
     | '/$lang/'
     | '/$lang/admin/organisations'
@@ -317,10 +354,13 @@ export interface FileRouteTypes {
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
     | '/$lang/app/compte'
+    | '/$lang/app/equipe'
+    | '/$lang/app/modele-contrat'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
+    | '/api/fichiers/$'
     | '/$lang/admin/'
     | '/$lang/app/'
     | '/$lang/app/clients/$customerId'
@@ -339,6 +379,7 @@ export interface FileRouteTypes {
     | '/$lang/confidentialite'
     | '/$lang/connexion'
     | '/$lang/design'
+    | '/$lang/inscription'
     | '/$lang/mentions-legales'
     | '/$lang'
     | '/$lang/admin/organisations'
@@ -347,10 +388,13 @@ export interface FileRouteTypes {
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
     | '/$lang/app/compte'
+    | '/$lang/app/equipe'
+    | '/$lang/app/modele-contrat'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
+    | '/api/fichiers/$'
     | '/$lang/admin'
     | '/$lang/app'
     | '/$lang/app/clients/$customerId'
@@ -372,6 +416,7 @@ export interface FileRouteTypes {
     | '/$lang/confidentialite'
     | '/$lang/connexion'
     | '/$lang/design'
+    | '/$lang/inscription'
     | '/$lang/mentions-legales'
     | '/$lang/'
     | '/$lang/admin/organisations'
@@ -380,10 +425,13 @@ export interface FileRouteTypes {
     | '/$lang/app/alertes'
     | '/$lang/app/amendes'
     | '/$lang/app/compte'
+    | '/$lang/app/equipe'
+    | '/$lang/app/modele-contrat'
     | '/$lang/app/reglages'
     | '/$lang/app/suivi'
     | '/$lang/invitation/$invitationId'
     | '/api/auth/$'
+    | '/api/fichiers/$'
     | '/$lang/admin/'
     | '/$lang/app/'
     | '/$lang/app/clients/$customerId'
@@ -402,6 +450,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRoute: typeof LangRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiFichiersSplatRoute: typeof ApiFichiersSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -460,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/design'
       fullPath: '/$lang/design'
       preLoaderRoute: typeof LangDesignRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/inscription': {
+      id: '/$lang/inscription'
+      path: '/inscription'
+      fullPath: '/$lang/inscription'
+      preLoaderRoute: typeof LangInscriptionRouteImport
       parentRoute: typeof LangRoute
     }
     '/$lang/mentions-legales': {
@@ -525,6 +581,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangAppCompteRouteImport
       parentRoute: typeof LangAppRoute
     }
+    '/$lang/app/equipe': {
+      id: '/$lang/app/equipe'
+      path: '/equipe'
+      fullPath: '/$lang/app/equipe'
+      preLoaderRoute: typeof LangAppEquipeRouteImport
+      parentRoute: typeof LangAppRoute
+    }
+    '/$lang/app/modele-contrat': {
+      id: '/$lang/app/modele-contrat'
+      path: '/modele-contrat'
+      fullPath: '/$lang/app/modele-contrat'
+      preLoaderRoute: typeof LangAppModeleContratRouteImport
+      parentRoute: typeof LangAppRoute
+    }
     '/$lang/app/reglages': {
       id: '/$lang/app/reglages'
       path: '/reglages'
@@ -551,6 +621,13 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/fichiers/$': {
+      id: '/api/fichiers/$'
+      path: '/api/fichiers/$'
+      fullPath: '/api/fichiers/$'
+      preLoaderRoute: typeof ApiFichiersSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang/app/clients/': {
@@ -647,6 +724,8 @@ interface LangAppRouteChildren {
   LangAppAlertesRoute: typeof LangAppAlertesRoute
   LangAppAmendesRoute: typeof LangAppAmendesRoute
   LangAppCompteRoute: typeof LangAppCompteRoute
+  LangAppEquipeRoute: typeof LangAppEquipeRoute
+  LangAppModeleContratRoute: typeof LangAppModeleContratRoute
   LangAppReglagesRoute: typeof LangAppReglagesRoute
   LangAppSuiviRoute: typeof LangAppSuiviRoute
   LangAppIndexRoute: typeof LangAppIndexRoute
@@ -667,6 +746,8 @@ const LangAppRouteChildren: LangAppRouteChildren = {
   LangAppAlertesRoute: LangAppAlertesRoute,
   LangAppAmendesRoute: LangAppAmendesRoute,
   LangAppCompteRoute: LangAppCompteRoute,
+  LangAppEquipeRoute: LangAppEquipeRoute,
+  LangAppModeleContratRoute: LangAppModeleContratRoute,
   LangAppReglagesRoute: LangAppReglagesRoute,
   LangAppSuiviRoute: LangAppSuiviRoute,
   LangAppIndexRoute: LangAppIndexRoute,
@@ -692,6 +773,7 @@ interface LangRouteChildren {
   LangConfidentialiteRoute: typeof LangConfidentialiteRoute
   LangConnexionRoute: typeof LangConnexionRoute
   LangDesignRoute: typeof LangDesignRoute
+  LangInscriptionRoute: typeof LangInscriptionRoute
   LangMentionsLegalesRoute: typeof LangMentionsLegalesRoute
   LangIndexRoute: typeof LangIndexRoute
   LangInvitationInvitationIdRoute: typeof LangInvitationInvitationIdRoute
@@ -703,6 +785,7 @@ const LangRouteChildren: LangRouteChildren = {
   LangConfidentialiteRoute: LangConfidentialiteRoute,
   LangConnexionRoute: LangConnexionRoute,
   LangDesignRoute: LangDesignRoute,
+  LangInscriptionRoute: LangInscriptionRoute,
   LangMentionsLegalesRoute: LangMentionsLegalesRoute,
   LangIndexRoute: LangIndexRoute,
   LangInvitationInvitationIdRoute: LangInvitationInvitationIdRoute,
@@ -714,6 +797,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRoute: LangRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiFichiersSplatRoute: ApiFichiersSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -40,6 +40,33 @@ export const CreateScheduleInput = z
     path: ['intervalKm'],
   })
 
+/**
+ * Correction d'un programme d'entretien.
+ *
+ * Séparée de la création parce qu'elle ne demande PAS de véhicule : le programme
+ * appartient déjà à une voiture, et accepter un `vehicleId` ici offrirait un moyen de
+ * déplacer une vidange d'une voiture à l'autre — c'est-à-dire de fausser deux carnets
+ * d'un coup.
+ *
+ * `isActive: false` remplace la suppression. Un programme arrêté garde sa dernière
+ * vidange et sa date : c'est de l'historique d'entretien, et l'historique d'entretien
+ * se revend avec la voiture.
+ */
+export const UpdateScheduleInput = z
+  .object({
+    id: z.string().min(1),
+    intervalKm: z.int().min(100).max(200_000).nullable().optional(),
+    intervalMonths: z.int().min(1).max(120).nullable().optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (value) =>
+      value.isActive === false ||
+      (value.intervalKm ?? null) !== null ||
+      (value.intervalMonths ?? null) !== null,
+    { message: 'maintenance.intervalRequired', path: ['intervalKm'] },
+  )
+
 /** Passage à l'atelier : c'est lui qui repousse la prochaine échéance. */
 export const RecordMaintenanceInput = z.object({
   vehicleId,

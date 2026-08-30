@@ -7,7 +7,7 @@ import { vehicleRepository } from '~/db/repositories/vehicles'
 import { organizations } from '~/db/schema/auth'
 import { invoices } from '~/db/schema/billing'
 import { contracts } from '~/db/schema/contracts'
-import { ensurePlans } from '~/server/plan'
+import { DEFAULT_PLANS, ensurePlans } from '~/server/plan'
 import { readAgencyOverview } from '~/server/reads/overview'
 import { createTestDb, tenant } from '../helpers/db'
 
@@ -153,9 +153,17 @@ describe('tableau de bord de la plateforme', () => {
     expect(metrics.organizations.active).toBe(1)
     expect(metrics.organizations.atRisk).toBe(1)
 
-    // `pro` (79 900) + `starter` en impayé (29 900) : l'impayé reste facturable, il
-    // est dû. C'est l'annulation qui sort du revenu, pas le retard de paiement.
-    expect(metrics.mrrCents).toBe(79_900 + 29_900)
+    /*
+     * `pro` + `starter` en impayé : l'impayé reste facturable, il est dû. C'est
+     * l'annulation qui sort du revenu, pas le retard de paiement.
+     *
+     * Les montants sont LUS dans le catalogue posé par `ensurePlans`, et non recopiés
+     * en dur : ils ont changé le 29/08/2026 avec la nouvelle grille, et un test qui
+     * répète des chiffres cesse de mesurer l'agrégation pour mesurer la grille — il
+     * échoue alors à chaque décision commerciale, sans rien avoir trouvé.
+     */
+    const catalogue = new Map(DEFAULT_PLANS.map((plan) => [plan.code, plan.monthlyCents]))
+    expect(metrics.mrrCents).toBe(catalogue.get('pro')! + catalogue.get('starter')!)
   })
 
   it('additionne la flotte de TOUTES les agences — c’est le seul endroit qui le fait', async () => {

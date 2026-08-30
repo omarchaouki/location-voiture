@@ -423,6 +423,111 @@ livré et testé intégralement en mode test, comme demandé.
 
 ---
 
+## D-11 — Ouverture commerciale du 29/08/2026 : inscription libre, grille alignée, quatrième langue
+
+Six décisions prises ensemble, parce qu'elles répondent à une seule question : **comment une agence
+qui découvre le produit devient-elle cliente sans passer par un appel téléphonique ?**
+
+### 1. L'inscription libre remplace la demande de rappel
+
+Le site ne savait que prendre un PROSPECT : nom, numéro, quelqu'un rappelle, une organisation est
+montée à la main depuis `/admin`, une invitation part. Entre le clic et le premier écran du produit,
+deux jours pouvaient passer — et deux jours après avoir comparé trois logiciels, personne ne se
+souvient duquel il attend l'appel.
+
+`/$lang/inscription` monte le compte, l'organisation, l'appartenance, l'abonnement d'essai et les
+compteurs d'usage en un geste, puis ouvre la session (`src/server/signup-intake.ts`). Le formulaire
+de rappel RESTE, en second : c'est un vrai besoin, ce n'est plus le seul chemin.
+
+**Le crochet qui refuse les inscriptions sans invitation n'a pas été retiré.** Il a été rendu
+*portant l'adresse* : la fenêtre d'ouverture est un ensemble d'adresses et non un booléen global —
+deux inscriptions simultanées ne pouvaient sinon pas éviter d'ouvrir l'endpoint à un tiers pendant
+leur chevauchement (`src/auth/server.ts`, `tests/unit/signup.test.ts`).
+
+Écart avec É-02 : `SELF_SERVE_SIGNUP` reste une variable d'environnement, mais elle n'est plus le
+chemin du produit — c'est une trappe d'exploitation qui lève le contrôle entièrement. Le drapeau en
+base décrit par É-02 n'a plus d'objet : l'inscription est ouverte par conception.
+
+### 2. La grille tarifaire est alignée sur le concurrent direct, et le dépasse partout
+
+Relevé le 28/08/2026 sur `locaflotte.com` : 99 MAD pour 8 véhicules et 2 utilisateurs, 199 pour 25
+et 5, 299 pour 50 et 10, l'illimité **sur devis**, 30 jours d'essai partout.
+
+| offre    | Flotta             | LocaFlotte       |
+|----------|--------------------|------------------|
+| starter  | 89 — 10 véh / 3 u  | 99 — 8 véh / 2 u |
+| pro      | 179 — 30 / 8       | 199 — 25 / 5     |
+| business | 279 — 60 / 15      | 299 — 50 / 10    |
+| premium  | 449 — illimité     | sur devis        |
+| essai    | **60 jours**       | 30 jours         |
+
+Deux mois d'essai et non un : un loueur ne juge pas un logiciel de gestion sur une semaine de
+découverte, il le juge sur un cycle complet de location — réservation, départ, retour, caution
+rendue. Trente jours suffisent à peine à en voir un.
+
+L'ancienne offre `business` était illimitée ; elle est désormais bornée, et `premium` reprend
+l'illimité. **Une organisation déjà sur `business` hérite donc d'un plafond de 60 véhicules.** C'est
+supportable aujourd'hui — le produit n'est pas commercialisé — et cela ne le serait plus demain :
+une bascule ultérieure demanderait de migrer les organisations concernées, pas seulement le
+catalogue.
+
+La bascule est une **migration de données** (`drizzle/0002_competitive_price_grid.sql`) et non un
+changement de `ensurePlans()`, qui garde son `ON CONFLICT DO NOTHING` : un déploiement ne doit jamais
+écraser un tarif décidé en base.
+
+### 3. L'espagnol, quatrième langue
+
+Quatorze kilomètres séparent Tarifa de Tanger. La locale ICU est **`es-ES`** et non `es` nu, pour la
+raison exacte qui interdit `ar` nu (É6) : `es-MX` écrit « 1,234.56 » là où `es-ES` écrit
+« 1.234,56 » — un facteur mille sur un montant.
+
+Coût mesuré : **+16 ko gzip dans le paquet d'entrée**, les dictionnaires étant importés
+statiquement. Le découpage par langue a été tenté le même jour et retiré — voir R-8 ci-dessous.
+
+### 4. Le stockage de fichiers existe enfin
+
+`STORAGE_PROVIDER` était déclaré dans `.env.example` depuis la Phase 3 avec un avertissement disant
+de ne pas y croire : aucun code ne le lisait. `src/server/storage/` livre l'interface et ses deux
+implémentations — disque local, et Supabase Storage par `fetch`, **sans ajouter
+`@supabase/supabase-js`** (une centaine de kilo-octets pour trois appels HTTP).
+
+Deux propriétés de sûreté, éprouvées : toute clé commence par `org/<orgId>/`, ce qui permet à la
+route de service de refuser en une comparaison de chaîne — et le fournisseur local déplie les `..`
+avant de comparer au dossier racine. Le SVG est refusé : c'est du XML qui peut porter un script, et
+le servir depuis notre domaine donnerait à quiconque téléverse le droit d'exécuter du code dans la
+session de ses collègues.
+
+Les images sont redimensionnées **par le navigateur** avant l'envoi
+(`src/ui/forms/image-field.tsx`) : aucune bibliothèque de traitement d'image côté serveur, et une
+photo de téléphone de 4 Mo arrive à 30 ko. Le serveur vérifie quand même, parce qu'un client peut
+mentir.
+
+### 5. Le modèle de contrat est en BLOCS, jamais en HTML
+
+Chaque loueur a son contrat type, qui vient de son avocat ou de son assureur. Imposer les nôtres,
+c'est garantir qu'il continue d'imprimer le sien à part et de le remplir à la main.
+
+Trois raisons de ne pas prendre un éditeur riche (TipTap, ProseMirror), dans l'ordre où elles
+pèsent : du HTML en base est une injection en attente, qu'il faudrait assainir à l'écriture ET à la
+lecture ; 120 à 180 ko de plus dans un paquet mesuré à chaque construction, pour un écran qu'on
+ouvre une fois par an ; et un rendu papier imprévisible. Le prix assumé : pas de tableaux, pas
+d'images dans le corps, pas d'alignement libre — un contrat de location a besoin d'articles
+numérotés, de paragraphes et de listes.
+
+La fonctionnalité est liée à l'offre (`contract.template`), décidée par `can()` côté serveur.
+
+### 6. Des comptes créés avec leur mot de passe, à côté de l'invitation
+
+L'invitation par courriel est le bon chemin pour un collègue qui relève sa boîte. Ce n'est pas celui
+d'une agence marocaine ordinaire, où trois agents de comptoir se partagent l'adresse du gérant : un
+lien d'activation envoyé à une boîte que personne n'ouvre est un accès que personne n'obtient.
+
+Le gérant crée donc le compte et son mot de passe, et le communique de vive voix — le modèle de tous
+les logiciels de comptoir. **Le quota d'utilisateurs de l'offre s'applique**, ce qui donne enfin un
+sens commercial à la grille. Une agence ne peut pas retirer ni rétrograder son dernier propriétaire.
+
+---
+
 ## Risques ouverts, suivis phase après phase
 
 | # | Risque | Gravité | Suivi |
@@ -434,6 +539,8 @@ livré et testé intégralement en mode test, comme demandé.
 | R-5 | TanStack Table v9 très récente, peu d'exemples | faible | `useLegacyTable` en repli (D-04) |
 | R-6 | Qualité du rendu arabe RTL dans les PDF de contrat | moyenne | choisir le moteur PDF en Phase 5 **après** un test réel de shaping arabe, pas avant |
 | R-7 | Traccar dépend d'un serveur à héberger et de boîtiers réels | moyenne | `MockGpsProvider` rend les Phases 1 à 6 indépendantes du matériel |
+| R-8 | Les 4 dictionnaires pèsent 64 ko gzip dans le paquet d'entrée, dont 3/4 inutiles à chaque visiteur | moyenne | découpage par langue tenté le 29/08/2026 et **retiré** : l'hydratation repartait sur des clés brutes, TanStack Start ne rejouant pas `beforeLoad` avant d'hydrater. À reprendre par l'entrée CLIENT, qui doit attendre le dictionnaire avant `hydrateRoot`. Budget relevé à 210 ko en attendant, et il doit REDESCENDRE |
+| R-9 | Une agence déjà sur `business` passe d'illimité à 60 véhicules avec la nouvelle grille | faible | sans conséquence tant que le produit n'est pas commercialisé ; une bascule ultérieure demanderait une migration des organisations, pas seulement du catalogue |
 
 ---
 

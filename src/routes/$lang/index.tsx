@@ -82,7 +82,7 @@ function HomePage() {
      * formulaire, exactement ce qu'on cherche à faire atteindre.
      */
     <div className="-my-8 pb-action-bar">
-      <Hero locale={locale} />
+      <Hero locale={locale} trialDays={plans[0]?.trialDays ?? 0} />
       <AppShowcase locale={locale} />
       <Capabilities />
       <MadeForMorocco />
@@ -90,7 +90,7 @@ function HomePage() {
       <PlanQuiz plans={plans} locale={locale} period={period} onFleetSize={setFleetSize} />
       <SignupForm locale={locale} fleetSize={fleetSize} onFleetSize={setFleetSize} />
 
-      <MobileCallToAction />
+      <MobileCallToAction locale={locale} />
     </div>
   )
 }
@@ -107,7 +107,7 @@ function HomePage() {
  * dans lequel on veut que ce soit lu, rendu visible. Tout arriver en même temps ne
  * hiérarchise rien.
  */
-function Hero({ locale }: { locale: Locale }) {
+function Hero({ locale, trialDays }: { locale: Locale; trialDays: number }) {
   const { t } = useTranslation()
 
   return (
@@ -129,18 +129,29 @@ function Hero({ locale }: { locale: Locale }) {
 
         <Reveal index={3}>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
+            {/*
+              L'ACTION PRINCIPALE MÈNE À L'INSCRIPTION, plus au formulaire de rappel.
+
+              C'est le changement du 29/08/2026, et il n'est pas cosmétique : jusqu'ici
+              le meilleur chemin qu'un visiteur convaincu pouvait prendre était de
+              laisser son numéro et d'attendre qu'on le rappelle. Entre le clic et le
+              premier écran du produit, deux jours pouvaient passer — et deux jours
+              après avoir comparé trois logiciels, personne ne se souvient duquel il
+              attend l'appel. Le rappel reste offert JUSTE À CÔTÉ, en second, pour le
+              gérant qui préfère parler à quelqu'un ; c'est un vrai besoin, mais ce
+              n'est plus le seul chemin.
+
+              Un lien reste un <a>/<Link> : jamais de <button> imbriqué dans une ancre.
+            */}
             <Button asChild size="lg">
-              <a href="#demo">
-                <span>{t('site.requestDemo')}</span>
+              <Link to="/$lang/inscription" params={{ lang: locale }}>
+                <span>{t('site.startNow')}</span>
                 {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
                 <ArrowRight className="icon-directional" aria-hidden="true" />
-              </a>
+              </Link>
             </Button>
             <Button asChild variant="ghost" size="lg">
-              <Link to="/$lang/connexion" params={{ lang: locale }}>
-                {t('auth.signIn')}
-              </Link>
+              <a href="#demo">{t('site.requestDemo')}</a>
             </Button>
           </div>
         </Reveal>
@@ -163,7 +174,9 @@ function Hero({ locale }: { locale: Locale }) {
         </Reveal>
 
         <Reveal index={5}>
-          <p className="mt-5 text-xs text-muted-foreground">{t('site.heroNote')}</p>
+          <p className="mt-5 text-xs text-muted-foreground">
+            {t('site.heroNote', { days: trialDays })}
+          </p>
         </Reveal>
       </div>
     </section>
@@ -182,7 +195,7 @@ function Hero({ locale }: { locale: Locale }) {
  * utilitaires n'ont aucune spécificité de plus que le `flex` qu'ils doivent battre, et
  * qui l'emporte dépend de l'ordre des variantes Tailwind.
  */
-function MobileCallToAction() {
+function MobileCallToAction({ locale }: { locale: Locale }) {
   const { t } = useTranslation()
 
   return (
@@ -191,10 +204,10 @@ function MobileCallToAction() {
       className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 px-4 pt-2 backdrop-blur sm:hidden"
     >
       <Button asChild size="lg" className="w-full">
-        <a href="#demo">
-          <span>{t('site.requestDemo')}</span>
+        <Link to="/$lang/inscription" params={{ lang: locale }}>
+          <span>{t('site.startNow')}</span>
           <ArrowRight className="icon-directional" aria-hidden="true" />
-        </a>
+        </Link>
       </Button>
     </div>
   )

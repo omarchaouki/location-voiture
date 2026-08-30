@@ -6,6 +6,7 @@ import { displayedMonthlyCents, type BillingPeriod } from '~/core/billing'
 import { recommendPlan, type PlanNeeds, type PlanRecommendation } from '~/core/plan-fit'
 import type { FleetSize } from '~/core/schemas/lead'
 import { formatMoney } from '~/i18n/format'
+import { Link } from '@tanstack/react-router'
 import type { Locale } from '~/i18n/locales'
 import type { PublicPlan } from '~/server/pricing'
 import { ChoiceGroup } from '~/ui/forms/choice-group'
@@ -374,13 +375,29 @@ function QuizResult({
       </Card>
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* Un lien reste un <a> : jamais de <button> imbriqué dans une ancre. */}
+        {/*
+          LE QUESTIONNAIRE MÈNE MAINTENANT À L'INSCRIPTION, offre déjà cochée.
+
+          C'est sa conclusion logique : on vient de répondre à quatre questions pour
+          obtenir un nom d'offre, et l'ancienne sortie renvoyait vers le formulaire de
+          rappel — c'est-à-dire vers l'attente. Le rappel reste offert juste à côté,
+          pour qui préfère parler à quelqu'un.
+
+          Un lien reste un <a>/<Link> : jamais de <button> imbriqué dans une ancre.
+        */}
         <Button asChild>
-          <a href="#demo">
-            <span>{t('site.quiz.talk')}</span>
+          <Link
+            to="/$lang/inscription"
+            params={{ lang: locale }}
+            search={{ offre: plan.code }}
+          >
+            <span>{t('site.pricing.cta')}</span>
             {/* Flèche DIRECTIONNELLE : elle se retourne en arabe. */}
             <ArrowRight className="icon-directional" aria-hidden="true" />
-          </a>
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <a href="#demo">{t('site.quiz.talk')}</a>
         </Button>
         <Button type="button" variant="ghost" onClick={onRestart}>
           {t('site.quiz.restart')}

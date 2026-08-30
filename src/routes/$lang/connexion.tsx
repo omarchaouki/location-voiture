@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -15,9 +15,17 @@ import { Field, Input } from '~/ui/shadcn/field'
 /**
  * Connexion.
  *
- * Il n'y a pas de page « créer un compte » : l'accès se fait sur invitation (cahier
- * des charges §1). Le refus est aussi appliqué côté serveur, sur l'endpoint
- * d'inscription — l'absence de page ne protège rien à elle seule.
+ * **Elle a une sortie, depuis le 28/08/2026 : « créer mon espace ».** L'accès ne se
+ * fait plus uniquement sur invitation — `/$lang/inscription` monte l'agence, son
+ * abonnement d'essai et son compte propriétaire d'un geste. Le lien vit en bas de
+ * page, hors de la carte de connexion : c'est la seule sortie tolérée ici, parce que
+ * son absence coûtait plus cher que sa présence. Quelqu'un qui arrive sans compte et
+ * ne trouve aucun chemin ne cherche pas le formulaire d'inscription, il ferme
+ * l'onglet.
+ *
+ * L'endpoint d'inscription de Better Auth, lui, reste fermé : il n'accepte que les
+ * adresses ouvertes le temps d'une création par le serveur (`src/auth/server.ts`).
+ * L'absence — ou la présence — d'une page ne protège rien à elle seule.
  */
 export const Route = createFileRoute('/$lang/connexion')({
   beforeLoad: async ({ params }) => {
@@ -146,6 +154,25 @@ function SignInPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/*
+        La sortie, SOUS la carte et non dedans.
+
+        Dans la carte, elle rivaliserait avec le bouton « Se connecter » — deux actions
+        de même poids sur un écran qui n'a qu'une chose à faire. Dessous, elle ne se
+        voit que si on la cherche, ce qui est exactement le cas de quelqu'un qui n'a
+        pas de compte.
+      */}
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        {t('auth.noAccount')}{' '}
+        <Link
+          to="/$lang/inscription"
+          params={{ lang: locale }}
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          {t('auth.createAccount')}
+        </Link>
+      </p>
     </div>
   )
 }

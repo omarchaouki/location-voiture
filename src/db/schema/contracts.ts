@@ -1,6 +1,7 @@
+import { sql } from 'drizzle-orm'
 import { index, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
-import { aliveOnly, cents, orgColumns, timestamp } from './_shared'
+import { aliveOnly, bool, cents, orgColumns, timestamp } from './_shared'
 
 export const contracts = pgTable(
   'contracts',
@@ -119,4 +120,46 @@ export const conditionPhotos = pgTable(
     zone: text('zone'),
   },
   (table) => [index('condition_photos_report_idx').on(table.orgId, table.conditionReportId)],
+)
+
+/**
+ * LE MODÈLE DE CONTRAT de l'agence — ses clauses, pas les nôtres.
+ *
+ * Chaque loueur a son contrat type, qui vient de son avocat ou de son assureur et qui
+ * porte ses conditions à lui : kilométrage, franchise, sortie du territoire. Imposer
+ * les nôtres, c'est garantir que le gérant continue d'imprimer son contrat à part et
+ * de le remplir à la main.
+ *
+ * `blocksJson` est du `text` sérialisé, validé par Zod au bord (règle 5 de la charte
+ * de portabilité) — et JAMAIS du HTML : les blocs sont rendus en éléments React, de
+ * sorte qu'une balise tapée dans le champ s'imprime comme du texte. Voir
+ * `src/core/contract-template.ts`.
+ *
+ * `locale` est la langue dans laquelle le contrat sera SIGNÉ, et non celle de
+ * l'utilisateur : une agence de Tanger peut imprimer en français pour un client
+ * français et en arabe pour un client marocain, avec deux modèles distincts. C'est
+ * pour cela qu'il y en a plusieurs par organisation, et un seul `isDefault`.
+ */
+export const contractTemplates = pgTable(
+  'contract_templates',
+  {
+    ...orgColumns,
+    name: text('name').notNull(),
+    /** fr | ar | en | es — la langue du contrat imprimé. */
+    locale: text('locale').notNull().default('fr'),
+    /** Tableau de blocs sérialisé. Parsé par Zod à la lecture, jamais cru sur parole. */
+    blocksJson: text('blocks_json').notNull(),
+    isDefault: bool('is_default').notNull().default(false),
+  },
+  (table) => [
+    /*
+     * UN SEUL modèle par défaut et par organisation, garanti par l'index et non par le
+     * code : deux onglets, deux enregistrements, et l'impression tirerait au sort
+     * lequel des deux contrats fait foi.
+     */
+    uniqueIndex('contract_templates_default_unique')
+      .on(table.orgId)
+      .where(sql`is_default and deleted_at is null`),
+    index('contract_templates_org_idx').on(table.orgId, table.deletedAt),
+  ],
 )

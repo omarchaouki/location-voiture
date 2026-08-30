@@ -27,6 +27,7 @@ export async function readOrganizationSettings(
       contactEmail: organizations.contactEmail,
       localeDefault: organizations.localeDefault,
       timezone: organizations.timezone,
+      logo: organizations.logo,
       planCode: organizations.planCode,
       status: organizations.status,
     })

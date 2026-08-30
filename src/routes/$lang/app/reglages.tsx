@@ -3,11 +3,14 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '~/i18n/locales'
+import { removeLogo, uploadLogo } from '~/server/files'
 import { loadSettings, updateSettings } from '~/server/settings'
 import { Button, buttonVariants } from '~/ui/shadcn/button'
 import { cn } from '~/ui/shadcn/utils'
 import { Field, Select } from '~/ui/forms/fields'
 import { choiceField, textField } from '~/ui/forms/form-data'
+import { ImageField, type ImagePickError } from '~/ui/forms/image-field'
+import { BuildingIcon } from '~/ui/icons'
 import { LanguageSwitcher } from '~/ui/i18n/language-switcher'
 import { Badge } from '~/ui/shadcn/badge'
 import { ThemeMenu } from '~/ui/theme/theme'
@@ -41,6 +44,40 @@ function SettingsPage() {
 
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  /**
+   * LE LOGO s'enregistre TOUT DE SUITE, sans passer par le bouton « Enregistrer ».
+   *
+   * C'est le seul champ de cet écran qui se comporte ainsi, et c'est délibéré : une
+   * image choisie puis perdue parce qu'on a quitté la page sans valider est une image
+   * qu'on ne rechoisit pas. Les autres champs, eux, se relisent avant d'être envoyés —
+   * on corrige un numéro de téléphone, on ne corrige pas un fichier.
+   */
+  const [logoBusy, setLogoBusy] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
+
+  async function pickLogo(dataUrl: string) {
+    setLogoBusy(true)
+    setLogoError(null)
+    try {
+      const result = await uploadLogo({ data: { dataUrl } })
+      if (!result.ok) setLogoError(result.reason)
+      else await router.invalidate()
+    } finally {
+      setLogoBusy(false)
+    }
+  }
+
+  async function dropLogo() {
+    setLogoBusy(true)
+    setLogoError(null)
+    try {
+      await removeLogo()
+      await router.invalidate()
+    } finally {
+      setLogoBusy(false)
+    }
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -82,7 +119,38 @@ function SettingsPage() {
         <p className="mt-3 text-xs text-muted-foreground">{t('settings.readOnlyHint')}</p>
       )}
 
-      <form method="post" className="mt-4 grid gap-5 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
+      {/*
+        Le logo vit AU-DESSUS du formulaire, et hors de lui.
+
+        Dedans, il donnerait à croire qu'il attend le bouton « Enregistrer » — alors
+        qu'il est déjà parti. Au-dessus, il se lit comme ce qu'il est : l'en-tête de
+        l'agence, celui qui s'imprimera en haut des contrats.
+      */}
+      <div className="mt-4">
+        <ImageField
+          label={t('settings.logo')}
+          hint={t('settings.logoHint')}
+          value={settings.logo}
+          alt={t('settings.logoAlt', { name: settings.name })}
+          pickLabel={t('settings.logoPick')}
+          replaceLabel={t('settings.logoReplace')}
+          removeLabel={t('settings.logoRemove')}
+          errorLabel={(reason: ImagePickError) => t(`upload.error.${reason}`)}
+          emptyIcon={<BuildingIcon className="size-8" />}
+          aspect="wide"
+          disabled={!settings.canEdit}
+          busy={logoBusy}
+          onPick={(dataUrl) => void pickLogo(dataUrl)}
+          onRemove={() => void dropLogo()}
+        />
+        {logoError === null ? null : (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            {t(`upload.error.${logoError}`)}
+          </p>
+        )}
+      </div>
+
+      <form method="post" className="mt-6 grid gap-5 sm:grid-cols-2" onSubmit={(event) => void submit(event)}>
         <Field
           name="name"
           numeric={false}
@@ -141,6 +209,30 @@ function SettingsPage() {
           </div>
         ) : null}
       </form>
+
+      <h2 className="mt-10 border-b border-border pb-2 text-base">{t('template.title')}</h2>
+      <p className="mt-3 text-xs text-muted-foreground">{t('settings.templateHint')}</p>
+      <div className="mt-4">
+        <Link
+          to="/$lang/app/modele-contrat"
+          params={{ lang: locale }}
+          className={buttonVariants({ variant: 'outline' })}
+        >
+          <span>{t('settings.editTemplate')}</span>
+        </Link>
+      </div>
+
+      <h2 className="mt-10 border-b border-border pb-2 text-base">{t('team.title')}</h2>
+      <p className="mt-3 text-xs text-muted-foreground">{t('settings.teamHint')}</p>
+      <div className="mt-4">
+        <Link
+          to="/$lang/app/equipe"
+          params={{ lang: locale }}
+          className={buttonVariants({ variant: 'outline' })}
+        >
+          <span>{t('settings.manageTeam')}</span>
+        </Link>
+      </div>
 
       <h2 className="mt-10 border-b border-border pb-2 text-base">
         {t('settings.planSection')}

@@ -26,20 +26,36 @@ import { ac, PLATFORM_OWNER, platformAc, platformRoles, roles } from './permissi
  */
 
 /**
- * Fenêtre d'amorçage — variable de PROCESSUS, jamais un en-tête ni un paramètre.
+ * Fenêtre de création de compte — variable de PROCESSUS, jamais un en-tête ni un
+ * paramètre, et **portant l'adresse qu'elle autorise**.
  *
- * Le tout premier compte de plateforme doit bien naître quelque part. Elle n'est
- * ouverte que par `pnpm admin:create` (et par les tests), le temps d'une création,
- * et il n'existe aucun moyen de l'ouvrir depuis le réseau.
+ * Deux chemins créent un compte sans invitation, et un seul mécanisme les couvre :
+ * `pnpm admin:create` pour le tout premier compte de plateforme, et l'inscription
+ * libre de `src/server/signup.ts`, qui monte l'agence entière avant de rendre la main.
+ * Les deux appellent `auth.api.signUpEmail` côté serveur, donc traversent le crochet
+ * ci-dessous, qui refuserait sans cela.
+ *
+ * **C'est un ensemble d'adresses et non un booléen**, et la différence n'est pas
+ * cosmétique : deux inscriptions simultanées ouvriraient chacune un drapeau global, et
+ * pendant ce chevauchement un appel HTTP direct à `/api/auth/sign-up/email` — depuis
+ * n'importe où sur le réseau — serait accepté. Ici l'ouverture ne vaut que pour
+ * l'adresse qu'on est en train de créer, et l'appel d'un tiers ne trouve pas la sienne.
+ *
+ * Il n'existe aucun moyen d'y inscrire une adresse depuis le réseau.
  */
-let bootstrapWindowOpen = false
+const signupWindow = new Set<string>()
 
-export function openBootstrapWindow(): void {
-  bootstrapWindowOpen = true
+/** Normalisée une seule fois : le crochet compare la même forme que l'appelant. */
+function windowKey(email: string): string {
+  return email.trim().toLowerCase()
 }
 
-export function closeBootstrapWindow(): void {
-  bootstrapWindowOpen = false
+export function openSignupWindow(email: string): void {
+  signupWindow.add(windowKey(email))
+}
+
+export function closeSignupWindow(email: string): void {
+  signupWindow.delete(windowKey(email))
 }
 
 const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60
@@ -156,16 +172,24 @@ export function createAuth(db: Db, options: AuthOptions = {}) {
        * directement doit être refusé aussi. On n'accepte une création de compte que
        * si une invitation en cours existe pour cette adresse.
        *
-       * `SELF_SERVE_SIGNUP=true` ouvre l'inscription libre le jour venu — l'autre
-       * chemin du cahier des charges, présent dès maintenant, pas à réécrire.
+       * `SELF_SERVE_SIGNUP=true` lève le contrôle entièrement — trappe d'exploitation,
+       * pas le chemin normal. L'inscription libre du produit passe par
+       * `src/server/signup.ts`, qui ouvre la fenêtre ci-dessus pour la seule adresse
+       * qu'il crée : elle monte l'agence, l'abonnement et le compte propriétaire dans
+       * la foulée, ce qu'un appel nu à cet endpoint ne ferait pas.
        */
       before: createAuthMiddleware(async (ctx) => {
         if (ctx.path !== '/sign-up/email') return
         if (process.env['SELF_SERVE_SIGNUP'] === 'true') return
-        if (bootstrapWindowOpen) return
 
         const raw = (ctx.body as { email?: unknown } | undefined)?.email
         const email = typeof raw === 'string' ? raw.trim().toLowerCase() : ''
+
+        // Création conduite par le serveur lui-même — amorçage de plateforme ou
+        // inscription d'agence. La fenêtre porte l'adresse : elle n'ouvre rien pour
+        // une autre.
+        if (email && signupWindow.has(email)) return
+
         const pending = email
           ? await db
               .select({ id: invitations.id })

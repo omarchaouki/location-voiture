@@ -25,7 +25,9 @@
     "vendor:rtl": "tsx scripts/vendor-rtl-text.ts",
     "check:budget": "tsx scripts/check-budget.ts",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
-    "demo:reset": "tsx --env-file-if-exists=.env scripts/demo-reset.ts"
+    "demo:reset": "tsx --env-file-if-exists=.env scripts/demo-reset.ts",
+    "demo:fill": "tsx --env-file-if-exists=.env scripts/demo-fill.ts",
+    "demo:purge": "tsx --env-file-if-exists=.env scripts/demo-purge.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",

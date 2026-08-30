@@ -8,6 +8,7 @@ import { ForbiddenError } from '~/auth/guards'
 import { PLATFORM_OWNER } from '~/auth/permissions'
 import { getAuth } from '~/auth/server'
 import { getDb } from '~/db/client'
+import { LOCALES } from '~/i18n/locales'
 import { invitations, members, organizations, users } from '~/db/schema/auth'
 import { impersonationSessions } from '~/db/schema/platform'
 import { platformMetrics, type PlatformMetrics } from '~/db/repositories/platform'
@@ -33,7 +34,7 @@ export const CreateOrganizationInput = z.object({
   slug: z.string().trim().min(2).max(60).regex(SLUG),
   city: z.string().trim().max(80).optional(),
   planCode: z.enum(['trial', 'starter', 'pro', 'business']),
-  localeDefault: z.enum(['fr', 'ar', 'en']),
+  localeDefault: z.enum(LOCALES),
   ownerEmail: z.email(),
 })
 

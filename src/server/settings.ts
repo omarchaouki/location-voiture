@@ -26,6 +26,8 @@ export interface OrganizationSettings {
   contactEmail: string | null
   localeDefault: string
   timezone: string
+  /** Clé de stockage du logo, jamais une URL. `null` = aucun logo posé. */
+  logo: string | null
   planCode: string
   status: string
   /** Le rôle décide de l'affichage en lecture seule — le serveur, lui, refuse. */
